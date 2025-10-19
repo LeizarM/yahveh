@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       next.when(
         data: (user) {
           if (user != null) {
-            context.go('/');
+            context.go('/dashboard');
           }
         },
         loading: () {},

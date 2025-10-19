@@ -46,17 +46,19 @@ class DioClient {
           return handler.next(options);
         },
         onResponse: (response, handler) async {
-          _logger.d('✅ Response: ${response.statusCode} ${response.requestOptions.path}');
+         
           
           // Si la respuesta contiene token, guardarlo automáticamente
           if (response.data != null && response.data is Map) {
             final data = response.data as Map<String, dynamic>;
             if (data['success'] == true && data['data'] != null) {
-              final responseData = data['data'] as Map<String, dynamic>;
-              if (responseData.containsKey('token')) {
-                final token = responseData['token'] as String;
-                await _storage.write(key: AppConfig.tokenKey, value: token);
-                _logger.d('🔑 Token guardado automáticamente');
+              // Verificar que data['data'] sea un Map (no una Lista)
+              if (data['data'] is Map<String, dynamic>) {
+                final responseData = data['data'] as Map<String, dynamic>;
+                if (responseData.containsKey('token')) {
+                  final token = responseData['token'] as String;
+                  await _storage.write(key: AppConfig.tokenKey, value: token);
+                }
               }
             }
           }

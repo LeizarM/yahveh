@@ -1,37 +1,27 @@
-import 'dart:convert';
+import '../../domain/entities/vista_entity.dart';
 
-VistaModel vistaModelFromJson(String str) => VistaModel.fromJson(json.decode(str));
+class VistaModel extends VistaEntity {
+  VistaModel({
+    required super.codVista,
+    required super.codVistaPadre,
+    required super.direccion,
+    required super.titulo,
+    required super.audUsuario,
+  });
 
-String vistaModelToJson(VistaModel data) => json.encode(data.toJson());
+  factory VistaModel.fromJson(Map<String, dynamic> json) => VistaModel(
+    codVista: json["codVista"],
+    codVistaPadre: json["codVistaPadre"],
+    direccion: json["direccion"],
+    titulo: json["titulo"],
+    audUsuario: json["audUsuario"] ?? 0,
+  );
 
-class VistaModel {
-    int codVista;
-    int codVistaPadre;
-    String direccion;
-    String titulo;
-    int audUsuario;
-
-    VistaModel({
-        required this.codVista,
-        required this.codVistaPadre,
-        required this.direccion,
-        required this.titulo,
-        required this.audUsuario,
-    });
-
-    factory VistaModel.fromJson(Map<String, dynamic> json) => VistaModel(
-        codVista: json["codVista"],
-        codVistaPadre: json["codVistaPadre"],
-        direccion: json["direccion"],
-        titulo: json["titulo"],
-        audUsuario: json["audUsuario"],
-    );
-
-    Map<String, dynamic> toJson() => {
-        "codVista": codVista,
-        "codVistaPadre": codVistaPadre,
-        "direccion": direccion,
-        "titulo": titulo,
-        "audUsuario": audUsuario,
-    };
+  Map<String, dynamic> toJson() => {
+    "codVista": codVista,
+    "codVistaPadre": codVistaPadre,
+    "direccion": direccion,
+    "titulo": titulo,
+    "audUsuario": audUsuario,
+  };
 }

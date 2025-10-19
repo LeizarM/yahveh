@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/utils/extensions.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/app_drawer.dart';
 
 /// Pantalla principal (Home)
 class HomeScreen extends ConsumerWidget {
@@ -14,16 +14,9 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Yahveh'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              _showLogoutDialog(context, ref);
-            },
-          ),
-        ],
+        title: const Text('Yahveh - Dashboard'),
       ),
+      drawer: const AppDrawer(),
       body: Center(
         child: authState.when(
           data: (user) {
@@ -118,30 +111,6 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cerrar Sesión'),
-        content: const Text('Estás seguro de que deseas cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ref.read(authProvider.notifier).logout();
-              context.go('/login');
-            },
-            child: const Text('Cerrar Sesión'),
-          ),
-        ],
       ),
     );
   }

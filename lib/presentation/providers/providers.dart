@@ -4,8 +4,12 @@ import 'package:logger/logger.dart';
 import '../../core/network/dio_client.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/vista_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/vista_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/vista_repository.dart';
+import 'auth_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -25,9 +29,12 @@ final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(
     storage: storage,
     logger: logger,
+    // Cuando el token expira, refrescar el estado de autenticación
     onUnauthorized: () {
-      // Este callback se llamará cuando el token expire (401)
-      // El AuthProvider escuchará esto para redirigir al login
+      // Usar Future.microtask para evitar modificar el estado durante build
+      Future.microtask(() {
+        ref.read(authProvider.notifier).refresh();
+      });
     },
   );
 });
@@ -52,5 +59,20 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(
     remoteDataSource: remoteDataSource,
     localDataSource: localDataSource,
+  );
+});
+
+/// Provider para VistaRemoteDataSource
+final vistaRemoteDataSourceProvider = Provider<VistaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return VistaRemoteDataSourceImpl(client);
+});
+
+/// Provider para VistaRepository
+final vistaRepositoryProvider = Provider<VistaRepository>((ref) {
+  final remoteDataSource = ref.watch(vistaRemoteDataSourceProvider);
+  
+  return VistaRepositoryImpl(
+    remoteDataSource: remoteDataSource,
   );
 });

@@ -46,6 +46,12 @@ class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  /// Refresca el estado de autenticación
+  /// Se llama cuando el token expira
+  Future<void> refresh() async {
+    await _checkAuth();
+  }
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(() {

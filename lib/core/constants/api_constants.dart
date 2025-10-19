@@ -6,6 +6,7 @@ class ApiConstants {
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh';
   static const String profile = '/user/profile';
+  static const String menu = '/vistas/menu';
   
   // Headers
   static const String contentType = 'Content-Type';
