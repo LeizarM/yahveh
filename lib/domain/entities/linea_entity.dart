@@ -1,12 +1,18 @@
+/// Entidad de Línea
 class LineaEntity {
-    int codLinea;
-    String linea;
-    int audUsuario;
+  final int? codLinea;
+  final String linea;
+  final int audUsuario;
+  final DateTime? audFecha;
+  final int? totalArticulos;
+  final int? articulosActivos;
 
-    LineaEntity({
-        required this.codLinea,
-        required this.linea,
-        required this.audUsuario,
-    });
-
+  const LineaEntity({
+    this.codLinea,
+    required this.linea,
+    required this.audUsuario,
+    this.audFecha,
+    this.totalArticulos,
+    this.articulosActivos,
+  });
 }

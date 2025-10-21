@@ -5,10 +5,16 @@ import '../../core/network/dio_client.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/vista_remote_datasource.dart';
+import '../../data/datasources/linea_remote_datasource.dart';
+import '../../data/datasources/articulo_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
+import '../../data/repositories/linea_repository_impl.dart';
+import '../../data/repositories/articulo_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
+import '../../domain/repositories/linea_repository.dart';
+import '../../domain/repositories/articulo_repository.dart';
 import 'auth_provider.dart';
 
 /// Provider para FlutterSecureStorage
@@ -75,4 +81,32 @@ final vistaRepositoryProvider = Provider<VistaRepository>((ref) {
   return VistaRepositoryImpl(
     remoteDataSource: remoteDataSource,
   );
+});
+
+/// Provider para LineaRemoteDataSource
+final lineaRemoteDataSourceProvider = Provider<LineaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return LineaRemoteDataSourceImpl(client);
+});
+
+/// Provider para LineaRepository
+final lineaRepositoryProvider = Provider<LineaRepository>((ref) {
+  final remoteDataSource = ref.watch(lineaRemoteDataSourceProvider);
+  
+  return LineaRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+  );
+});
+
+/// Provider para ArticuloRemoteDataSource
+final articuloRemoteDataSourceProvider = Provider<ArticuloRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return ArticuloRemoteDataSourceImpl(client);
+});
+
+/// Provider para ArticuloRepository
+final articuloRepositoryProvider = Provider<ArticuloRepository>((ref) {
+  final remoteDataSource = ref.watch(articuloRemoteDataSourceProvider);
+  
+  return ArticuloRepositoryImpl(remoteDataSource);
 });

@@ -6,6 +6,7 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/vista_entity.dart';
 import '../providers/auth_provider.dart';
 import '../providers/menu_provider.dart';
+import '../providers/routes_provider.dart';
 
 /// NavigationDrawer personalizado con menú dinámico desde el backend
 class AppDrawer extends ConsumerWidget {
@@ -15,6 +16,7 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final menuState = ref.watch(menuProvider);
     final authState = ref.watch(authProvider);
+    final localRoutes = ref.watch(appRoutesProvider);
 
     return NavigationDrawer(
       children: [
@@ -23,9 +25,79 @@ class AppDrawer extends ConsumerWidget {
 
         const SizedBox(height: 8),
 
-        // Menú dinámico desde el backend
+        // Sección: Menú Local (rutas definidas en la app)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Text(
+            'MENÚ LOCAL',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: context.colorScheme.primary,
+            ),
+          ),
+        ),
+        
+        // Rutas locales definidas en la app
+        ...localRoutes.map((route) => _buildLocalMenuItem(context, route)),
+
+        const Divider(),
+
+        // Sección: Menú desde Backend
         menuState.when(
-          data: (menu) => _buildMenuItems(context, menu),
+          data: (menu) {
+            // Normalizar las rutas locales (sin /, lowercase, singular/plural)
+            final localPaths = localRoutes.map((r) {
+              var path = r.path.toLowerCase();
+              if (path.startsWith('/')) path = path.substring(1);
+              return path;
+            }).toSet();
+
+            // Filtrar las rutas que ya están en el menú local
+            final filteredMenu = menu.where((vista) {
+              var vistaPath = vista.direccion.toLowerCase();
+              if (vistaPath.startsWith('/')) vistaPath = vistaPath.substring(1);
+              
+              // Verificar coincidencia exacta o variaciones (singular/plural)
+              if (localPaths.contains(vistaPath)) return false;
+              
+              // Verificar variaciones singular/plural
+              // "linea" vs "lineas", "item" vs "items"
+              for (var localPath in localPaths) {
+                // Si uno es plural del otro (agrega/quita 's')
+                if (localPath.endsWith('s') && vistaPath == localPath.substring(0, localPath.length - 1)) {
+                  return false;
+                }
+                if (vistaPath.endsWith('s') && localPath == vistaPath.substring(0, vistaPath.length - 1)) {
+                  return false;
+                }
+              }
+              
+              return true;
+            }).toList();
+
+            // Si no hay rutas únicas del backend, no mostrar la sección
+            if (filteredMenu.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Text(
+                    'MENÚ BACKEND',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: context.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                ...filteredMenu.map((vista) => _buildMenuItem(context, vista)),
+              ],
+            );
+          },
           loading: () => const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
@@ -121,22 +193,24 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
-  /// Construye los items del menú desde la lista de vistas
-  Widget _buildMenuItems(BuildContext context, List<VistaEntity> menu) {
-    if (menu.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Center(
-          child: Text(
-            'No hay opciones de menú disponibles',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
+  /// Construye un item del menú local (rutas definidas en la app)
+  Widget _buildLocalMenuItem(BuildContext context, AppRoute route) {
+    final icon = _getIconForRoute(route.icon);
 
-    return Column(
-      children: menu.map((vista) => _buildMenuItem(context, vista)).toList(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(route.title),
+        onTap: () {
+          // Cerrar el drawer
+          Navigator.of(context).pop();
+          
+          // Navegar a la ruta
+          debugPrint('🔘 Navegando desde drawer a: ${route.path}');
+          context.go(route.path);
+        },
+      ),
     );
   }
 
@@ -163,6 +237,30 @@ class AppDrawer extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  /// Obtiene el ícono apropiado según el nombre de la ruta local
+  IconData _getIconForRoute(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'dashboard':
+        return Icons.dashboard;
+      case 'items':
+      case 'articulos':
+        return Icons.inventory_2;
+      case 'lineas':
+        return Icons.category;
+      case 'users':
+      case 'usuarios':
+        return Icons.people;
+      case 'config':
+      case 'configuracion':
+        return Icons.settings;
+      case 'reports':
+      case 'reportes':
+        return Icons.assessment;
+      default:
+        return Icons.arrow_forward_ios;
+    }
   }
 
   /// Obtiene el ícono apropiado según la vista

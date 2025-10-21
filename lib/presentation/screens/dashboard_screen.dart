@@ -146,6 +146,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
+
           ],
         ),
       ),

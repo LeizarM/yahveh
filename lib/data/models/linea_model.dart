@@ -1,33 +1,47 @@
-// To parse this JSON data, do
-//
-//     final lineaEntity = lineaEntityFromJson(jsonString);
+import '../../domain/entities/linea_entity.dart';
 
-import 'dart:convert';
+/// Model de Línea que extiende la entidad
+class LineaModel extends LineaEntity {
+  const LineaModel({
+    super.codLinea,
+    required super.linea,
+    required super.audUsuario,
+    super.audFecha,
+    super.totalArticulos,
+    super.articulosActivos,
+  });
 
-LineaEntity lineaEntityFromJson(String str) => LineaEntity.fromJson(json.decode(str));
-
-String lineaEntityToJson(LineaEntity data) => json.encode(data.toJson());
-
-class LineaEntity {
-    int codLinea;
-    String linea;
-    int audUsuario;
-
-    LineaEntity({
-        required this.codLinea,
-        required this.linea,
-        required this.audUsuario,
-    });
-
-    factory LineaEntity.fromJson(Map<String, dynamic> json) => LineaEntity(
-        codLinea: json["codLinea"],
-        linea: json["linea"],
-        audUsuario: json["audUsuario"],
+  /// Crear LineaModel desde JSON
+  factory LineaModel.fromJson(Map<String, dynamic> json) {
+    return LineaModel(
+      codLinea: json['codLinea'] as int?,
+      linea: json['linea'] as String,
+      audUsuario: json['audUsuario'] as int? ?? 0,
+      audFecha: json['audFecha'] != null 
+          ? DateTime.parse(json['audFecha'] as String)
+          : null,
+      totalArticulos: json['totalArticulos'] as int?,
+      articulosActivos: json['articulos_activos'] as int?,
     );
+  }
 
-    Map<String, dynamic> toJson() => {
-        "codLinea": codLinea,
-        "linea": linea,
-        "audUsuario": audUsuario,
+  /// Convertir LineaModel a JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'codLinea': codLinea,
+      'linea': linea,
+      'audUsuario': audUsuario,
+      'audFecha': audFecha?.toIso8601String(),
+      'totalArticulos': totalArticulos,
+      'articulos_activos': articulosActivos,
     };
+  }
+
+  /// Convertir a JSON para crear (sin codLinea y audFecha)
+  Map<String, dynamic> toCreateJson() {
+    return {
+      'linea': linea,
+      'audUsuario': audUsuario,
+    };
+  }
 }
