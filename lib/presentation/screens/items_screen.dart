@@ -152,10 +152,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               : GridView.builder(
                   padding: context.screenPadding,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.5,
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
@@ -178,10 +178,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               : GridView.builder(
                   padding: context.screenPadding,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.3,
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.5,
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
@@ -246,86 +246,101 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _showItemDetails(context, articulo),
-        child: SizedBox(
-          height: 220,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Imagen/Ícono
-              Container(
-                height: 100,
-                color: context.colorScheme.primaryContainer,
-                child: Center(
-                  child: Icon(
+              // Header con código e ícono
+              Row(
+                children: [
+                  Icon(
                     Icons.inventory_2,
-                    size: 48,
+                    size: 20,
                     color: context.colorScheme.primary,
                   ),
-                ),
-              ),
-
-              // Información
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        articulo.descripcion,
-                        style: context.theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      articulo.codArticulo ?? "N/A",
+                      style: context.theme.textTheme.labelMedium?.copyWith(
+                        color: context.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        articulo.linea ?? 'Sin línea',
-                        style: context.theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                          fontSize: 11,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
-                                  style: context.theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.green.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Stock: ${articulo.stockActual ?? 0}',
-                                  style: context.theme.textTheme.bodySmall?.copyWith(
-                                    color: (articulo.stockActual ?? 0) > 0 ? Colors.green : Colors.red,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            articulo.codArticulo ?? "N/A",
-                            style: context.theme.textTheme.bodySmall?.copyWith(
-                              color: context.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                ],
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // Descripción
+              Text(
+                articulo.descripcion,
+                style: context.theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              
+              const SizedBox(height: 4),
+              
+              // Línea
+              Text(
+                articulo.linea ?? 'Sin línea',
+                style: context.theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // Precio y Stock
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Precio
+                  Text(
+                    '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
+                    style: context.theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  // Stock
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (articulo.stockActual ?? 0) > 0 
+                          ? Colors.green.shade50 
+                          : Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: (articulo.stockActual ?? 0) > 0 
+                            ? Colors.green.shade200 
+                            : Colors.red.shade200,
+                      ),
+                    ),
+                    child: Text(
+                      'Stock: ${articulo.stockActual ?? 0}',
+                      style: context.theme.textTheme.bodySmall?.copyWith(
+                        color: (articulo.stockActual ?? 0) > 0 
+                            ? Colors.green.shade700 
+                            : Colors.red.shade700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1069,6 +1084,7 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
     }
 
     return FormField<int?>(
+      key: ValueKey(widget.selectedLineaId),
       initialValue: widget.selectedLineaId,
       validator: widget.validator,
       builder: (FormFieldState<int?> field) {

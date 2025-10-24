@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/utils/extensions.dart';
+import '../../core/utils/responsive_layout.dart';
+import '../widgets/app_drawer.dart';
+
+/// Pantalla de Clientes (placeholder temporal para testing)
+class ClientesScreen extends ConsumerWidget {
+  const ClientesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Clientes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              // TODO: Implementar agregar cliente
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Agregar cliente - Por implementar')),
+              );
+            },
+            tooltip: 'Agregar cliente',
+          ),
+        ],
+      ),
+      drawer: context.isMobile ? const AppDrawer() : null,
+      body: Row(
+        children: [
+          // Drawer permanente en desktop/tablet
+          if (!context.isMobile)
+            Container(
+              width: 280,
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(
+                    color: context.colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              child: const AppDrawer(),
+            ),
+
+          // Contenido principal
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people,
+                      size: 80,
+                      color: context.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Módulo de Clientes',
+                      style: context.theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Pantalla de prueba',
+                      style: context.theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              size: 64,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '✅ Router funcionando correctamente',
+                              style: context.theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'La navegación desde el menú dinámico del backend está operativa.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('CRUD de clientes - Próximamente'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.construction),
+                              label: const Text('CRUD en desarrollo'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

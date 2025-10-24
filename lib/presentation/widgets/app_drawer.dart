@@ -6,7 +6,6 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/vista_entity.dart';
 import '../providers/auth_provider.dart';
 import '../providers/menu_provider.dart';
-import '../providers/routes_provider.dart';
 
 /// NavigationDrawer personalizado con menú dinámico desde el backend
 class AppDrawer extends ConsumerWidget {
@@ -16,7 +15,6 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final menuState = ref.watch(menuProvider);
     final authState = ref.watch(authProvider);
-    final localRoutes = ref.watch(appRoutesProvider);
 
     return NavigationDrawer(
       children: [
@@ -25,68 +23,33 @@ class AppDrawer extends ConsumerWidget {
 
         const SizedBox(height: 8),
 
-        // Sección: Menú Local (rutas definidas en la app)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            'MENÚ LOCAL',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.colorScheme.primary,
-            ),
-          ),
-        ),
-        
-        // Rutas locales definidas en la app
-        ...localRoutes.map((route) => _buildLocalMenuItem(context, route)),
-
-        const Divider(),
-
-        // Sección: Menú desde Backend
+        // Menú dinámico desde Backend
         menuState.when(
           data: (menu) {
-            // Normalizar las rutas locales (sin /, lowercase, singular/plural)
-            final localPaths = localRoutes.map((r) {
-              var path = r.path.toLowerCase();
-              if (path.startsWith('/')) path = path.substring(1);
-              return path;
-            }).toSet();
+            debugPrint('📋 Menú del backend cargado: ${menu.length} items');
+            for (var vista in menu) {
+              debugPrint('  - ${vista.titulo} -> ${vista.direccion}');
+            }
 
-            // Filtrar las rutas que ya están en el menú local
-            final filteredMenu = menu.where((vista) {
-              var vistaPath = vista.direccion.toLowerCase();
-              if (vistaPath.startsWith('/')) vistaPath = vistaPath.substring(1);
-              
-              // Verificar coincidencia exacta o variaciones (singular/plural)
-              if (localPaths.contains(vistaPath)) return false;
-              
-              // Verificar variaciones singular/plural
-              // "linea" vs "lineas", "item" vs "items"
-              for (var localPath in localPaths) {
-                // Si uno es plural del otro (agrega/quita 's')
-                if (localPath.endsWith('s') && vistaPath == localPath.substring(0, localPath.length - 1)) {
-                  return false;
-                }
-                if (vistaPath.endsWith('s') && localPath == vistaPath.substring(0, vistaPath.length - 1)) {
-                  return false;
-                }
-              }
-              
-              return true;
-            }).toList();
-
-            // Si no hay rutas únicas del backend, no mostrar la sección
-            if (filteredMenu.isEmpty) {
-              return const SizedBox.shrink();
+            if (menu.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text(
+                    'No hay opciones de menú disponibles',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              );
             }
 
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Text(
-                    'MENÚ BACKEND',
+                    'MENÚ',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -94,40 +57,59 @@ class AppDrawer extends ConsumerWidget {
                     ),
                   ),
                 ),
-                ...filteredMenu.map((vista) => _buildMenuItem(context, vista)),
+                ...menu.map((vista) => _buildMenuItem(context, vista)),
               ],
             );
           },
           loading: () => const Padding(
             padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (error, _) => Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: context.colorScheme.error,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Error al cargar el menú',
-                  style: TextStyle(color: context.colorScheme.error),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.read(menuProvider.notifier).refreshMenu();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Reintentar'),
-                ),
-              ],
+            child: Center(
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text(
+                    'Cargando menú...',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ),
+          error: (error, stack) {
+            debugPrint('❌ Error al cargar menú: $error');
+            debugPrint('Stack: $stack');
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.cloud_off,
+                    size: 40,
+                    color: context.colorScheme.error.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No se pudo cargar el menú',
+                    style: TextStyle(
+                      color: context.colorScheme.error,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      debugPrint('🔄 Recargando menú...');
+                      ref.read(menuProvider.notifier).refreshMenu();
+                    },
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Reintentar', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
 
         const Divider(),
@@ -193,30 +175,8 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
-  /// Construye un item del menú local (rutas definidas en la app)
-  Widget _buildLocalMenuItem(BuildContext context, AppRoute route) {
-    final icon = _getIconForRoute(route.icon);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(route.title),
-        onTap: () {
-          // Cerrar el drawer
-          Navigator.of(context).pop();
-          
-          // Navegar a la ruta
-          debugPrint('🔘 Navegando desde drawer a: ${route.path}');
-          context.go(route.path);
-        },
-      ),
-    );
-  }
-
   /// Construye un item individual del menú
   Widget _buildMenuItem(BuildContext context, VistaEntity vista) {
-    // Mapeo de iconos según el título o dirección
     final icon = _getIconForVista(vista);
 
     return Padding(
@@ -225,42 +185,21 @@ class AppDrawer extends ConsumerWidget {
         leading: Icon(icon),
         title: Text(vista.titulo),
         onTap: () {
+          debugPrint('🚀 Navegando desde menú backend: ${vista.direccion}');
+          
           // Cerrar el drawer
           Navigator.of(context).pop();
           
           // Navegar a la ruta especificada
-          if (vista.direccion.startsWith('/')) {
-            context.go(vista.direccion);
-          } else {
-            context.go('/${vista.direccion}');
-          }
+          final path = vista.direccion.startsWith('/') 
+              ? vista.direccion 
+              : '/${vista.direccion}';
+          
+          debugPrint('   Ruta final: $path');
+          context.go(path);
         },
       ),
     );
-  }
-
-  /// Obtiene el ícono apropiado según el nombre de la ruta local
-  IconData _getIconForRoute(String iconName) {
-    switch (iconName.toLowerCase()) {
-      case 'dashboard':
-        return Icons.dashboard;
-      case 'items':
-      case 'articulos':
-        return Icons.inventory_2;
-      case 'lineas':
-        return Icons.category;
-      case 'users':
-      case 'usuarios':
-        return Icons.people;
-      case 'config':
-      case 'configuracion':
-        return Icons.settings;
-      case 'reports':
-      case 'reportes':
-        return Icons.assessment;
-      default:
-        return Icons.arrow_forward_ios;
-    }
   }
 
   /// Obtiene el ícono apropiado según la vista
@@ -277,16 +216,24 @@ class AppDrawer extends ConsumerWidget {
       return Icons.inventory_2;
     } else if (direccion.contains('linea') || titulo.contains('linea')) {
       return Icons.category;
-    } else if (direccion.contains('user') || titulo.contains('usuario')) {
+    } else if (direccion.contains('cliente') || titulo.contains('cliente')) {
       return Icons.people;
+    } else if (direccion.contains('user') || titulo.contains('usuario')) {
+      return Icons.person;
     } else if (direccion.contains('config') || titulo.contains('config')) {
       return Icons.settings;
     } else if (direccion.contains('report') || titulo.contains('reporte')) {
       return Icons.assessment;
+    } else if (direccion.contains('venta') || titulo.contains('venta')) {
+      return Icons.shopping_cart;
+    } else if (direccion.contains('compra') || titulo.contains('compra')) {
+      return Icons.shopping_bag;
+    } else if (direccion.contains('producto') || titulo.contains('producto')) {
+      return Icons.inventory;
     }
 
     // Ícono por defecto
-    return Icons.arrow_forward_ios;
+    return Icons.chevron_right;
   }
 
   /// Muestra el diálogo de confirmación de cierre de sesión

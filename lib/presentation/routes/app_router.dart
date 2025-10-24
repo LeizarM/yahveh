@@ -15,21 +15,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.hasValue && authState.value != null;
       final isLoggingIn = state.matchedLocation == '/login';
 
-      // Debug: imprimir información de navegación
-      debugPrint('🔄 GoRouter Redirect - Location: ${state.matchedLocation}');
-      debugPrint('🔑 isAuthenticated: $isAuthenticated');
-      
       if (!isAuthenticated && !isLoggingIn) {
-        debugPrint('➡️ Redirigiendo a /login (no autenticado)');
+        
         return '/login';
       }
       
       if (isAuthenticated && isLoggingIn) {
-        debugPrint('➡️ Redirigiendo a /dashboard (ya autenticado)');
+        
         return '/dashboard';
       }
       
-      debugPrint('✅ Permitiendo navegación a ${state.matchedLocation}');
+      
       return null;
     },
     routes: [
@@ -66,11 +62,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/lineas',
-        name: 'lineas',
+        path: '/linea',
+        name: 'linea',
         builder: (context, state) {
           debugPrint('🏗️ Construyendo LineasScreen');
           return const LineasScreen();
+        },
+      ),
+      GoRoute(
+        path: '/clientes',
+        name: 'clientes',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo ClientesScreen');
+          return const ClientesScreen();
         },
       ),
     ],

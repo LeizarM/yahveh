@@ -54,10 +54,7 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
 
       if (response.data['success'] == true) {
         final data = response.data['data'];
-        
-        // Debug: ver qué tipo de dato es
-        print('Create articulo response data type: ${data.runtimeType}');
-        print('Create articulo response data: $data');
+      
         
         // Si el backend devuelve solo el codArticulo (String), obtenemos el objeto completo
         if (data is String) {
@@ -135,6 +132,7 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
       final response = await _client.put(
         '/articulos/$codArticulo',
         data: {
+          'codArticulo': codArticulo,
           'codLinea': codLinea,
           'descripcion': descripcion,
           'descripcion2': descripcion2,
