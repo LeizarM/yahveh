@@ -7,14 +7,26 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/vista_remote_datasource.dart';
 import '../../data/datasources/linea_remote_datasource.dart';
 import '../../data/datasources/articulo_remote_datasource.dart';
+import '../../data/datasources/pais_remote_datasource.dart';
+import '../../data/datasources/ciudad_remote_datasource.dart';
+import '../../data/datasources/zona_remote_datasource.dart';
+import '../../data/datasources/cliente_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
 import '../../data/repositories/articulo_repository_impl.dart';
+import '../../data/repositories/pais_repository_impl.dart';
+import '../../data/repositories/ciudad_repository_impl.dart';
+import '../../data/repositories/zona_repository_impl.dart';
+import '../../data/repositories/cliente_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
 import '../../domain/repositories/articulo_repository.dart';
+import '../../domain/repositories/pais_repository.dart';
+import '../../domain/repositories/ciudad_repository.dart';
+import '../../domain/repositories/zona_repository.dart';
+import '../../domain/repositories/cliente_repository.dart';
 import 'auth_provider.dart';
 
 /// Provider para FlutterSecureStorage
@@ -109,4 +121,80 @@ final articuloRepositoryProvider = Provider<ArticuloRepository>((ref) {
   final remoteDataSource = ref.watch(articuloRemoteDataSourceProvider);
   
   return ArticuloRepositoryImpl(remoteDataSource);
+});
+
+// ============================================================================
+// PAÍS
+// ============================================================================
+
+/// Provider para PaisRemoteDataSource
+final paisRemoteDataSourceProvider = Provider<PaisRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return PaisRemoteDataSourceImpl(client);
+});
+
+/// Provider para PaisRepository
+final paisRepositoryProvider = Provider<PaisRepository>((ref) {
+  final remoteDataSource = ref.watch(paisRemoteDataSourceProvider);
+  
+  return PaisRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+  );
+});
+
+// ============================================================================
+// CIUDAD
+// ============================================================================
+
+/// Provider para CiudadRemoteDataSource
+final ciudadRemoteDataSourceProvider = Provider<CiudadRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return CiudadRemoteDataSourceImpl(client);
+});
+
+/// Provider para CiudadRepository
+final ciudadRepositoryProvider = Provider<CiudadRepository>((ref) {
+  final remoteDataSource = ref.watch(ciudadRemoteDataSourceProvider);
+  
+  return CiudadRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+  );
+});
+
+// ============================================================================
+// ZONA
+// ============================================================================
+
+/// Provider para ZonaRemoteDataSource
+final zonaRemoteDataSourceProvider = Provider<ZonaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return ZonaRemoteDataSourceImpl(client);
+});
+
+/// Provider para ZonaRepository
+final zonaRepositoryProvider = Provider<ZonaRepository>((ref) {
+  final remoteDataSource = ref.watch(zonaRemoteDataSourceProvider);
+  
+  return ZonaRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+  );
+});
+
+// ============================================================================
+// CLIENTE
+// ============================================================================
+
+/// Provider para ClienteRemoteDataSource
+final clienteRemoteDataSourceProvider = Provider<ClienteRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return ClienteRemoteDataSourceImpl(client);
+});
+
+/// Provider para ClienteRepository
+final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
+  final remoteDataSource = ref.watch(clienteRemoteDataSourceProvider);
+  
+  return ClienteRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+  );
 });

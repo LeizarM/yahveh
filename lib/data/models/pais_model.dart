@@ -1,33 +1,37 @@
-// To parse this JSON data, do
-//
-//     final paisModel = paisModelFromJson(jsonString);
-
 import 'dart:convert';
+import '../../domain/entities/pais_entity.dart';
 
 PaisModel paisModelFromJson(String str) => PaisModel.fromJson(json.decode(str));
 
 String paisModelToJson(PaisModel data) => json.encode(data.toJson());
 
-class PaisModel {
-    int codPais;
-    String pais;
-    int audUsuario;
+class PaisModel extends PaisEntity {
+  PaisModel({
+    required super.codPais,
+    required super.pais,
+    required super.audUsuario,
+  });
 
-    PaisModel({
-        required this.codPais,
-        required this.pais,
-        required this.audUsuario,
-    });
-
-    factory PaisModel.fromJson(Map<String, dynamic> json) => PaisModel(
+  factory PaisModel.fromJson(Map<String, dynamic> json) => PaisModel(
         codPais: json["codPais"],
         pais: json["pais"],
         audUsuario: json["audUsuario"],
-    );
+      );
 
-    Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => {
         "codPais": codPais,
         "pais": pais,
         "audUsuario": audUsuario,
-    };
+      };
+
+  Map<String, dynamic> toCreateJson() => {
+        "pais": pais,
+        "audUsuario": audUsuario,
+      };
+
+  Map<String, dynamic> toUpdateJson() => {
+        "codPais": codPais,
+        "pais": pais,
+        "audUsuario": audUsuario,
+      };
 }
