@@ -220,7 +220,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
               paisesAsync.when(
                 data: (paises) {
                   return DropdownButtonFormField<int>(
-                    value: _selectedPaisId,
+                    initialValue: _selectedPaisId,
                     decoration: const InputDecoration(
                       labelText: 'País *',
                       border: OutlineInputBorder(),
