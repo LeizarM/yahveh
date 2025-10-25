@@ -44,9 +44,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
       if (response.data['success'] == true) {
         final data = response.data['data'];
         
-        // Debug: ver qué tipo de dato es
-        print('Create response data type: ${data.runtimeType}');
-        print('Create response data: $data');
+       
         
         // Si el backend devuelve solo el codLinea (int), obtenemos el objeto completo
         if (data is int) {
@@ -126,10 +124,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
       if (response.data['success'] == true) {
         final data = response.data['data'];
         
-        // Debug: ver qué tipo de dato es
-        print('Update response data type: ${data.runtimeType}');
-        print('Update response data: $data');
-        
+       
         // Si el backend devuelve solo el codLinea (int), obtenemos el objeto completo
         if (data is int) {
           return await getLineaById(data);

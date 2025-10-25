@@ -218,6 +218,12 @@ class AppDrawer extends ConsumerWidget {
       return Icons.category;
     } else if (direccion.contains('cliente') || titulo.contains('cliente')) {
       return Icons.people;
+    } else if (direccion.contains('zona') || titulo.contains('zona')) {
+      return Icons.map;
+    } else if (direccion.contains('ciudad') || titulo.contains('ciudad')) {
+      return Icons.location_city;
+    } else if (direccion.contains('pais') || titulo.contains('pais') || titulo.contains('país')) {
+      return Icons.public;
     } else if (direccion.contains('user') || titulo.contains('usuario')) {
       return Icons.person;
     } else if (direccion.contains('config') || titulo.contains('config')) {

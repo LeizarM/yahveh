@@ -77,6 +77,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return const ClientesScreen();
         },
       ),
+      GoRoute(
+        path: '/zona',
+        name: 'zona',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo ZonasScreen');
+          return const ZonasScreen();
+        },
+      ),
+      GoRoute(
+        path: '/ciudad',
+        name: 'ciudad',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo CiudadesScreen');
+          return const CiudadesScreen();
+        },
+      ),
+      GoRoute(
+        path: '/pais',
+        name: 'pais',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo PaisesScreen');
+          return const PaisesScreen();
+        },
+      ),
     ],
     errorBuilder: (context, state) {
       debugPrint('❌ Error de ruta: ${state.error}');

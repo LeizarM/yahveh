@@ -143,10 +143,7 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
       if (response.data['success'] == true) {
         final data = response.data['data'];
         
-        // Debug: ver qué tipo de dato es
-        print('Update articulo response data type: ${data.runtimeType}');
-        print('Update articulo response data: $data');
-        
+       
         // Si el backend devuelve solo el codArticulo (String), obtenemos el objeto completo
         if (data is String) {
           return await getArticuloById(data);
