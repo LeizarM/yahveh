@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../core/utils/error_messages.dart';
 import '../../domain/entities/zona_entity.dart';
 import '../../data/models/zona_model.dart';
 import '../providers/zona_provider.dart';
@@ -103,7 +104,35 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
+              error: (error, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No se pudieron cargar las zonas',
+                        style: context.theme.textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        ErrorMessages.getFriendlyMessage(error),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => ref.refresh(zonaProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -167,7 +196,9 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                  );
                 }
               }
             },
@@ -246,7 +277,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                   }
 
                   return DropdownButtonFormField<int>(
-                    value: _selectedCiudadId,
+                    initialValue: _selectedCiudadId,
                     decoration: const InputDecoration(
                       labelText: 'Ciudad *',
                       border: OutlineInputBorder(),
@@ -334,7 +365,10 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final operation = widget.zona == null ? 'create' : 'update';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

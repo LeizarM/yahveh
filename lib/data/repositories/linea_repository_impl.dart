@@ -12,10 +12,12 @@ class LineaRepositoryImpl implements LineaRepository {
 
   @override
   Future<LineaEntity> createLinea({
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
     return await _remoteDataSource.createLinea(
+      codFamilia: codFamilia,
       linea: linea,
       audUsuario: audUsuario,
     );
@@ -34,11 +36,13 @@ class LineaRepositoryImpl implements LineaRepository {
   @override
   Future<LineaEntity> updateLinea({
     required int codLinea,
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
     return await _remoteDataSource.updateLinea(
       codLinea: codLinea,
+      codFamilia: codFamilia,
       linea: linea,
       audUsuario: audUsuario,
     );

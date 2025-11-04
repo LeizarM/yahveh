@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../core/utils/error_messages.dart';
 import '../../domain/entities/ciudad_entity.dart';
 import '../../data/models/ciudad_model.dart';
 import '../providers/ciudad_provider.dart';
@@ -99,7 +100,35 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
+              error: (error, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No se pudieron cargar las ciudades',
+                        style: context.theme.textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        ErrorMessages.getFriendlyMessage(error),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => ref.refresh(ciudadProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -163,7 +192,9 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                  );
                 }
               }
             },
@@ -284,7 +315,10 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final operation = widget.ciudad == null ? 'create' : 'update';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

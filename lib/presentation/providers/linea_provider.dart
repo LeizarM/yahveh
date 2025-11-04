@@ -25,12 +25,14 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
 
   /// Crear una nueva línea
   Future<void> createLinea({
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(lineaRepositoryProvider);
       await repository.createLinea(
+        codFamilia: codFamilia,
         linea: linea,
         audUsuario: audUsuario,
       );
@@ -46,6 +48,7 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
   /// Actualizar una línea existente
   Future<void> updateLinea({
     required int codLinea,
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
@@ -53,6 +56,7 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
       final repository = ref.read(lineaRepositoryProvider);
       await repository.updateLinea(
         codLinea: codLinea,
+        codFamilia: codFamilia,
         linea: linea,
         audUsuario: audUsuario,
       );

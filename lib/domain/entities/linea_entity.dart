@@ -1,6 +1,7 @@
 /// Entidad de Línea
 class LineaEntity {
   final int? codLinea;
+  final int codFamilia;
   final String linea;
   final int audUsuario;
   final DateTime? audFecha;
@@ -9,6 +10,7 @@ class LineaEntity {
 
   const LineaEntity({
     this.codLinea,
+    required this.codFamilia,
     required this.linea,
     required this.audUsuario,
     this.audFecha,

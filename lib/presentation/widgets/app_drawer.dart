@@ -187,8 +187,12 @@ class AppDrawer extends ConsumerWidget {
         onTap: () {
           debugPrint('🚀 Navegando desde menú backend: ${vista.direccion}');
           
-          // Cerrar el drawer
-          Navigator.of(context).pop();
+          // Cerrar el drawer solo en móvil (cuando es un diálogo modal)
+          // En desktop/tablet el drawer es permanente, no se debe cerrar
+          final isMobile = context.screenWidth < 600;
+          if (isMobile && Scaffold.of(context).hasDrawer) {
+            Navigator.of(context).pop();
+          }
           
           // Navegar a la ruta especificada
           final path = vista.direccion.startsWith('/') 
@@ -214,8 +218,10 @@ class AppDrawer extends ConsumerWidget {
                direccion.contains('articulos') || 
                titulo.contains('articulos')) {
       return Icons.inventory_2;
-    } else if (direccion.contains('linea') || titulo.contains('linea')) {
+    } else if (direccion.contains('linea') || titulo.contains('linea') || titulo.contains('línea')) {
       return Icons.category;
+    } else if (direccion.contains('familia') || titulo.contains('familia')) {
+      return Icons.folder_special;
     } else if (direccion.contains('cliente') || titulo.contains('cliente')) {
       return Icons.people;
     } else if (direccion.contains('zona') || titulo.contains('zona')) {

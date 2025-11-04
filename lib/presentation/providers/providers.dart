@@ -11,6 +11,7 @@ import '../../data/datasources/pais_remote_datasource.dart';
 import '../../data/datasources/ciudad_remote_datasource.dart';
 import '../../data/datasources/zona_remote_datasource.dart';
 import '../../data/datasources/cliente_remote_datasource.dart';
+import '../../data/datasources/familia_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -19,6 +20,7 @@ import '../../data/repositories/pais_repository_impl.dart';
 import '../../data/repositories/ciudad_repository_impl.dart';
 import '../../data/repositories/zona_repository_impl.dart';
 import '../../data/repositories/cliente_repository_impl.dart';
+import '../../data/repositories/familia_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -27,6 +29,7 @@ import '../../domain/repositories/pais_repository.dart';
 import '../../domain/repositories/ciudad_repository.dart';
 import '../../domain/repositories/zona_repository.dart';
 import '../../domain/repositories/cliente_repository.dart';
+import '../../domain/repositories/familia_repository.dart';
 import 'auth_provider.dart';
 
 /// Provider para FlutterSecureStorage
@@ -47,11 +50,12 @@ final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(
     storage: storage,
     logger: logger,
-    // Cuando el token expira, refrescar el estado de autenticación
+    // Cuando el token expira, hacer logout completo
     onUnauthorized: () {
       // Usar Future.microtask para evitar modificar el estado durante build
-      Future.microtask(() {
-        ref.read(authProvider.notifier).refresh();
+      Future.microtask(() async {
+        // Hacer logout para limpiar estado y redirigir automáticamente
+        await ref.read(authProvider.notifier).logout();
       });
     },
   );
@@ -197,4 +201,21 @@ final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
   return ClienteRepositoryImpl(
     remoteDataSource: remoteDataSource,
   );
+});
+
+// ============================================================================
+// FAMILIA
+// ============================================================================
+
+/// Provider para FamiliaRemoteDataSource
+final familiaRemoteDataSourceProvider = Provider<FamiliaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return FamiliaRemoteDataSourceImpl(client);
+});
+
+/// Provider para FamiliaRepository
+final familiaRepositoryProvider = Provider<FamiliaRepository>((ref) {
+  final remoteDataSource = ref.watch(familiaRemoteDataSourceProvider);
+  
+  return FamiliaRepositoryImpl(remoteDataSource);
 });

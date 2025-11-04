@@ -4,6 +4,7 @@ import '../entities/linea_entity.dart';
 abstract class LineaRepository {
   /// Crear una nueva línea
   Future<LineaEntity> createLinea({
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   });
@@ -17,6 +18,7 @@ abstract class LineaRepository {
   /// Actualizar una línea
   Future<LineaEntity> updateLinea({
     required int codLinea,
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   });

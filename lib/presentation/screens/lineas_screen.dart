@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/validators.dart';
+import '../../core/utils/error_messages.dart';
 import '../../domain/entities/linea_entity.dart';
 import '../providers/auth_provider.dart';
 import '../providers/linea_provider.dart';
+import '../providers/familia_provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -24,6 +26,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
   final _searchController = TextEditingController();
   bool _isEditing = false;
   int? _editingCodLinea;
+  int? _selectedFamiliaId;
   String _searchQuery = '';
 
   @override
@@ -51,6 +54,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
         // Actualizar línea existente
         await ref.read(lineaProvider.notifier).updateLinea(
               codLinea: _editingCodLinea!,
+              codFamilia: _selectedFamiliaId!,
               linea: _lineaController.text.trim(),
               audUsuario: user.codUsuario,
             );
@@ -61,6 +65,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
       } else {
         // Crear nueva línea
         await ref.read(lineaProvider.notifier).createLinea(
+              codFamilia: _selectedFamiliaId!,
               linea: _lineaController.text.trim(),
               audUsuario: user.codUsuario,
             );
@@ -73,8 +78,9 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
       _resetForm();
     } catch (e) {
       if (mounted) {
+        final operation = _isEditing ? 'update' : 'create';
         context.showSnackBar(
-          'Error: ${e.toString()}',
+          ErrorMessages.getCrudErrorMessage(operation, e),
           isError: true,
         );
       }
@@ -85,6 +91,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
     setState(() {
       _isEditing = true;
       _editingCodLinea = linea.codLinea;
+      _selectedFamiliaId = linea.codFamilia;
       _lineaController.text = linea.linea;
     });
   }
@@ -121,7 +128,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
       } catch (e) {
         if (mounted) {
           context.showSnackBar(
-            'Error al eliminar: ${e.toString()}',
+            ErrorMessages.getCrudErrorMessage('delete', e),
             isError: true,
           );
         }
@@ -133,6 +140,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
     setState(() {
       _isEditing = false;
       _editingCodLinea = null;
+      _selectedFamiliaId = null;
       _lineaController.clear();
     });
     _formKey.currentState?.reset();
@@ -200,6 +208,9 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    // Dropdown de Familia
+                    _buildFamiliaDropdown(),
                     const SizedBox(height: 16),
                     CustomTextField(
                       controller: _lineaController,
@@ -414,48 +425,27 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                 child: CircularProgressIndicator(),
               ),
               error: (error, stack) => Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red[400],
-                      ),
+                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
                       const SizedBox(height: 16),
                       Text(
-                        'Error al cargar líneas',
+                        'No se pudieron cargar las líneas',
+                        style: context.theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.red[600],
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Text(
-                          error.toString().length > 200
-                              ? '${error.toString().substring(0, 200)}...'
-                              : error.toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.red[800],
-                            fontSize: 12,
-                          ),
-                        ),
+                      Text(
+                        ErrorMessages.getFriendlyMessage(error),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => ref.read(lineaProvider.notifier).loadLineas(),
+                      FilledButton.icon(
+                        onPressed: () => ref.refresh(lineaProvider),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Reintentar'),
                       ),
@@ -466,6 +456,76 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             ),
           ), // Cierre del SizedBox
         ],
+      ),
+    );
+  }
+
+  /// Widget del dropdown de Familia
+  Widget _buildFamiliaDropdown() {
+    final familiasAsync = ref.watch(familiaProvider);
+
+    return familiasAsync.when(
+      data: (familias) {
+        if (familias.isEmpty) {
+          return Card(
+            color: Colors.orange[50],
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.orange[700]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No hay familias registradas.\nPrimero debes crear una familia.',
+                      style: TextStyle(color: Colors.orange[900]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return DropdownButtonFormField<int>(
+          value: _selectedFamiliaId,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Familia *',
+            border: OutlineInputBorder(),
+            helperText: 'Selecciona una familia',
+          ),
+          items: familias.map((familia) {
+            return DropdownMenuItem(
+              value: familia.codFamilia,
+              child: Text(
+                familia.familia,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }).toList(),
+          onChanged: (value) => setState(() => _selectedFamiliaId = value),
+          validator: (value) => value == null ? 'Selecciona una familia' : null,
+        );
+      },
+      loading: () => const CircularProgressIndicator(),
+      error: (error, stack) => Card(
+        color: Colors.red[50],
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Icon(Icons.error, color: Colors.red[700]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Error al cargar familias',
+                  style: TextStyle(color: Colors.red[900]),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -3,41 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
-import '../../domain/entities/pais_entity.dart';
-import '../providers/pais_provider.dart';
+import '../../domain/entities/familia_entity.dart';
+import '../providers/familia_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
 
-/// Pantalla de Países con CRUD completo
-class PaisesScreen extends ConsumerStatefulWidget {
-  const PaisesScreen({super.key});
+/// Pantalla de Familias con CRUD completo
+class FamiliasScreen extends ConsumerStatefulWidget {
+  const FamiliasScreen({super.key});
 
   @override
-  ConsumerState<PaisesScreen> createState() => _PaisesScreenState();
+  ConsumerState<FamiliasScreen> createState() => _FamiliasScreenState();
 }
 
-class _PaisesScreenState extends ConsumerState<PaisesScreen> {
+class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
   @override
   Widget build(BuildContext context) {
-    final paisesAsync = ref.watch(paisProvider);
+    final familiasAsync = ref.watch(familiaProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Países'),
+        title: const Text('Familias'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              _showAddPaisDialog(context);
-            },
-            tooltip: 'Agregar país',
+            onPressed: () => _showAddFamiliaDialog(context),
+            tooltip: 'Agregar familia',
           ),
         ],
       ),
       drawer: context.isMobile ? const AppDrawer() : null,
       body: Row(
         children: [
-          // Drawer permanente en desktop/tablet
           if (!context.isMobile)
             Container(
               width: 280,
@@ -50,15 +47,13 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
               ),
               child: const AppDrawer(),
             ),
-
-          // Contenido principal
           Expanded(
-            child: paisesAsync.when(
-              data: (paises) {
-                if (paises.isEmpty) {
+            child: familiasAsync.when(
+              data: (familias) {
+                if (familias.isEmpty) {
                   return _buildEmptyState();
                 }
-                return _buildPaisesList(paises);
+                return _buildFamiliasList(familias);
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
@@ -70,7 +65,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                       Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
                       const SizedBox(height: 16),
                       Text(
-                        'No se pudieron cargar los países',
+                        'No se pudieron cargar las familias',
                         style: context.theme.textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
@@ -82,7 +77,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                       ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
-                        onPressed: () => ref.refresh(paisProvider),
+                        onPressed: () => ref.refresh(familiaProvider),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Reintentar'),
                       ),
@@ -103,50 +98,54 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.public_off,
+            Icons.category_outlined,
             size: 80,
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
-            'No hay países registrados',
+            'No hay familias registradas',
             style: context.theme.textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          const Text('Agrega el primer país usando el botón +'),
+          const Text('Agrega la primera familia usando el botón +'),
         ],
       ),
     );
   }
 
-  Widget _buildPaisesList(List<PaisEntity> paises) {
+  Widget _buildFamiliasList(List<FamiliaEntity> familias) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: paises.length,
+      itemCount: familias.length,
       itemBuilder: (context, index) {
-        final pais = paises[index];
+        final familia = familias[index];
         return Card(
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: context.colorScheme.primaryContainer,
               child: Icon(
-                Icons.public,
-                color: context.colorScheme.primary,
+                Icons.category,
+                color: context.colorScheme.onPrimaryContainer,
               ),
             ),
-            title: Text(pais.pais),
-            subtitle: Text('ID: ${pais.codPais}'),
+            title: Text(
+              familia.familia,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text('Código: ${familia.codFamilia}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _showEditPaisDialog(context, pais),
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _showEditFamiliaDialog(context, familia),
                   tooltip: 'Editar',
+                  color: context.colorScheme.primary,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _showDeleteConfirmation(context, pais),
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _showDeleteConfirmation(context, familia),
                   tooltip: 'Eliminar',
                   color: Colors.red,
                 ),
@@ -158,61 +157,59 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
     );
   }
 
-  void _showAddPaisDialog(BuildContext context) {
+  void _showAddFamiliaDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _PaisFormDialog(
-        onSubmit: (pais) async {
-          final userAsync = ref.read(authProvider);
-          final user = userAsync.value;
-          await ref.read(paisProvider.notifier).createPais(
-                pais: pais,
-                audUsuario: user?.codUsuario ?? 0,
+      builder: (context) => _FamiliaFormDialog(
+        onSubmit: (familia) async {
+          final user = ref.read(authProvider).value;
+          await ref.read(familiaProvider.notifier).createFamilia(
+                familia: familia,
+                audUsuario: user!.codUsuario,
               );
         },
       ),
     );
   }
 
-  void _showEditPaisDialog(BuildContext context, PaisEntity pais) {
+  void _showEditFamiliaDialog(BuildContext context, FamiliaEntity familia) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _PaisFormDialog(
-        pais: pais,
-        onSubmit: (paisNombre) async {
-          final userAsync = ref.read(authProvider);
-          final user = userAsync.value;
-          await ref.read(paisProvider.notifier).updatePais(
-                codPais: pais.codPais,
-                pais: paisNombre,
-                audUsuario: user?.codUsuario ?? 0,
+      builder: (context) => _FamiliaFormDialog(
+        familia: familia,
+        onSubmit: (familiaNombre) async {
+          final user = ref.read(authProvider).value;
+          await ref.read(familiaProvider.notifier).updateFamilia(
+                codFamilia: familia.codFamilia,
+                familia: familiaNombre,
+                audUsuario: user!.codUsuario,
               );
         },
       ),
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, PaisEntity pais) {
+  void _showDeleteConfirmation(BuildContext context, FamiliaEntity familia) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmar eliminación'),
-        content: Text('¿Estás seguro de eliminar "${pais.pais}"?'),
+        content: Text('¿Eliminar la familia "${familia.familia}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop();
+              Navigator.pop(context);
               try {
-                await ref.read(paisProvider.notifier).deletePais(pais.codPais);
+                await ref.read(familiaProvider.notifier).deleteFamilia(familia.codFamilia);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('País eliminado correctamente')),
+                    const SnackBar(content: Text('Familia eliminada')),
                   );
                 }
               } catch (e) {
@@ -231,41 +228,41 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
   }
 }
 
-/// Formulario de país (crear/editar)
-class _PaisFormDialog extends ConsumerStatefulWidget {
-  final PaisEntity? pais;
-  final Future<void> Function(String pais) onSubmit;
+/// Formulario de familia (crear/editar)
+class _FamiliaFormDialog extends ConsumerStatefulWidget {
+  final FamiliaEntity? familia;
+  final Future<void> Function(String familia) onSubmit;
 
-  const _PaisFormDialog({
-    this.pais,
+  const _FamiliaFormDialog({
+    this.familia,
     required this.onSubmit,
   });
 
   @override
-  ConsumerState<_PaisFormDialog> createState() => _PaisFormDialogState();
+  ConsumerState<_FamiliaFormDialog> createState() => _FamiliaFormDialogState();
 }
 
-class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
+class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _paisController;
+  late TextEditingController _familiaController;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _paisController = TextEditingController(text: widget.pais?.pais ?? '');
+    _familiaController = TextEditingController(text: widget.familia?.familia ?? '');
   }
 
   @override
   void dispose() {
-    _paisController.dispose();
+    _familiaController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.pais == null ? 'Agregar País' : 'Editar País'),
+      title: Text(widget.familia == null ? 'Agregar Familia' : 'Editar Familia'),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -273,18 +270,19 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                controller: _paisController,
+                controller: _familiaController,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre del País *',
+                  labelText: 'Nombre de la Familia *',
                   border: OutlineInputBorder(),
+                  helperText: 'Ej: Electrónica, Ropa, Alimentos',
                 ),
+                textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'El nombre del país es requerido';
+                    return 'El nombre de la familia es requerido';
                   }
                   return null;
                 },
-                textCapitalization: TextCapitalization.words,
               ),
             ],
           ),
@@ -292,18 +290,14 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
         FilledButton(
           onPressed: _isLoading ? null : _handleSubmit,
           child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(widget.pais == null ? 'Crear' : 'Actualizar'),
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text(widget.familia == null ? 'Crear' : 'Actualizar'),
         ),
       ],
     );
@@ -315,31 +309,27 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(_paisController.text.trim());
+      await widget.onSubmit(_familiaController.text.trim());
 
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.pais == null
-                  ? 'País creado correctamente'
-                  : 'País actualizado correctamente',
+              widget.familia == null ? 'Familia creada correctamente' : 'Familia actualizada correctamente',
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.pais == null ? 'create' : 'update';
+        final operation = widget.familia == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../core/utils/error_messages.dart';
 import '../../domain/entities/articulo_entity.dart';
 import '../../domain/entities/linea_entity.dart';
 import '../providers/articulo_provider.dart';
 import '../providers/linea_provider.dart';
+import '../providers/familia_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
 
@@ -75,28 +77,32 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error al cargar artículos',
-                      style: context.theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      error.toString().substring(0, error.toString().length > 100 ? 100 : error.toString().length),
-                      style: context.theme.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () => ref.read(articuloProvider.notifier).loadArticulos(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No se pudieron cargar los artículos',
+                        style: context.theme.textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        ErrorMessages.getFriendlyMessage(error),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => ref.refresh(articuloProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -455,7 +461,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    context.showSnackBar('Error al eliminar artículo: $e');
+                    context.showSnackBar(ErrorMessages.getCrudErrorMessage('delete', e));
                   }
                 }
               }
@@ -748,9 +754,10 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final operation = widget.articulo == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(ErrorMessages.getCrudErrorMessage(operation, e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -771,6 +778,7 @@ class _QuickLineaForm extends ConsumerStatefulWidget {
 
 class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
   final _lineaController = TextEditingController();
+  int? _selectedFamiliaId;
   bool _isCreating = false;
 
   @override
@@ -781,6 +789,8 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
 
   @override
   Widget build(BuildContext context) {
+    final familiasAsync = ref.watch(familiaProvider);
+    
     return Card(
       color: Colors.blue.shade50,
       child: Padding(
@@ -802,6 +812,82 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
               ],
             ),
             const SizedBox(height: 12),
+            
+            // Dropdown de Familias
+            familiasAsync.when(
+              data: (familias) {
+                if (familias.isEmpty) {
+                  return Card(
+                    color: Colors.orange.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'No hay familias disponibles. Crea una familia primero.',
+                              style: TextStyle(color: Colors.orange.shade700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                
+                return DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: 'Familia',
+                    prefixIcon: Icon(Icons.folder_special),
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  value: _selectedFamiliaId,
+                  isExpanded: true,
+                  items: familias.map((familia) {
+                    return DropdownMenuItem<int>(
+                      value: familia.codFamilia,
+                      child: Text(
+                        '${familia.codFamilia} - ${familia.familia}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: _isCreating ? null : (value) {
+                    setState(() {
+                      _selectedFamiliaId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'La familia es obligatoria';
+                    }
+                    return null;
+                  },
+                );
+              },
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (error, stack) => Card(
+                color: Colors.red.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    'Error al cargar familias: ${ErrorMessages.getFriendlyMessage(error)}',
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
             TextField(
               controller: _lineaController,
               decoration: const InputDecoration(
@@ -841,14 +927,22 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
       return;
     }
 
+    if (_selectedFamiliaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes seleccionar una familia')),
+      );
+      return;
+    }
+
     setState(() => _isCreating = true);
 
     try {
       final userAsync = ref.read(authProvider);
       final user = userAsync.value;
       await ref.read(lineaProvider.notifier).createLinea(
+        codFamilia: _selectedFamiliaId!,
         linea: _lineaController.text,
-        audUsuario: user?.codUsuario ?? 0,
+        audUsuario: user?.codUsuario ?? 0, 
       );
 
       // Recargar líneas y obtener la recién creada
@@ -871,7 +965,7 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
         setState(() => _isCreating = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(ErrorMessages.getCrudErrorMessage('create', e)),
             backgroundColor: Colors.red,
           ),
         );

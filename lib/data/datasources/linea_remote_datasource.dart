@@ -4,6 +4,7 @@ import '../models/linea_model.dart';
 /// Interfaz del datasource remoto de Líneas
 abstract class LineaRemoteDataSource {
   Future<LineaModel> createLinea({
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   });
@@ -14,6 +15,7 @@ abstract class LineaRemoteDataSource {
 
   Future<LineaModel> updateLinea({
     required int codLinea,
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   });
@@ -29,6 +31,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
 
   @override
   Future<LineaModel> createLinea({
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
@@ -36,6 +39,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
       final response = await _client.post(
         '/lineas/',
         data: {
+          'codFamilia': codFamilia,
           'linea': linea,
           'audUsuario': audUsuario,
         },
@@ -109,6 +113,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
   @override
   Future<LineaModel> updateLinea({
     required int codLinea,
+    required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
@@ -116,6 +121,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
       final response = await _client.put(
         '/lineas/$codLinea',
         data: {
+          'codFamilia': codFamilia,
           'linea': linea,
           'audUsuario': audUsuario,
         },

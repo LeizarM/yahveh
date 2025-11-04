@@ -70,6 +70,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/familia',
+        name: 'familia',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo FamiliasScreen');
+          return const FamiliasScreen();
+        },
+      ),
+      GoRoute(
         path: '/clientes',
         name: 'clientes',
         builder: (context, state) {

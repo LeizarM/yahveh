@@ -4,6 +4,7 @@ import '../../domain/entities/linea_entity.dart';
 class LineaModel extends LineaEntity {
   const LineaModel({
     super.codLinea,
+    required super.codFamilia,
     required super.linea,
     required super.audUsuario,
     super.audFecha,
@@ -15,6 +16,7 @@ class LineaModel extends LineaEntity {
   factory LineaModel.fromJson(Map<String, dynamic> json) {
     return LineaModel(
       codLinea: json['codLinea'] as int?,
+      codFamilia: json['codFamilia'] as int,
       linea: json['linea'] as String,
       audUsuario: json['audUsuario'] as int? ?? 0,
       audFecha: json['audFecha'] != null 
@@ -29,6 +31,7 @@ class LineaModel extends LineaEntity {
   Map<String, dynamic> toJson() {
     return {
       'codLinea': codLinea,
+      'codFamilia': codFamilia,
       'linea': linea,
       'audUsuario': audUsuario,
       'audFecha': audFecha?.toIso8601String(),
@@ -41,6 +44,7 @@ class LineaModel extends LineaEntity {
   Map<String, dynamic> toCreateJson() {
     return {
       'linea': linea,
+      'codFamilia': codFamilia,
       'audUsuario': audUsuario,
     };
   }
