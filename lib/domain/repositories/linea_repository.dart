@@ -1,9 +1,10 @@
+import '../../core/utils/operation_result.dart';
 import '../entities/linea_entity.dart';
 
 /// Repositorio de Líneas
 abstract class LineaRepository {
   /// Crear una nueva línea
-  Future<LineaEntity> createLinea({
+  Future<OperationResult<LineaEntity>> createLinea({
     required int codFamilia,
     required String linea,
     required int audUsuario,
@@ -16,7 +17,7 @@ abstract class LineaRepository {
   Future<LineaEntity> getLineaById(int codLinea);
 
   /// Actualizar una línea
-  Future<LineaEntity> updateLinea({
+  Future<OperationResult<LineaEntity>> updateLinea({
     required int codLinea,
     required int codFamilia,
     required String linea,
@@ -24,5 +25,5 @@ abstract class LineaRepository {
   });
 
   /// Eliminar una línea
-  Future<void> deleteLinea(int codLinea);
+  Future<OperationResult<void>> deleteLinea(int codLinea);
 }

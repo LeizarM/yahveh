@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/api_exception.dart';
+import '../../core/utils/operation_result.dart';
 import '../models/linea_model.dart';
 
 /// Interfaz del datasource remoto de Líneas
 abstract class LineaRemoteDataSource {
-  Future<LineaModel> createLinea({
+  Future<OperationResult<LineaModel>> createLinea({
     required int codFamilia,
     required String linea,
     required int audUsuario,
@@ -13,14 +16,14 @@ abstract class LineaRemoteDataSource {
 
   Future<LineaModel> getLineaById(int codLinea);
 
-  Future<LineaModel> updateLinea({
+  Future<OperationResult<LineaModel>> updateLinea({
     required int codLinea,
     required int codFamilia,
     required String linea,
     required int audUsuario,
   });
 
-  Future<void> deleteLinea(int codLinea);
+  Future<OperationResult<void>> deleteLinea(int codLinea);
 }
 
 /// Implementación del datasource remoto de Líneas
@@ -30,7 +33,7 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
   LineaRemoteDataSourceImpl(this._client);
 
   @override
-  Future<LineaModel> createLinea({
+  Future<OperationResult<LineaModel>> createLinea({
     required int codFamilia,
     required String linea,
     required int audUsuario,
@@ -45,28 +48,52 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
         final data = response.data['data'];
+        final message = response.data['message'] as String? ?? 'Línea creada exitosamente';
         
-       
+        LineaModel lineaModel;
         
         // Si el backend devuelve solo el codLinea (int), obtenemos el objeto completo
         if (data is int) {
-          return await getLineaById(data);
+          lineaModel = await getLineaById(data);
         }
-        
         // Si el backend devuelve el objeto completo
-        if (data is Map<String, dynamic>) {
-          return LineaModel.fromJson(data);
+        else if (data is Map<String, dynamic>) {
+          lineaModel = LineaModel.fromJson(data);
+        }
+        // Si data es null o cualquier otro tipo inesperado
+        else {
+          throw ApiException(
+            message: 'Formato de respuesta inesperado: ${data.runtimeType}',
+          );
         }
         
-        // Si data es null o cualquier otro tipo inesperado
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+        return OperationResult(data: lineaModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al crear línea');
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al crear línea: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al crear línea');
     }
   }
 
@@ -88,10 +115,24 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
         // Si data es null o está vacío, retornar lista vacía
         return [];
       } else {
-        throw Exception(response.data?['message'] ?? 'Error al obtener líneas');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener líneas: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener líneas');
     }
   }
 
@@ -103,15 +144,29 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
       if (response.data['success'] == true) {
         return LineaModel.fromJson(response.data['data'] as Map<String, dynamic>);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al obtener línea');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener línea: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener línea');
     }
   }
 
   @override
-  Future<LineaModel> updateLinea({
+  Future<OperationResult<LineaModel>> updateLinea({
     required int codLinea,
     required int codFamilia,
     required String linea,
@@ -127,44 +182,90 @@ class LineaRemoteDataSourceImpl implements LineaRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
         final data = response.data['data'];
+        final message = response.data['message'] as String? ?? 'Línea actualizada exitosamente';
         
-       
+        LineaModel lineaModel;
+        
         // Si el backend devuelve solo el codLinea (int), obtenemos el objeto completo
         if (data is int) {
-          return await getLineaById(data);
+          lineaModel = await getLineaById(data);
         }
-        
         // Si el backend devuelve el objeto completo
-        if (data is Map<String, dynamic>) {
-          return LineaModel.fromJson(data);
+        else if (data is Map<String, dynamic>) {
+          lineaModel = LineaModel.fromJson(data);
         }
-        
         // Si data es null, asumimos que se actualizó correctamente y obtenemos el objeto
-        if (data == null) {
-          return await getLineaById(codLinea);
+        else if (data == null) {
+          lineaModel = await getLineaById(codLinea);
+        }
+        else {
+          throw ApiException(
+            message: 'Formato de respuesta inesperado: ${data.runtimeType}',
+          );
         }
         
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+        return OperationResult(data: lineaModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al actualizar línea');
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al actualizar línea: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al actualizar línea');
     }
   }
 
   @override
-  Future<void> deleteLinea(int codLinea) async {
+  Future<OperationResult<void>> deleteLinea(int codLinea) async {
     try {
       final response = await _client.delete('/lineas/$codLinea');
 
-      if (response.data['success'] != true) {
-        throw Exception(response.data['message'] ?? 'Error al eliminar línea');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Línea eliminada exitosamente';
+        return OperationResult(data: null, message: message);
+      } else {
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al eliminar línea: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al eliminar línea');
     }
   }
 }

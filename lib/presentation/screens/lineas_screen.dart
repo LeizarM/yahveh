@@ -50,37 +50,34 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
     }
 
     try {
+      String message;
+      
       if (_isEditing && _editingCodLinea != null) {
         // Actualizar línea existente
-        await ref.read(lineaProvider.notifier).updateLinea(
+        message = await ref.read(lineaProvider.notifier).updateLinea(
               codLinea: _editingCodLinea!,
               codFamilia: _selectedFamiliaId!,
               linea: _lineaController.text.trim(),
               audUsuario: user.codUsuario,
             );
-
-        if (mounted) {
-          context.showSnackBar('Línea actualizada exitosamente');
-        }
       } else {
         // Crear nueva línea
-        await ref.read(lineaProvider.notifier).createLinea(
+        message = await ref.read(lineaProvider.notifier).createLinea(
               codFamilia: _selectedFamiliaId!,
               linea: _lineaController.text.trim(),
               audUsuario: user.codUsuario,
             );
+      }
 
-        if (mounted) {
-          context.showSnackBar('Línea creada exitosamente');
-        }
+      if (mounted) {
+        context.showSnackBar(message);
       }
 
       _resetForm();
     } catch (e) {
       if (mounted) {
-        final operation = _isEditing ? 'update' : 'create';
         context.showSnackBar(
-          ErrorMessages.getCrudErrorMessage(operation, e),
+          ErrorMessages.getFriendlyMessage(e),
           isError: true,
         );
       }
@@ -120,15 +117,15 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
 
     if (confirmed == true) {
       try {
-        await ref.read(lineaProvider.notifier).deleteLinea(codLinea);
+        final message = await ref.read(lineaProvider.notifier).deleteLinea(codLinea);
 
         if (mounted) {
-          context.showSnackBar('Línea eliminada exitosamente');
+          context.showSnackBar(message);
         }
       } catch (e) {
         if (mounted) {
           context.showSnackBar(
-            ErrorMessages.getCrudErrorMessage('delete', e),
+            ErrorMessages.getFriendlyMessage(e),
             isError: true,
           );
         }

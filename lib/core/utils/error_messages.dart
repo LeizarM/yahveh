@@ -1,7 +1,14 @@
+import '../error/api_exception.dart';
+
 /// Utilidad para convertir errores técnicos en mensajes amigables para el usuario
 class ErrorMessages {
   /// Convierte un error técnico en un mensaje amigable
   static String getFriendlyMessage(dynamic error) {
+    // Si es ApiException, usar su mensaje directamente (viene del backend)
+    if (error is ApiException) {
+      return error.message;
+    }
+
     final errorStr = error.toString().toLowerCase();
 
     // Errores de red/conexión

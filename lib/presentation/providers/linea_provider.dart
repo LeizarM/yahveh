@@ -24,14 +24,15 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
   }
 
   /// Crear una nueva línea
-  Future<void> createLinea({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> createLinea({
     required int codFamilia,
     required String linea,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(lineaRepositoryProvider);
-      await repository.createLinea(
+      final result = await repository.createLinea(
         codFamilia: codFamilia,
         linea: linea,
         audUsuario: audUsuario,
@@ -39,14 +40,18 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
       
       // Recargar la lista después de crear
       await loadLineas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Actualizar una línea existente
-  Future<void> updateLinea({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> updateLinea({
     required int codLinea,
     required int codFamilia,
     required String linea,
@@ -54,7 +59,7 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
   }) async {
     try {
       final repository = ref.read(lineaRepositoryProvider);
-      await repository.updateLinea(
+      final result = await repository.updateLinea(
         codLinea: codLinea,
         codFamilia: codFamilia,
         linea: linea,
@@ -63,22 +68,29 @@ class LineaNotifier extends Notifier<AsyncValue<List<LineaEntity>>> {
       
       // Recargar la lista después de actualizar
       await loadLineas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Eliminar una línea
-  Future<void> deleteLinea(int codLinea) async {
+  /// Retorna el mensaje de éxito del backend
+  Future<String> deleteLinea(int codLinea) async {
     try {
       final repository = ref.read(lineaRepositoryProvider);
-      await repository.deleteLinea(codLinea);
+      final result = await repository.deleteLinea(codLinea);
       
       // Recargar la lista después de eliminar
       await loadLineas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }

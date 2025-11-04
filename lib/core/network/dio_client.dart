@@ -68,6 +68,7 @@ class DioClient {
         onError: (error, handler) async {
           _logger.e('❌ Error: ${error.response?.statusCode} ${error.requestOptions.path}');
           _logger.e('📝 Message: ${error.message}');
+          _logger.e('📝 Response Data: ${error.response?.data}');
           
           // Si el token expiró (401), eliminar token y redirigir al login
           if (error.response?.statusCode == 401) {

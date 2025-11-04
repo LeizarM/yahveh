@@ -1,3 +1,4 @@
+import '../../core/utils/operation_result.dart';
 import '../../domain/entities/linea_entity.dart';
 import '../../domain/repositories/linea_repository.dart';
 import '../datasources/linea_remote_datasource.dart';
@@ -11,7 +12,7 @@ class LineaRepositoryImpl implements LineaRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<LineaEntity> createLinea({
+  Future<OperationResult<LineaEntity>> createLinea({
     required int codFamilia,
     required String linea,
     required int audUsuario,
@@ -34,7 +35,7 @@ class LineaRepositoryImpl implements LineaRepository {
   }
 
   @override
-  Future<LineaEntity> updateLinea({
+  Future<OperationResult<LineaEntity>> updateLinea({
     required int codLinea,
     required int codFamilia,
     required String linea,
@@ -49,7 +50,7 @@ class LineaRepositoryImpl implements LineaRepository {
   }
 
   @override
-  Future<void> deleteLinea(int codLinea) async {
+  Future<OperationResult<void>> deleteLinea(int codLinea) async {
     return await _remoteDataSource.deleteLinea(codLinea);
   }
 }
