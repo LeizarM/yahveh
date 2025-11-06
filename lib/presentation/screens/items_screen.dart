@@ -455,13 +455,13 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               
               if (confirmed == true && context.mounted) {
                 try {
-                  await ref.read(articuloProvider.notifier).deleteArticulo(articulo.codArticulo!);
+                  final message = await ref.read(articuloProvider.notifier).deleteArticulo(articulo.codArticulo!);
                   if (context.mounted) {
-                    context.showSnackBar('Artículo eliminado correctamente');
+                    context.showSnackBar(message, isError: false);
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    context.showSnackBar(ErrorMessages.getCrudErrorMessage('delete', e));
+                    context.showSnackBar(ErrorMessages.getFriendlyMessage(e), isError: true);
                   }
                 }
               }
@@ -503,7 +503,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          await ref.read(articuloProvider.notifier).createArticulo(
+          return await ref.read(articuloProvider.notifier).createArticulo(
             codArticulo: codArticulo,
             codLinea: codLinea,
             descripcion: descripcion,
@@ -525,7 +525,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          await ref.read(articuloProvider.notifier).updateArticulo(
+          return await ref.read(articuloProvider.notifier).updateArticulo(
             codArticulo: codArticulo,
             codLinea: codLinea,
             descripcion: descripcion,
@@ -541,7 +541,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
 /// Formulario de artículo (crear/editar)
 class _ArticuloFormDialog extends ConsumerStatefulWidget {
   final ArticuloEntity? articulo;
-  final Future<void> Function(String codArticulo, int codLinea, String descripcion, String descripcion2) onSubmit;
+  final Future<String> Function(String codArticulo, int codLinea, String descripcion, String descripcion2) onSubmit;
 
   const _ArticuloFormDialog({
     this.articulo,
@@ -734,7 +734,7 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(
+      final message = await widget.onSubmit(
         _codArticuloController.text,
         _selectedLineaId!,
         _descripcionController.text,
@@ -745,19 +745,17 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.articulo == null
-                ? 'Artículo creado correctamente'
-                : 'Artículo actualizado correctamente'),
+            content: Text(message),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        final operation = widget.articulo == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorMessages.getCrudErrorMessage(operation, e)),
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
             backgroundColor: Colors.red,
           ),
         );

@@ -143,7 +143,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
       builder: (context) => _CiudadFormDialog(
         onSubmit: (codPais, ciudad) async {
           final user = ref.read(authProvider).value;
-          await ref.read(ciudadProvider.notifier).createCiudad(
+          return await ref.read(ciudadProvider.notifier).createCiudad(
                 codPais: codPais,
                 ciudad: ciudad,
                 audUsuario: user?.codUsuario ?? 0,
@@ -161,7 +161,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
         ciudad: ciudad,
         onSubmit: (codPais, ciudadNombre) async {
           final user = ref.read(authProvider).value;
-          await ref.read(ciudadProvider.notifier).updateCiudad(
+          return await ref.read(ciudadProvider.notifier).updateCiudad(
                 codCiudad: ciudad.codCiudad,
                 codPais: codPais,
                 ciudad: ciudadNombre,
@@ -184,16 +184,22 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(ciudadProvider.notifier).deleteCiudad(ciudad.codCiudad);
+                final message = await ref.read(ciudadProvider.notifier).deleteCiudad(ciudad.codCiudad);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ciudad eliminada')),
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                    SnackBar(
+                      content: Text(ErrorMessages.getFriendlyMessage(e)),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -209,7 +215,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
 /// Formulario de ciudad
 class _CiudadFormDialog extends ConsumerStatefulWidget {
   final CiudadEntity? ciudad;
-  final Future<void> Function(int codPais, String ciudad) onSubmit;
+  final Future<String> Function(int codPais, String ciudad) onSubmit;
 
   const _CiudadFormDialog({this.ciudad, required this.onSubmit});
 
@@ -305,23 +311,27 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(_selectedPaisId!, _ciudadController.text.trim());
+      final message = await widget.onSubmit(_selectedPaisId!, _ciudadController.text.trim());
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.ciudad == null ? 'Ciudad creada' : 'Ciudad actualizada')),
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.ciudad == null ? 'create' : 'update';
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

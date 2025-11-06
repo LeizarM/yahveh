@@ -1,9 +1,10 @@
 import '../entities/zona_entity.dart';
+import '../../core/utils/operation_result.dart';
 
 /// Repositorio de Zonas
 abstract class ZonaRepository {
   /// Crear una nueva zona
-  Future<ZonaEntity> createZona({
+  Future<OperationResult<ZonaEntity>> createZona({
     required int codCiudad,
     required String zona,
     required int audUsuario,
@@ -16,7 +17,7 @@ abstract class ZonaRepository {
   Future<ZonaEntity> getZonaById(int codZona);
 
   /// Actualizar una zona
-  Future<ZonaEntity> updateZona({
+  Future<OperationResult<ZonaEntity>> updateZona({
     required int codZona,
     required int codCiudad,
     required String zona,
@@ -24,5 +25,5 @@ abstract class ZonaRepository {
   });
 
   /// Eliminar una zona
-  Future<void> deleteZona(int codZona);
+  Future<OperationResult<void>> deleteZona(int codZona);
 }

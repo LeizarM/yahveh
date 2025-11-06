@@ -166,7 +166,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
         onSubmit: (pais) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          await ref.read(paisProvider.notifier).createPais(
+          return await ref.read(paisProvider.notifier).createPais(
                 pais: pais,
                 audUsuario: user?.codUsuario ?? 0,
               );
@@ -184,7 +184,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
         onSubmit: (paisNombre) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          await ref.read(paisProvider.notifier).updatePais(
+          return await ref.read(paisProvider.notifier).updatePais(
                 codPais: pais.codPais,
                 pais: paisNombre,
                 audUsuario: user?.codUsuario ?? 0,
@@ -209,16 +209,22 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
             onPressed: () async {
               Navigator.of(context).pop();
               try {
-                await ref.read(paisProvider.notifier).deletePais(pais.codPais);
+                final message = await ref.read(paisProvider.notifier).deletePais(pais.codPais);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('País eliminado correctamente')),
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                    SnackBar(
+                      content: Text(ErrorMessages.getFriendlyMessage(e)),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -234,7 +240,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
 /// Formulario de país (crear/editar)
 class _PaisFormDialog extends ConsumerStatefulWidget {
   final PaisEntity? pais;
-  final Future<void> Function(String pais) onSubmit;
+  final Future<String> Function(String pais) onSubmit;
 
   const _PaisFormDialog({
     this.pais,
@@ -315,30 +321,26 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(_paisController.text.trim());
+      final message = await widget.onSubmit(_paisController.text.trim());
 
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              widget.pais == null
-                  ? 'País creado correctamente'
-                  : 'País actualizado correctamente',
-            ),
+            content: Text(message),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.pais == null ? 'create' : 'update';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
-        );
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

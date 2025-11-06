@@ -1,9 +1,10 @@
 import '../entities/cliente_entity.dart';
+import '../../core/utils/operation_result.dart';
 
 /// Repositorio de Clientes
 abstract class ClienteRepository {
   /// Crear un nuevo cliente
-  Future<ClienteEntity> createCliente({
+  Future<OperationResult<ClienteEntity>> createCliente({
     required int codZona,
     required String nit,
     required String razonSocial,
@@ -21,7 +22,7 @@ abstract class ClienteRepository {
   Future<ClienteEntity> getClienteById(int codCliente);
 
   /// Actualizar un cliente
-  Future<ClienteEntity> updateCliente({
+  Future<OperationResult<ClienteEntity>> updateCliente({
     required int codCliente,
     required int codZona,
     required String nit,
@@ -34,5 +35,5 @@ abstract class ClienteRepository {
   });
 
   /// Eliminar un cliente
-  Future<void> deleteCliente(int codCliente);
+  Future<OperationResult<void>> deleteCliente(int codCliente);
 }

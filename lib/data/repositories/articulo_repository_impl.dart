@@ -1,3 +1,4 @@
+import '../../core/utils/operation_result.dart';
 import '../../domain/entities/articulo_entity.dart';
 import '../../domain/repositories/articulo_repository.dart';
 import '../datasources/articulo_remote_datasource.dart';
@@ -9,7 +10,7 @@ class ArticuloRepositoryImpl implements ArticuloRepository {
   ArticuloRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<ArticuloEntity> createArticulo({
+  Future<OperationResult<ArticuloEntity>> createArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -36,7 +37,7 @@ class ArticuloRepositoryImpl implements ArticuloRepository {
   }
 
   @override
-  Future<ArticuloEntity> updateArticulo({
+  Future<OperationResult<ArticuloEntity>> updateArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -53,7 +54,7 @@ class ArticuloRepositoryImpl implements ArticuloRepository {
   }
 
   @override
-  Future<void> deleteArticulo(String codArticulo) async {
+  Future<OperationResult<void>> deleteArticulo(String codArticulo) async {
     return await _remoteDataSource.deleteArticulo(codArticulo);
   }
 }

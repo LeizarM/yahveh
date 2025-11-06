@@ -1,3 +1,4 @@
+import '../../core/utils/operation_result.dart';
 import '../../domain/entities/ciudad_entity.dart';
 import '../../domain/repositories/ciudad_repository.dart';
 import '../datasources/ciudad_remote_datasource.dart';
@@ -11,7 +12,7 @@ class CiudadRepositoryImpl implements CiudadRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<CiudadEntity> createCiudad({
+  Future<OperationResult<CiudadEntity>> createCiudad({
     required int codPais,
     required String ciudad,
     required int audUsuario,
@@ -34,7 +35,7 @@ class CiudadRepositoryImpl implements CiudadRepository {
   }
 
   @override
-  Future<CiudadEntity> updateCiudad({
+  Future<OperationResult<CiudadEntity>> updateCiudad({
     required int codCiudad,
     required int codPais,
     required String ciudad,
@@ -49,7 +50,7 @@ class CiudadRepositoryImpl implements CiudadRepository {
   }
 
   @override
-  Future<void> deleteCiudad(int codCiudad) async {
+  Future<OperationResult<void>> deleteCiudad(int codCiudad) async {
     return await _remoteDataSource.deleteCiudad(codCiudad);
   }
 }

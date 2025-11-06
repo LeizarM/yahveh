@@ -1,5 +1,6 @@
 import '../../domain/entities/zona_entity.dart';
 import '../../domain/repositories/zona_repository.dart';
+import '../../core/utils/operation_result.dart';
 import '../datasources/zona_remote_datasource.dart';
 
 /// Implementación del repositorio de Zonas
@@ -11,15 +12,19 @@ class ZonaRepositoryImpl implements ZonaRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<ZonaEntity> createZona({
+  Future<OperationResult<ZonaEntity>> createZona({
     required int codCiudad,
     required String zona,
     required int audUsuario,
   }) async {
-    return await _remoteDataSource.createZona(
+    final result = await _remoteDataSource.createZona(
       codCiudad: codCiudad,
       zona: zona,
       audUsuario: audUsuario,
+    );
+    return OperationResult(
+      data: result.data,
+      message: result.message,
     );
   }
 
@@ -34,22 +39,26 @@ class ZonaRepositoryImpl implements ZonaRepository {
   }
 
   @override
-  Future<ZonaEntity> updateZona({
+  Future<OperationResult<ZonaEntity>> updateZona({
     required int codZona,
     required int codCiudad,
     required String zona,
     required int audUsuario,
   }) async {
-    return await _remoteDataSource.updateZona(
+    final result = await _remoteDataSource.updateZona(
       codZona: codZona,
       codCiudad: codCiudad,
       zona: zona,
       audUsuario: audUsuario,
     );
+    return OperationResult(
+      data: result.data,
+      message: result.message,
+    );
   }
 
   @override
-  Future<void> deleteZona(int codZona) async {
+  Future<OperationResult<void>> deleteZona(int codZona) async {
     return await _remoteDataSource.deleteZona(codZona);
   }
 }

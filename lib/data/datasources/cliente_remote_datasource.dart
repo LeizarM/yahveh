@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/api_exception.dart';
+import '../../core/utils/operation_result.dart';
 import '../models/cliente_model.dart';
 
 /// Interfaz del datasource remoto de Clientes
 abstract class ClienteRemoteDataSource {
-  Future<ClienteModel> createCliente({
+  Future<OperationResult<ClienteModel>> createCliente({
     required int codZona,
     required String nit,
     required String razonSocial,
@@ -18,7 +21,7 @@ abstract class ClienteRemoteDataSource {
 
   Future<ClienteModel> getClienteById(int codCliente);
 
-  Future<ClienteModel> updateCliente({
+  Future<OperationResult<ClienteModel>> updateCliente({
     required int codCliente,
     required int codZona,
     required String nit,
@@ -30,7 +33,7 @@ abstract class ClienteRemoteDataSource {
     required int audUsuario,
   });
 
-  Future<void> deleteCliente(int codCliente);
+  Future<OperationResult<void>> deleteCliente(int codCliente);
 }
 
 /// Implementación del datasource remoto de Clientes
@@ -40,7 +43,7 @@ class ClienteRemoteDataSourceImpl implements ClienteRemoteDataSource {
   ClienteRemoteDataSourceImpl(this._client);
 
   @override
-  Future<ClienteModel> createCliente({
+  Future<OperationResult<ClienteModel>> createCliente({
     required int codZona,
     required String nit,
     required String razonSocial,
@@ -65,23 +68,45 @@ class ClienteRemoteDataSourceImpl implements ClienteRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
-
-        if (data is int) {
-          return await getClienteById(data);
-        }
-
-        if (data is Map<String, dynamic>) {
-          return ClienteModel.fromJson(data);
-        }
-
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Cliente creado exitosamente';
+        
+        // Crear un ClienteModel temporal con los datos que tenemos
+        final clienteModel = ClienteModel(
+          codCliente: response.data['data'] is int ? response.data['data'] : 0,
+          codZona: codZona,
+          nit: nit,
+          razonSocial: razonSocial,
+          nombreCliente: nombreCliente,
+          direccion: direccion,
+          referencia: referencia,
+          obs: obs,
+          audUsuario: audUsuario,
+        );
+        
+        return OperationResult(data: clienteModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al crear cliente');
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al crear cliente: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al crear cliente');
     }
   }
 
@@ -101,10 +126,23 @@ class ClienteRemoteDataSourceImpl implements ClienteRemoteDataSource {
 
         return [];
       } else {
-        throw Exception(response.data?['message'] ?? 'Error al obtener clientes');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener clientes: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener clientes');
     }
   }
 
@@ -116,15 +154,28 @@ class ClienteRemoteDataSourceImpl implements ClienteRemoteDataSource {
       if (response.data['success'] == true) {
         return ClienteModel.fromJson(response.data['data'] as Map<String, dynamic>);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al obtener cliente');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener cliente: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener cliente');
     }
   }
 
   @override
-  Future<ClienteModel> updateCliente({
+  Future<OperationResult<ClienteModel>> updateCliente({
     required int codCliente,
     required int codZona,
     required String nit,
@@ -151,36 +202,78 @@ class ClienteRemoteDataSourceImpl implements ClienteRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
-
-        if (data is int || data == null) {
-          return await getClienteById(codCliente);
-        }
-
-        if (data is Map<String, dynamic>) {
-          return ClienteModel.fromJson(data);
-        }
-
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Cliente actualizado exitosamente';
+        
+        // Crear un ClienteModel temporal con los datos que tenemos
+        final clienteModel = ClienteModel(
+          codCliente: codCliente,
+          codZona: codZona,
+          nit: nit,
+          razonSocial: razonSocial,
+          nombreCliente: nombreCliente,
+          direccion: direccion,
+          referencia: referencia,
+          obs: obs,
+          audUsuario: audUsuario,
+        );
+        
+        return OperationResult(data: clienteModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al actualizar cliente');
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al actualizar cliente: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al actualizar cliente');
     }
   }
 
   @override
-  Future<void> deleteCliente(int codCliente) async {
+  Future<OperationResult<void>> deleteCliente(int codCliente) async {
     try {
       final response = await _client.delete('/clientes/$codCliente');
 
-      if (response.data['success'] != true) {
-        throw Exception(response.data['message'] ?? 'Error al eliminar cliente');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Cliente eliminado exitosamente';
+        return OperationResult(data: null, message: message);
+      } else {
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al eliminar cliente: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al eliminar cliente');
     }
   }
 }

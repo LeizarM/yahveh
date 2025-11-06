@@ -1,9 +1,10 @@
+import '../../core/utils/operation_result.dart';
 import '../entities/pais_entity.dart';
 
 /// Repositorio de Países
 abstract class PaisRepository {
   /// Crear un nuevo país
-  Future<PaisEntity> createPais({
+  Future<OperationResult<PaisEntity>> createPais({
     required String pais,
     required int audUsuario,
   });
@@ -15,12 +16,12 @@ abstract class PaisRepository {
   Future<PaisEntity> getPaisById(int codPais);
 
   /// Actualizar un país
-  Future<PaisEntity> updatePais({
+  Future<OperationResult<PaisEntity>> updatePais({
     required int codPais,
     required String pais,
     required int audUsuario,
   });
 
   /// Eliminar un país
-  Future<void> deletePais(int codPais);
+  Future<OperationResult<void>> deletePais(int codPais);
 }

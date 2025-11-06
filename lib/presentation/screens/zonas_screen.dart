@@ -147,7 +147,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
       builder: (context) => _ZonaFormDialog(
         onSubmit: (codCiudad, zona) async {
           final user = ref.read(authProvider).value;
-          await ref.read(zonaProvider.notifier).createZona(
+          return await ref.read(zonaProvider.notifier).createZona(
                 codCiudad: codCiudad,
                 zona: zona,
                 audUsuario: user?.codUsuario ?? 0,
@@ -165,7 +165,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
         zona: zona,
         onSubmit: (codCiudad, zonaNombre) async {
           final user = ref.read(authProvider).value;
-          await ref.read(zonaProvider.notifier).updateZona(
+          return await ref.read(zonaProvider.notifier).updateZona(
                 codZona: zona.codZona,
                 codCiudad: codCiudad,
                 zona: zonaNombre,
@@ -188,16 +188,22 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(zonaProvider.notifier).deleteZona(zona.codZona);
+                final message = await ref.read(zonaProvider.notifier).deleteZona(zona.codZona);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Zona eliminada')),
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                    SnackBar(
+                      content: Text(ErrorMessages.getFriendlyMessage(e)),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -213,7 +219,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
 /// Formulario de zona
 class _ZonaFormDialog extends ConsumerStatefulWidget {
   final ZonaEntity? zona;
-  final Future<void> Function(int codCiudad, String zona) onSubmit;
+  final Future<String> Function(int codCiudad, String zona) onSubmit;
 
   const _ZonaFormDialog({this.zona, required this.onSubmit});
 
@@ -355,19 +361,24 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(_selectedCiudadId!, _zonaController.text.trim());
+      final message = await widget.onSubmit(_selectedCiudadId!, _zonaController.text.trim());
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.zona == null ? 'Zona creada correctamente' : 'Zona actualizada correctamente')),
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.zona == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

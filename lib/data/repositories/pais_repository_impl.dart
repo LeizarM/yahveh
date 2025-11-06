@@ -1,3 +1,4 @@
+import '../../core/utils/operation_result.dart';
 import '../../domain/entities/pais_entity.dart';
 import '../../domain/repositories/pais_repository.dart';
 import '../datasources/pais_remote_datasource.dart';
@@ -11,7 +12,7 @@ class PaisRepositoryImpl implements PaisRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<PaisEntity> createPais({
+  Future<OperationResult<PaisEntity>> createPais({
     required String pais,
     required int audUsuario,
   }) async {
@@ -32,7 +33,7 @@ class PaisRepositoryImpl implements PaisRepository {
   }
 
   @override
-  Future<PaisEntity> updatePais({
+  Future<OperationResult<PaisEntity>> updatePais({
     required int codPais,
     required String pais,
     required int audUsuario,
@@ -45,7 +46,7 @@ class PaisRepositoryImpl implements PaisRepository {
   }
 
   @override
-  Future<void> deletePais(int codPais) async {
+  Future<OperationResult<void>> deletePais(int codPais) async {
     return await _remoteDataSource.deletePais(codPais);
   }
 }

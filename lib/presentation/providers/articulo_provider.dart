@@ -24,7 +24,8 @@ class ArticuloNotifier extends Notifier<AsyncValue<List<ArticuloEntity>>> {
   }
 
   /// Crear un nuevo artículo
-  Future<void> createArticulo({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> createArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -33,7 +34,7 @@ class ArticuloNotifier extends Notifier<AsyncValue<List<ArticuloEntity>>> {
   }) async {
     try {
       final repository = ref.read(articuloRepositoryProvider);
-      await repository.createArticulo(
+      final result = await repository.createArticulo(
         codArticulo: codArticulo,
         codLinea: codLinea,
         descripcion: descripcion,
@@ -43,14 +44,18 @@ class ArticuloNotifier extends Notifier<AsyncValue<List<ArticuloEntity>>> {
       
       // Recargar la lista después de crear
       await loadArticulos();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Actualizar un artículo existente
-  Future<void> updateArticulo({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> updateArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -59,7 +64,7 @@ class ArticuloNotifier extends Notifier<AsyncValue<List<ArticuloEntity>>> {
   }) async {
     try {
       final repository = ref.read(articuloRepositoryProvider);
-      await repository.updateArticulo(
+      final result = await repository.updateArticulo(
         codArticulo: codArticulo,
         codLinea: codLinea,
         descripcion: descripcion,
@@ -69,22 +74,29 @@ class ArticuloNotifier extends Notifier<AsyncValue<List<ArticuloEntity>>> {
       
       // Recargar la lista después de actualizar
       await loadArticulos();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Eliminar un artículo
-  Future<void> deleteArticulo(String codArticulo) async {
+  /// Retorna el mensaje de éxito del backend
+  Future<String> deleteArticulo(String codArticulo) async {
     try {
       final repository = ref.read(articuloRepositoryProvider);
-      await repository.deleteArticulo(codArticulo);
+      final result = await repository.deleteArticulo(codArticulo);
       
       // Recargar la lista después de eliminar
       await loadArticulos();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }

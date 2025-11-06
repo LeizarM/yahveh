@@ -1,9 +1,10 @@
+import '../../core/utils/operation_result.dart';
 import '../entities/articulo_entity.dart';
 
 /// Repositorio abstracto para operaciones con artículos
 abstract class ArticuloRepository {
   /// Crear un nuevo artículo
-  Future<ArticuloEntity> createArticulo({
+  Future<OperationResult<ArticuloEntity>> createArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -18,7 +19,7 @@ abstract class ArticuloRepository {
   Future<ArticuloEntity> getArticuloById(String codArticulo);
 
   /// Actualizar un artículo existente
-  Future<ArticuloEntity> updateArticulo({
+  Future<OperationResult<ArticuloEntity>> updateArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -27,5 +28,5 @@ abstract class ArticuloRepository {
   });
 
   /// Eliminar un artículo
-  Future<void> deleteArticulo(String codArticulo);
+  Future<OperationResult<void>> deleteArticulo(String codArticulo);
 }

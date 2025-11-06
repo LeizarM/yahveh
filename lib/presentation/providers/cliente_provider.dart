@@ -24,7 +24,7 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
   }
 
   /// Crear un nuevo cliente
-  Future<void> createCliente({
+  Future<String> createCliente({
     required int codZona,
     required String nit,
     required String razonSocial,
@@ -36,7 +36,7 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
   }) async {
     try {
       final repository = ref.read(clienteRepositoryProvider);
-      await repository.createCliente(
+      final result = await repository.createCliente(
         codZona: codZona,
         nit: nit,
         razonSocial: razonSocial,
@@ -49,14 +49,16 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
 
       // Recargar la lista después de crear
       await loadClientes();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadClientes();
       rethrow;
     }
   }
 
   /// Actualizar un cliente existente
-  Future<void> updateCliente({
+  Future<String> updateCliente({
     required int codCliente,
     required int codZona,
     required String nit,
@@ -69,7 +71,7 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
   }) async {
     try {
       final repository = ref.read(clienteRepositoryProvider);
-      await repository.updateCliente(
+      final result = await repository.updateCliente(
         codCliente: codCliente,
         codZona: codZona,
         nit: nit,
@@ -83,22 +85,26 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
 
       // Recargar la lista después de actualizar
       await loadClientes();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadClientes();
       rethrow;
     }
   }
 
   /// Eliminar un cliente
-  Future<void> deleteCliente(int codCliente) async {
+  Future<String> deleteCliente(int codCliente) async {
     try {
       final repository = ref.read(clienteRepositoryProvider);
-      await repository.deleteCliente(codCliente);
+      final result = await repository.deleteCliente(codCliente);
 
       // Recargar la lista después de eliminar
       await loadClientes();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadClientes();
       rethrow;
     }
   }

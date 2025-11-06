@@ -1,9 +1,10 @@
+import '../../core/utils/operation_result.dart';
 import '../entities/ciudad_entity.dart';
 
 /// Repositorio de Ciudades
 abstract class CiudadRepository {
   /// Crear una nueva ciudad
-  Future<CiudadEntity> createCiudad({
+  Future<OperationResult<CiudadEntity>> createCiudad({
     required int codPais,
     required String ciudad,
     required int audUsuario,
@@ -16,7 +17,7 @@ abstract class CiudadRepository {
   Future<CiudadEntity> getCiudadById(int codCiudad);
 
   /// Actualizar una ciudad
-  Future<CiudadEntity> updateCiudad({
+  Future<OperationResult<CiudadEntity>> updateCiudad({
     required int codCiudad,
     required int codPais,
     required String ciudad,
@@ -24,5 +25,5 @@ abstract class CiudadRepository {
   });
 
   /// Eliminar una ciudad
-  Future<void> deleteCiudad(int codCiudad);
+  Future<OperationResult<void>> deleteCiudad(int codCiudad);
 }

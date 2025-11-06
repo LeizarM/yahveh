@@ -24,14 +24,14 @@ class ZonaNotifier extends Notifier<AsyncValue<List<ZonaEntity>>> {
   }
 
   /// Crear una nueva zona
-  Future<void> createZona({
+  Future<String> createZona({
     required int codCiudad,
     required String zona,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(zonaRepositoryProvider);
-      await repository.createZona(
+      final result = await repository.createZona(
         codCiudad: codCiudad,
         zona: zona,
         audUsuario: audUsuario,
@@ -39,14 +39,16 @@ class ZonaNotifier extends Notifier<AsyncValue<List<ZonaEntity>>> {
 
       // Recargar la lista después de crear
       await loadZonas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadZonas();
       rethrow;
     }
   }
 
   /// Actualizar una zona existente
-  Future<void> updateZona({
+  Future<String> updateZona({
     required int codZona,
     required int codCiudad,
     required String zona,
@@ -54,7 +56,7 @@ class ZonaNotifier extends Notifier<AsyncValue<List<ZonaEntity>>> {
   }) async {
     try {
       final repository = ref.read(zonaRepositoryProvider);
-      await repository.updateZona(
+      final result = await repository.updateZona(
         codZona: codZona,
         codCiudad: codCiudad,
         zona: zona,
@@ -63,22 +65,26 @@ class ZonaNotifier extends Notifier<AsyncValue<List<ZonaEntity>>> {
 
       // Recargar la lista después de actualizar
       await loadZonas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadZonas();
       rethrow;
     }
   }
 
   /// Eliminar una zona
-  Future<void> deleteZona(int codZona) async {
+  Future<String> deleteZona(int codZona) async {
     try {
       final repository = ref.read(zonaRepositoryProvider);
-      await repository.deleteZona(codZona);
+      final result = await repository.deleteZona(codZona);
 
       // Recargar la lista después de eliminar
       await loadZonas();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      await loadZonas();
       rethrow;
     }
   }

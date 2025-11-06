@@ -1,8 +1,9 @@
+import '../../core/utils/operation_result.dart';
 import '../entities/familia_entity.dart';
 
 /// Repositorio abstracto para Familias
 abstract class FamiliaRepository {
-  Future<FamiliaEntity> createFamilia({
+  Future<OperationResult<FamiliaEntity>> createFamilia({
     required String familia,
     required int audUsuario,
   });
@@ -11,11 +12,11 @@ abstract class FamiliaRepository {
 
   Future<FamiliaEntity> getFamiliaById(int codFamilia);
 
-  Future<FamiliaEntity> updateFamilia({
+  Future<OperationResult<FamiliaEntity>> updateFamilia({
     required int codFamilia,
     required String familia,
     required int audUsuario,
   });
 
-  Future<void> deleteFamilia(int codFamilia);
+  Future<OperationResult<void>> deleteFamilia(int codFamilia);
 }

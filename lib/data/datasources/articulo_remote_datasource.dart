@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/api_exception.dart';
+import '../../core/utils/operation_result.dart';
 import '../models/articulo_model.dart';
 
 /// Interfaz del datasource remoto de Artículos
 abstract class ArticuloRemoteDataSource {
-  Future<ArticuloModel> createArticulo({
+  Future<OperationResult<ArticuloModel>> createArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -15,7 +19,7 @@ abstract class ArticuloRemoteDataSource {
 
   Future<ArticuloModel> getArticuloById(String codArticulo);
 
-  Future<ArticuloModel> updateArticulo({
+  Future<OperationResult<ArticuloModel>> updateArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -23,7 +27,7 @@ abstract class ArticuloRemoteDataSource {
     required int audUsuario,
   });
 
-  Future<void> deleteArticulo(String codArticulo);
+  Future<OperationResult<void>> deleteArticulo(String codArticulo);
 }
 
 /// Implementación del datasource remoto de Artículos
@@ -33,7 +37,7 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
   ArticuloRemoteDataSourceImpl(this._client);
 
   @override
-  Future<ArticuloModel> createArticulo({
+  Future<OperationResult<ArticuloModel>> createArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
@@ -52,31 +56,44 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
-      
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Artículo creado exitosamente';
         
-        // Si el backend devuelve solo el codArticulo (String), obtenemos el objeto completo
-        if (data is String) {
-          return await getArticuloById(data);
-        }
+        // Crear un ArticuloModel temporal con los datos que tenemos
+        // El provider recargará la lista completa después
+        final articuloModel = ArticuloModel(
+          codArticulo: codArticulo,
+          codLinea: codLinea,
+          descripcion: descripcion,
+          descripcion2: descripcion2,
+          audUsuario: audUsuario,
+        );
         
-        // Si el backend devuelve el objeto completo
-        if (data is Map<String, dynamic>) {
-          return ArticuloModel.fromJson(data);
-        }
-        
-        // Si data es null, asumimos que se creó correctamente y obtenemos el objeto
-        if (data == null) {
-          return await getArticuloById(codArticulo);
-        }
-        
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+        return OperationResult(data: articuloModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al crear artículo');
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al crear artículo: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al crear artículo');
     }
   }
 
@@ -98,10 +115,24 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
         // Si data es null o está vacío, retornar lista vacía
         return [];
       } else {
-        throw Exception(response.data?['message'] ?? 'Error al obtener artículos');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener artículos: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener artículos');
     }
   }
 
@@ -113,71 +144,138 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
       if (response.data['success'] == true) {
         return ArticuloModel.fromJson(response.data['data'] as Map<String, dynamic>);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al obtener artículo');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener artículo: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener artículo');
     }
   }
 
   @override
-  Future<ArticuloModel> updateArticulo({
+  Future<OperationResult<ArticuloModel>> updateArticulo({
     required String codArticulo,
     required int codLinea,
     required String descripcion,
     required String descripcion2,
     required int audUsuario,
   }) async {
+
+    debugPrint('=== UPDATE ARTICULO ===');
+    debugPrint('URL: /articulos/$codArticulo');
+    debugPrint('codArticulo: $codArticulo');
+    debugPrint('codLinea: $codLinea');
+    debugPrint('descripcion: $descripcion');
+    debugPrint('descripcion2: $descripcion2');
+    debugPrint('audUsuario: $audUsuario');
+
     try {
+      final requestData = {
+        'codArticulo': codArticulo,  // El backend lo requiere en el body también
+        'codLinea': codLinea,
+        'descripcion': descripcion,
+        'descripcion2': descripcion2,
+        'audUsuario': audUsuario,
+      };
+      
+      debugPrint('Request Data: $requestData');
+
       final response = await _client.put(
         '/articulos/$codArticulo',
-        data: {
-          'codArticulo': codArticulo,
-          'codLinea': codLinea,
-          'descripcion': descripcion,
-          'descripcion2': descripcion2,
-          'audUsuario': audUsuario,
-        },
+        data: requestData,
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
+      debugPrint('Response Status: ${response.statusCode}');
+      debugPrint('Response Data: ${response.data}');
+
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Artículo actualizado exitosamente';
         
-       
-        // Si el backend devuelve solo el codArticulo (String), obtenemos el objeto completo
-        if (data is String) {
-          return await getArticuloById(data);
-        }
+        // Crear un ArticuloModel temporal con los datos que tenemos
+        // El provider recargará la lista completa después
+        final articuloModel = ArticuloModel(
+          codArticulo: codArticulo,
+          codLinea: codLinea,
+          descripcion: descripcion,
+          descripcion2: descripcion2,
+          audUsuario: audUsuario,
+        );
         
-        // Si el backend devuelve el objeto completo
-        if (data is Map<String, dynamic>) {
-          return ArticuloModel.fromJson(data);
-        }
-        
-        // Si data es null, asumimos que se actualizó correctamente y obtenemos el objeto
-        if (data == null) {
-          return await getArticuloById(codArticulo);
-        }
-        
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+        return OperationResult(data: articuloModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al actualizar artículo');
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al actualizar artículo: $e');
+      debugPrint('Error en updateArticulo: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        debugPrint('DioException Response Data: ${e.response?.data}');
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al actualizar artículo');
     }
   }
 
   @override
-  Future<void> deleteArticulo(String codArticulo) async {
+  Future<OperationResult<void>> deleteArticulo(String codArticulo) async {
     try {
       final response = await _client.delete('/articulos/$codArticulo');
 
-      if (response.data['success'] != true) {
-        throw Exception(response.data['message'] ?? 'Error al eliminar artículo');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Artículo eliminado exitosamente';
+        return OperationResult(data: null, message: message);
+      } else {
+        // Lanzar excepción con el mensaje del backend cuando success = false
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al eliminar artículo: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Si es un DioException, intentar extraer el mensaje del response
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al eliminar artículo');
     }
   }
 }

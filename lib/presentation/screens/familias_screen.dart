@@ -164,10 +164,11 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
       builder: (context) => _FamiliaFormDialog(
         onSubmit: (familia) async {
           final user = ref.read(authProvider).value;
-          await ref.read(familiaProvider.notifier).createFamilia(
+          final message = await ref.read(familiaProvider.notifier).createFamilia(
                 familia: familia,
                 audUsuario: user!.codUsuario,
               );
+          return message;
         },
       ),
     );
@@ -181,11 +182,12 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
         familia: familia,
         onSubmit: (familiaNombre) async {
           final user = ref.read(authProvider).value;
-          await ref.read(familiaProvider.notifier).updateFamilia(
+          final message = await ref.read(familiaProvider.notifier).updateFamilia(
                 codFamilia: familia.codFamilia,
                 familia: familiaNombre,
                 audUsuario: user!.codUsuario,
               );
+          return message;
         },
       ),
     );
@@ -206,16 +208,19 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(familiaProvider.notifier).deleteFamilia(familia.codFamilia);
+                final message = await ref.read(familiaProvider.notifier).deleteFamilia(familia.codFamilia);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Familia eliminada')),
+                    SnackBar(content: Text(message)),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                    SnackBar(
+                      content: Text(ErrorMessages.getFriendlyMessage(e)),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -231,7 +236,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
 /// Formulario de familia (crear/editar)
 class _FamiliaFormDialog extends ConsumerStatefulWidget {
   final FamiliaEntity? familia;
-  final Future<void> Function(String familia) onSubmit;
+  final Future<String> Function(String familia) onSubmit;
 
   const _FamiliaFormDialog({
     this.familia,
@@ -309,23 +314,21 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(_familiaController.text.trim());
+      final message = await widget.onSubmit(_familiaController.text.trim());
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.familia == null ? 'Familia creada correctamente' : 'Familia actualizada correctamente',
-            ),
-          ),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.familia == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

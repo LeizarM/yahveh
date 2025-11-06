@@ -24,34 +24,39 @@ class FamiliaNotifier extends Notifier<AsyncValue<List<FamiliaEntity>>> {
   }
 
   /// Crear una nueva familia
-  Future<void> createFamilia({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> createFamilia({
     required String familia,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(familiaRepositoryProvider);
-      await repository.createFamilia(
+      final result = await repository.createFamilia(
         familia: familia,
         audUsuario: audUsuario,
       );
       
       // Recargar la lista después de crear
       await loadFamilias();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Actualizar una familia existente
-  Future<void> updateFamilia({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> updateFamilia({
     required int codFamilia,
     required String familia,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(familiaRepositoryProvider);
-      await repository.updateFamilia(
+      final result = await repository.updateFamilia(
         codFamilia: codFamilia,
         familia: familia,
         audUsuario: audUsuario,
@@ -59,22 +64,29 @@ class FamiliaNotifier extends Notifier<AsyncValue<List<FamiliaEntity>>> {
       
       // Recargar la lista después de actualizar
       await loadFamilias();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Eliminar una familia
-  Future<void> deleteFamilia(int codFamilia) async {
+  /// Retorna el mensaje de éxito del backend
+  Future<String> deleteFamilia(int codFamilia) async {
     try {
       final repository = ref.read(familiaRepositoryProvider);
-      await repository.deleteFamilia(codFamilia);
+      final result = await repository.deleteFamilia(codFamilia);
       
       // Recargar la lista después de eliminar
       await loadFamilias();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }

@@ -269,7 +269,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
       builder: (context) => _ClienteFormDialog(
         onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs) async {
           final user = ref.read(authProvider).value;
-          await ref.read(clienteProvider.notifier).createCliente(
+          return await ref.read(clienteProvider.notifier).createCliente(
                 codZona: codZona,
                 nit: nit,
                 razonSocial: razonSocial,
@@ -292,7 +292,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
         cliente: cliente,
         onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs) async {
           final user = ref.read(authProvider).value;
-          await ref.read(clienteProvider.notifier).updateCliente(
+          return await ref.read(clienteProvider.notifier).updateCliente(
                 codCliente: cliente.codCliente,
                 codZona: codZona,
                 nit: nit,
@@ -320,16 +320,22 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await ref.read(clienteProvider.notifier).deleteCliente(cliente.codCliente);
+                final message = await ref.read(clienteProvider.notifier).deleteCliente(cliente.codCliente);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cliente eliminado')),
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(ErrorMessages.getCrudErrorMessage('delete', e))),
+                    SnackBar(
+                      content: Text(ErrorMessages.getFriendlyMessage(e)),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -345,7 +351,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
 /// Formulario de cliente
 class _ClienteFormDialog extends ConsumerStatefulWidget {
   final ClienteEntity? cliente;
-  final Future<void> Function(
+  final Future<String> Function(
     int codZona,
     String nit,
     String razonSocial,
@@ -585,7 +591,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.onSubmit(
+      final message = await widget.onSubmit(
         _selectedZonaId!,
         _nitController.text.trim(),
         _razonSocialController.text.trim(),
@@ -599,17 +605,18 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              widget.cliente == null ? 'Cliente creado correctamente' : 'Cliente actualizado correctamente',
-            ),
+            content: Text(message),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        final operation = widget.cliente == null ? 'create' : 'update';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorMessages.getCrudErrorMessage(operation, e))),
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/error/api_exception.dart';
+import '../../core/utils/operation_result.dart';
 import '../models/zona_model.dart';
 
 /// Interfaz del datasource remoto de Zonas
 abstract class ZonaRemoteDataSource {
-  Future<ZonaModel> createZona({
+  Future<OperationResult<ZonaModel>> createZona({
     required int codCiudad,
     required String zona,
     required int audUsuario,
@@ -13,14 +16,14 @@ abstract class ZonaRemoteDataSource {
 
   Future<ZonaModel> getZonaById(int codZona);
 
-  Future<ZonaModel> updateZona({
+  Future<OperationResult<ZonaModel>> updateZona({
     required int codZona,
     required int codCiudad,
     required String zona,
     required int audUsuario,
   });
 
-  Future<void> deleteZona(int codZona);
+  Future<OperationResult<void>> deleteZona(int codZona);
 }
 
 /// Implementación del datasource remoto de Zonas
@@ -30,7 +33,7 @@ class ZonaRemoteDataSourceImpl implements ZonaRemoteDataSource {
   ZonaRemoteDataSourceImpl(this._client);
 
   @override
-  Future<ZonaModel> createZona({
+  Future<OperationResult<ZonaModel>> createZona({
     required int codCiudad,
     required String zona,
     required int audUsuario,
@@ -45,23 +48,40 @@ class ZonaRemoteDataSourceImpl implements ZonaRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
-
-        if (data is int) {
-          return await getZonaById(data);
-        }
-
-        if (data is Map<String, dynamic>) {
-          return ZonaModel.fromJson(data);
-        }
-
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Zona creada exitosamente';
+        
+        // Crear un ZonaModel temporal con los datos que tenemos
+        final zonaModel = ZonaModel(
+          codZona: response.data['data'] is int ? response.data['data'] : 0,
+          codCiudad: codCiudad,
+          zona: zona,
+          audUsuario: audUsuario,
+        );
+        
+        return OperationResult(data: zonaModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al crear zona');
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al crear zona: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al crear zona');
     }
   }
 
@@ -81,10 +101,23 @@ class ZonaRemoteDataSourceImpl implements ZonaRemoteDataSource {
 
         return [];
       } else {
-        throw Exception(response.data?['message'] ?? 'Error al obtener zonas');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener zonas: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener zonas');
     }
   }
 
@@ -96,15 +129,28 @@ class ZonaRemoteDataSourceImpl implements ZonaRemoteDataSource {
       if (response.data['success'] == true) {
         return ZonaModel.fromJson(response.data['data'] as Map<String, dynamic>);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al obtener zona');
+        throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al obtener zona: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener zona');
     }
   }
 
   @override
-  Future<ZonaModel> updateZona({
+  Future<OperationResult<ZonaModel>> updateZona({
     required int codZona,
     required int codCiudad,
     required String zona,
@@ -121,36 +167,73 @@ class ZonaRemoteDataSourceImpl implements ZonaRemoteDataSource {
         },
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
-
-        if (data is int || data == null) {
-          return await getZonaById(codZona);
-        }
-
-        if (data is Map<String, dynamic>) {
-          return ZonaModel.fromJson(data);
-        }
-
-        throw Exception('Formato de respuesta inesperado: ${data.runtimeType}');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Zona actualizada exitosamente';
+        
+        // Crear un ZonaModel temporal con los datos que tenemos
+        final zonaModel = ZonaModel(
+          codZona: codZona,
+          codCiudad: codCiudad,
+          zona: zona,
+          audUsuario: audUsuario,
+        );
+        
+        return OperationResult(data: zonaModel, message: message);
       } else {
-        throw Exception(response.data['message'] ?? 'Error al actualizar zona');
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al actualizar zona: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al actualizar zona');
     }
   }
 
   @override
-  Future<void> deleteZona(int codZona) async {
+  Future<OperationResult<void>> deleteZona(int codZona) async {
     try {
       final response = await _client.delete('/zonas/$codZona');
 
-      if (response.data['success'] != true) {
-        throw Exception(response.data['message'] ?? 'Error al eliminar zona');
+      // Verificar si la respuesta fue exitosa
+      if (response.data != null && response.data['success'] == true) {
+        final message = response.data['message'] as String? ?? 'Zona eliminada exitosamente';
+        return OperationResult(data: null, message: message);
+      } else {
+        final errorData = response.data is Map<String, dynamic> 
+            ? response.data as Map<String, dynamic>
+            : {'message': 'Error desconocido', 'success': false};
+        throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      throw Exception('Error al eliminar zona: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al eliminar zona');
     }
   }
 }

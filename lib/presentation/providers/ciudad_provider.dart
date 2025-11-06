@@ -24,14 +24,15 @@ class CiudadNotifier extends Notifier<AsyncValue<List<CiudadEntity>>> {
   }
 
   /// Crear una nueva ciudad
-  Future<void> createCiudad({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> createCiudad({
     required int codPais,
     required String ciudad,
     required int audUsuario,
   }) async {
     try {
       final repository = ref.read(ciudadRepositoryProvider);
-      await repository.createCiudad(
+      final result = await repository.createCiudad(
         codPais: codPais,
         ciudad: ciudad,
         audUsuario: audUsuario,
@@ -39,14 +40,18 @@ class CiudadNotifier extends Notifier<AsyncValue<List<CiudadEntity>>> {
 
       // Recargar la lista después de crear
       await loadCiudades();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Actualizar una ciudad existente
-  Future<void> updateCiudad({
+  /// Retorna el mensaje de éxito del backend
+  Future<String> updateCiudad({
     required int codCiudad,
     required int codPais,
     required String ciudad,
@@ -54,7 +59,7 @@ class CiudadNotifier extends Notifier<AsyncValue<List<CiudadEntity>>> {
   }) async {
     try {
       final repository = ref.read(ciudadRepositoryProvider);
-      await repository.updateCiudad(
+      final result = await repository.updateCiudad(
         codCiudad: codCiudad,
         codPais: codPais,
         ciudad: ciudad,
@@ -63,22 +68,29 @@ class CiudadNotifier extends Notifier<AsyncValue<List<CiudadEntity>>> {
 
       // Recargar la lista después de actualizar
       await loadCiudades();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }
 
   /// Eliminar una ciudad
-  Future<void> deleteCiudad(int codCiudad) async {
+  /// Retorna el mensaje de éxito del backend
+  Future<String> deleteCiudad(int codCiudad) async {
     try {
       final repository = ref.read(ciudadRepositoryProvider);
-      await repository.deleteCiudad(codCiudad);
+      final result = await repository.deleteCiudad(codCiudad);
 
       // Recargar la lista después de eliminar
       await loadCiudades();
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      
+      return result.message;
+    } catch (e) {
+      // NO cambiar el estado de la lista cuando falla una operación individual
+      // Solo relanzar el error para que lo maneje la UI
       rethrow;
     }
   }

@@ -1,3 +1,4 @@
+import '../../core/utils/operation_result.dart';
 import '../../domain/entities/familia_entity.dart';
 import '../../domain/repositories/familia_repository.dart';
 import '../datasources/familia_remote_datasource.dart';
@@ -9,7 +10,7 @@ class FamiliaRepositoryImpl implements FamiliaRepository {
   FamiliaRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<FamiliaEntity> createFamilia({
+  Future<OperationResult<FamiliaEntity>> createFamilia({
     required String familia,
     required int audUsuario,
   }) async {
@@ -30,7 +31,7 @@ class FamiliaRepositoryImpl implements FamiliaRepository {
   }
 
   @override
-  Future<FamiliaEntity> updateFamilia({
+  Future<OperationResult<FamiliaEntity>> updateFamilia({
     required int codFamilia,
     required String familia,
     required int audUsuario,
@@ -43,7 +44,7 @@ class FamiliaRepositoryImpl implements FamiliaRepository {
   }
 
   @override
-  Future<void> deleteFamilia(int codFamilia) async {
+  Future<OperationResult<void>> deleteFamilia(int codFamilia) async {
     return await _remoteDataSource.deleteFamilia(codFamilia);
   }
 }
