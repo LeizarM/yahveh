@@ -12,6 +12,7 @@ import '../../data/datasources/ciudad_remote_datasource.dart';
 import '../../data/datasources/zona_remote_datasource.dart';
 import '../../data/datasources/cliente_remote_datasource.dart';
 import '../../data/datasources/familia_remote_datasource.dart';
+import '../../data/datasources/precio_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -21,6 +22,7 @@ import '../../data/repositories/ciudad_repository_impl.dart';
 import '../../data/repositories/zona_repository_impl.dart';
 import '../../data/repositories/cliente_repository_impl.dart';
 import '../../data/repositories/familia_repository_impl.dart';
+import '../../data/repositories/precio_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -30,6 +32,7 @@ import '../../domain/repositories/ciudad_repository.dart';
 import '../../domain/repositories/zona_repository.dart';
 import '../../domain/repositories/cliente_repository.dart';
 import '../../domain/repositories/familia_repository.dart';
+import '../../domain/repositories/precio_repository.dart';
 import 'auth_provider.dart';
 
 /// Provider para FlutterSecureStorage
@@ -218,4 +221,21 @@ final familiaRepositoryProvider = Provider<FamiliaRepository>((ref) {
   final remoteDataSource = ref.watch(familiaRemoteDataSourceProvider);
   
   return FamiliaRepositoryImpl(remoteDataSource);
+});
+
+// ============================================================================
+// PRECIO
+// ============================================================================
+
+/// Provider para PrecioRemoteDataSource
+final precioRemoteDataSourceProvider = Provider<PrecioRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return PrecioRemoteDataSourceImpl(client);
+});
+
+/// Provider para PrecioRepository
+final precioRepositoryProvider = Provider<PrecioRepository>((ref) {
+  final remoteDataSource = ref.watch(precioRemoteDataSourceProvider);
+  
+  return PrecioRepositoryImpl(remoteDataSource);
 });

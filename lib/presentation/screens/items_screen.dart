@@ -5,9 +5,11 @@ import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/articulo_entity.dart';
 import '../../domain/entities/linea_entity.dart';
+import '../../domain/entities/precio_entity.dart';
 import '../providers/articulo_provider.dart';
 import '../providers/linea_provider.dart';
 import '../providers/familia_provider.dart';
+import '../providers/precio_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
 
@@ -258,7 +260,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header con código e ícono
+              // Header con código, ícono y botón de precios
               Row(
                 children: [
                   Icon(
@@ -277,6 +279,18 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  // Botón de precios
+                  IconButton(
+                    icon: Icon(
+                      Icons.attach_money,
+                      size: 20,
+                      color: Colors.amber.shade700,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _showPreciosDialog(context, articulo),
+                    tooltip: 'Gestionar precios',
                   ),
                 ],
               ),
@@ -534,6 +548,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
           );
         },
       ),
+    );
+  }
+
+  /// Diálogo para gestionar precios del artículo
+  void _showPreciosDialog(BuildContext context, ArticuloEntity articulo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _PreciosFormDialog(articulo: articulo),
     );
   }
 }
@@ -1211,5 +1234,641 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
         );
       },
     );
+  }
+}
+
+/// Diálogo para gestionar precios de un artículo
+class _PreciosFormDialog extends ConsumerStatefulWidget {
+  final ArticuloEntity articulo;
+
+  const _PreciosFormDialog({required this.articulo});
+
+  @override
+  ConsumerState<_PreciosFormDialog> createState() => _PreciosFormDialogState();
+}
+
+class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _precioBaseController = TextEditingController(text: '');
+  final TextEditingController _porcentajeController = TextEditingController(text: '30'); // 30% por defecto
+  bool _isLoading = false;
+  bool _isLoadingPrecios = true;
+  List<PrecioEntity> _preciosExistentes = [];
+  String? _errorPrecios;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarPreciosExistentes();
+  }
+
+  @override
+  void dispose() {
+    _precioBaseController.dispose();
+    _porcentajeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cargarPreciosExistentes() async {
+    setState(() {
+      _isLoadingPrecios = true;
+      _errorPrecios = null;
+    });
+
+    try {
+      final precios = await ref.read(precioProvider.notifier).loadPreciosByArticulo(
+        widget.articulo.codArticulo!,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _preciosExistentes = precios;
+          _isLoadingPrecios = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      // Log para debugging
+      debugPrint('Error al cargar precios: $e');
+      debugPrint('StackTrace: $stackTrace');
+      
+      if (mounted) {
+        setState(() {
+          _errorPrecios = ErrorMessages.getFriendlyMessage(e);
+          _isLoadingPrecios = false;
+          _preciosExistentes = []; // Lista vacía en caso de error
+        });
+      }
+    }
+  }
+
+  // Calcula el precio de venta basado en el precio base y el porcentaje
+  double? _calcularPrecioVenta() {
+    final precioBase = double.tryParse(_precioBaseController.text.trim());
+    final porcentaje = double.tryParse(_porcentajeController.text.trim());
+    
+    if (precioBase != null && porcentaje != null) {
+      return precioBase * (1 + (porcentaje / 100));
+    }
+    return null;
+  }
+
+  // Calcula el precio sin factura (mismo que precio de venta por ahora)
+  double? _calcularPrecioSinFactura() {
+    return _calcularPrecioVenta();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.attach_money, color: Colors.amber.shade700),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text('Gestionar Precios'),
+          ),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 500,
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Información del artículo
+                Card(
+                  color: Colors.blue.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.inventory_2, 
+                              size: 20, 
+                              color: Colors.blue.shade700
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                widget.articulo.codArticulo ?? 'N/A',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.articulo.descripcion,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        if (widget.articulo.linea != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'Línea: ${widget.articulo.linea}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Precios existentes del artículo
+                if (_isLoadingPrecios)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (_errorPrecios != null)
+                  Card(
+                    color: Colors.orange.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorPrecios!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (_preciosExistentes.isNotEmpty)
+                  Card(
+                    color: Colors.green.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.price_check, 
+                                size: 18, 
+                                color: Colors.green.shade700
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Precios Existentes (${_preciosExistentes.length})',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Colors.green.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 12),
+                          ..._preciosExistentes.map((precio) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Lista: ${precio.listaPrecio}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Base: \$${precio.precioBase.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Venta: \$${precio.precio.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'S/Fact: \$${precio.precioSinFactura.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.orange.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Card(
+                    color: Colors.grey.shade100,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, 
+                            size: 18, 
+                            color: Colors.grey.shade600
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Este artículo no tiene precios registrados',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // Divider con texto
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey.shade400)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'AGREGAR/ACTUALIZAR PRECIO',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey.shade400)),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Precio Base
+                TextFormField(
+                  controller: _precioBaseController,
+                  decoration: InputDecoration(
+                    labelText: 'Precio Base (Costo)',
+                    hintText: '0.00',
+                    prefixIcon: Icon(Icons.monetization_on, color: Colors.green.shade600),
+                    prefixText: '\$ ',
+                    border: const OutlineInputBorder(),
+                    helperText: 'Precio de costo o base del producto',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) => setState(() {}), // Recalcular precios
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El precio base es requerido';
+                    }
+                    final precio = double.tryParse(value.trim());
+                    if (precio == null) {
+                      return 'Ingrese un precio válido';
+                    }
+                    if (precio <= 0) {
+                      return 'El precio debe ser mayor a 0';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Porcentaje de Incremento
+                TextFormField(
+                  controller: _porcentajeController,
+                  decoration: InputDecoration(
+                    labelText: 'Porcentaje de Incremento',
+                    hintText: '0',
+                    prefixIcon: Icon(Icons.percent, color: Colors.purple.shade600),
+                    suffixText: '%',
+                    border: const OutlineInputBorder(),
+                    helperText: 'Porcentaje de ganancia sobre el precio base',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) => setState(() {}), // Recalcular precios
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El porcentaje es requerido';
+                    }
+                    final porcentaje = double.tryParse(value.trim());
+                    if (porcentaje == null) {
+                      return 'Ingrese un porcentaje válido';
+                    }
+                    if (porcentaje < 0) {
+                      return 'El porcentaje no puede ser negativo';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // Precios Calculados (solo lectura)
+                ValueListenableBuilder(
+                  valueListenable: _precioBaseController,
+                  builder: (context, baseValue, _) {
+                    return ValueListenableBuilder(
+                      valueListenable: _porcentajeController,
+                      builder: (context, porcentajeValue, _) {
+                        final precioVenta = _calcularPrecioVenta();
+                        final precioSinFactura = _calcularPrecioSinFactura();
+                        
+                        return Card(
+                          color: Colors.blue.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.calculate, 
+                                      size: 20, 
+                                      color: Colors.blue.shade700
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Precios Calculados',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.blue.shade900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Divider(height: 16),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.sell, 
+                                          size: 16, 
+                                          color: Colors.blue.shade700
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          'Precio de Venta:',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      precioVenta != null 
+                                        ? '\$${precioVenta.toStringAsFixed(2)}'
+                                        : '\$0.00',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue.shade900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.money_off, 
+                                          size: 16, 
+                                          color: Colors.orange.shade700
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          'Precio Sin Factura:',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      precioSinFactura != null 
+                                        ? '\$${precioSinFactura.toStringAsFixed(2)}'
+                                        : '\$0.00',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange.shade900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Resumen de ganancia
+                ValueListenableBuilder(
+                  valueListenable: _precioBaseController,
+                  builder: (context, baseValue, _) {
+                    return ValueListenableBuilder(
+                      valueListenable: _porcentajeController,
+                      builder: (context, porcentajeValue, _) {
+                        final precioBase = double.tryParse(baseValue.text);
+                        final porcentaje = double.tryParse(porcentajeValue.text);
+                        
+                        double? ganancia;
+                        
+                        if (precioBase != null && porcentaje != null && precioBase > 0) {
+                          ganancia = precioBase * (porcentaje / 100);
+                        }
+                        
+                        return Card(
+                          color: Colors.green.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.trending_up, 
+                                      size: 18, 
+                                      color: Colors.green.shade900
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Resumen de Ganancia',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (ganancia != null) ...[
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Ganancia por unidad:', 
+                                        style: TextStyle(fontSize: 12)
+                                      ),
+                                      Text(
+                                        '\$${ganancia.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Divider(height: 12),
+                                ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Los precios serán calculados automáticamente y aplicados al artículo.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green.shade900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton.icon(
+          onPressed: _isLoading ? null : _handleSubmit,
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.save),
+          label: const Text('Guardar Precios'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final precioBase = double.parse(_precioBaseController.text.trim());
+      final porcentaje = double.parse(_porcentajeController.text.trim());
+      final precioVenta = _calcularPrecioVenta()!;
+      final precioSinFactura = _calcularPrecioSinFactura()!;
+
+      // Obtener el usuario actual desde el provider de autenticación
+      final authState = ref.read(authProvider);
+      final userId = authState.value?.codUsuario ?? 0;
+
+      // Llamar al provider para crear el precio
+      // codPrecio es auto-increment, no se envía desde el frontend
+      final message = await ref.read(precioProvider.notifier).createPrecio(
+        codArticulo: widget.articulo.codArticulo!,
+        precioBase: precioBase,
+        precio: precioVenta,
+        precioSinFactura: precioSinFactura,
+        audUsuario: userId,
+      );
+      
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$message\n'
+              'Base: \$${precioBase.toStringAsFixed(2)} + ${porcentaje.toStringAsFixed(0)}%\n'
+              'Venta: \$${precioVenta.toStringAsFixed(2)} | '
+              'Sin Factura: \$${precioSinFactura.toStringAsFixed(2)}',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        
+        // Recargar los precios del artículo después de guardar
+        _cargarPreciosExistentes();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
