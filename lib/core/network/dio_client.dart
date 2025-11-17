@@ -39,14 +39,19 @@ class DioClient {
             if (token != null) {
               options.headers[ApiConstants.authorization] = 
                   '${ApiConstants.bearer} $token';
+              _logger.d('🔑 Token agregado');
+            } else {
+              _logger.w('⚠️ No hay token disponible');
             }
           }
-          _logger.d('🚀 Request: ${options.method} ${options.path}');
+          _logger.d('🚀 Request: ${options.method} ${options.baseUrl}${options.path}');
           _logger.d('📦 Data: ${options.data}');
+          _logger.d('📋 Headers: ${options.headers}');
           return handler.next(options);
         },
         onResponse: (response, handler) async {
-         
+          _logger.d('✅ Response: ${response.statusCode} ${response.requestOptions.path}');
+          _logger.d('📦 Response Data: ${response.data}');
           
           // Si la respuesta contiene token, guardarlo automáticamente
           if (response.data != null && response.data is Map) {

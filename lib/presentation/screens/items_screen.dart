@@ -11,6 +11,7 @@ import '../providers/linea_provider.dart';
 import '../providers/familia_provider.dart';
 import '../providers/precio_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
 /// Pantalla de Artículos/Items
@@ -248,121 +249,227 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     );
   }
 
-  /// Card de artículo
+  /// Card de artículo con diseño mejorado
   Widget _buildItemCard(BuildContext context, ArticuloEntity articulo) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         onTap: () => _showItemDetails(context, articulo),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header con código, ícono y botón de precios
-              Row(
-                children: [
-                  Icon(
-                    Icons.inventory_2,
-                    size: 20,
-                    color: context.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      articulo.codArticulo ?? "N/A",
-                      style: context.theme.textTheme.labelMedium?.copyWith(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                context.colorScheme.primary.withOpacity(0.02),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header con código, ícono y botones de precios/inventario
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.inventory_2,
+                        size: 20,
                         color: context.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  // Botón de precios
-                  IconButton(
-                    icon: Icon(
-                      Icons.attach_money,
-                      size: 20,
-                      color: Colors.amber.shade700,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            articulo.codArticulo ?? "N/A",
+                            style: context.theme.textTheme.labelLarge?.copyWith(
+                              color: context.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            articulo.linea ?? 'Sin línea',
+                            style: context.theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                              fontSize: 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => _showPreciosDialog(context, articulo),
-                    tooltip: 'Gestionar precios',
+                    // Botón de entrada de inventario
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.warehouse,
+                          size: 20,
+                          color: Colors.green.shade700,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _showEntradaInventarioDialog(context, articulo),
+                        tooltip: 'Entrada de inventario',
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Botón de precios
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.attach_money,
+                          size: 20,
+                          color: Colors.amber.shade700,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _showPreciosDialog(context, articulo),
+                        tooltip: 'Gestionar precios',
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Separador visual
+                Divider(
+                  color: Colors.grey.shade200,
+                  height: 1,
+                  thickness: 1,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Descripción
+                Text(
+                  articulo.descripcion,
+                  style: context.theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
                   ),
-                ],
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Descripción
-              Text(
-                articulo.descripcion,
-                style: context.theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              
-              const SizedBox(height: 4),
-              
-              // Línea
-              Text(
-                articulo.linea ?? 'Sin línea',
-                style: context.theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                  fontSize: 11,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Precio y Stock
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Precio
+                
+                if (articulo.descripcion2.isNotEmpty) ...[
+                  const SizedBox(height: 6),
                   Text(
-                    '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
-                    style: context.theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.green.shade700,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    articulo.descripcion2,
+                    style: context.theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
                     ),
-                  ),
-                  // Stock
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (articulo.stockActual ?? 0) > 0 
-                          ? Colors.green.shade50 
-                          : Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: (articulo.stockActual ?? 0) > 0 
-                            ? Colors.green.shade200 
-                            : Colors.red.shade200,
-                      ),
-                    ),
-                    child: Text(
-                      'Stock: ${articulo.stockActual ?? 0}',
-                      style: context.theme.textTheme.bodySmall?.copyWith(
-                        color: (articulo.stockActual ?? 0) > 0 
-                            ? Colors.green.shade700 
-                            : Colors.red.shade700,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ],
+                
+                const SizedBox(height: 12),
+                
+                // Precio y Stock
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Precio
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green.shade700, Colors.green.shade600],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.shade200,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    // Stock
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: (articulo.stockActual ?? 0) > 0 
+                            ? Colors.blue.shade50 
+                            : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: (articulo.stockActual ?? 0) > 0 
+                              ? Colors.blue.shade300 
+                              : Colors.red.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            (articulo.stockActual ?? 0) > 0 
+                                ? Icons.inventory 
+                                : Icons.warning_amber_rounded,
+                            size: 16,
+                            color: (articulo.stockActual ?? 0) > 0 
+                                ? Colors.blue.shade700 
+                                : Colors.red.shade700,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${articulo.stockActual ?? 0}',
+                            style: context.theme.textTheme.bodyMedium?.copyWith(
+                              color: (articulo.stockActual ?? 0) > 0 
+                                  ? Colors.blue.shade700 
+                                  : Colors.red.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -557,6 +664,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => _PreciosFormDialog(articulo: articulo),
+    );
+  }
+
+  /// Diálogo para entrada de inventario
+  void _showEntradaInventarioDialog(BuildContext context, ArticuloEntity articulo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _EntradaInventarioDialog(articulo: articulo),
     );
   }
 }
@@ -1864,6 +1980,394 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
           SnackBar(
             content: Text(ErrorMessages.getFriendlyMessage(e)),
             backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+}
+
+// ============================================================================
+// DIÁLOGO DE ENTRADA DE INVENTARIO
+// ============================================================================
+
+/// Diálogo para registrar entrada de inventario
+class _EntradaInventarioDialog extends ConsumerStatefulWidget {
+  final ArticuloEntity articulo;
+
+  const _EntradaInventarioDialog({required this.articulo});
+
+  @override
+  ConsumerState<_EntradaInventarioDialog> createState() => _EntradaInventarioDialogState();
+}
+
+class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _cantidadController = TextEditingController();
+  final TextEditingController _observacionController = TextEditingController();
+  
+  bool _isLoading = false;
+  String _tipoMovimiento = 'ENTRADA'; // Por defecto ENTRADA
+
+  @override
+  void dispose() {
+    _cantidadController.dispose();
+    _observacionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: _tipoMovimiento == 'ENTRADA' ? Colors.green.shade700 : Colors.red.shade700,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _tipoMovimiento == 'ENTRADA' ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _tipoMovimiento == 'ENTRADA' 
+                          ? 'Entrada de Inventario' 
+                          : 'Salida de Inventario',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+
+            // Contenido scrollable
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Información del artículo
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      color: Colors.grey.shade100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.inventory_2, size: 20, color: context.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.articulo.codArticulo ?? 'N/A',
+                        style: context.theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.articulo.descripcion,
+                        style: context.theme.textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                    // Formulario
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                      // Selector de tipo de movimiento
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tipo de Movimiento *',
+                              style: context.theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () => setState(() => _tipoMovimiento = 'ENTRADA'),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      decoration: BoxDecoration(
+                                      color: _tipoMovimiento == 'ENTRADA' 
+                                          ? Colors.green.shade700 
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: _tipoMovimiento == 'ENTRADA'
+                                            ? Colors.green.shade700
+                                            : Colors.grey.shade300,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.arrow_downward,
+                                          color: _tipoMovimiento == 'ENTRADA' 
+                                              ? Colors.white 
+                                              : Colors.green.shade700,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'ENTRADA',
+                                          style: TextStyle(
+                                            color: _tipoMovimiento == 'ENTRADA' 
+                                                ? Colors.white 
+                                                : Colors.green.shade700,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () => setState(() => _tipoMovimiento = 'SALIDA'),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      decoration: BoxDecoration(
+                                      color: _tipoMovimiento == 'SALIDA' 
+                                          ? Colors.red.shade700 
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: _tipoMovimiento == 'SALIDA'
+                                            ? Colors.red.shade700
+                                            : Colors.grey.shade300,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.arrow_upward,
+                                          color: _tipoMovimiento == 'SALIDA' 
+                                              ? Colors.white 
+                                              : Colors.red.shade700,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'SALIDA',
+                                          style: TextStyle(
+                                            color: _tipoMovimiento == 'SALIDA' 
+                                                ? Colors.white 
+                                                : Colors.red.shade700,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Cantidad
+                      TextFormField(
+                        controller: _cantidadController,
+                        decoration: InputDecoration(
+                          labelText: 'Cantidad *',
+                          hintText: _tipoMovimiento == 'ENTRADA' 
+                              ? 'Cantidad a recibir' 
+                              : 'Cantidad a retirar',
+                          prefixIcon: const Icon(Icons.pin),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'La cantidad es obligatoria';
+                          }
+                          final cantidad = int.tryParse(value);
+                          if (cantidad == null || cantidad <= 0) {
+                            return 'Debe ser un número entero positivo';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Observación
+                      TextFormField(
+                        controller: _observacionController,
+                        decoration: const InputDecoration(
+                          labelText: 'Observación (opcional)',
+                          hintText: 'Observación adicional',
+                          prefixIcon: Icon(Icons.note),
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
+                        maxLines: 2,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+                    // Botones de acción
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _isLoading ? null : () => Navigator.pop(context),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton.icon(
+                              onPressed: _isLoading ? null : _registrarMovimiento,
+                              icon: _isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(_tipoMovimiento == 'ENTRADA' ? Icons.check : Icons.remove),
+                              label: Text(_isLoading 
+                                  ? 'Guardando...' 
+                                  : 'Registrar ${_tipoMovimiento == 'ENTRADA' ? 'Entrada' : 'Salida'}'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _tipoMovimiento == 'ENTRADA' 
+                                    ? Colors.green.shade700 
+                                    : Colors.red.shade700,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _registrarMovimiento() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final cantidad = int.parse(_cantidadController.text);
+      final observacion = _observacionController.text.trim();
+      
+      // Usar el precio actual del artículo, o 1.0 si no tiene precio
+      final precioUnitario = widget.articulo.precioActual ?? 1.0;
+      
+      final result = await ref.read(inventarioProvider.notifier).crearMovimiento(
+        codArticulo: widget.articulo.codArticulo!,
+        tipoMovimiento: _tipoMovimiento,
+        cantidad: cantidad,
+        precioUnitario: precioUnitario,
+        observacion: observacion.isEmpty ? null : observacion,
+      );
+      
+      if (result != null && mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${result.message}\n'
+              'Tipo: $_tipoMovimiento\n'
+              'Cantidad: $cantidad unidades',
+            ),
+            backgroundColor: _tipoMovimiento == 'ENTRADA' ? Colors.green : Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Recargar la lista de artículos para actualizar el stock
+        ref.read(articuloProvider.notifier).loadArticulos();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

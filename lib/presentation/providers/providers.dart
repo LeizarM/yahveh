@@ -13,6 +13,7 @@ import '../../data/datasources/zona_remote_datasource.dart';
 import '../../data/datasources/cliente_remote_datasource.dart';
 import '../../data/datasources/familia_remote_datasource.dart';
 import '../../data/datasources/precio_remote_datasource.dart';
+import '../../data/datasources/inventario_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -23,6 +24,7 @@ import '../../data/repositories/zona_repository_impl.dart';
 import '../../data/repositories/cliente_repository_impl.dart';
 import '../../data/repositories/familia_repository_impl.dart';
 import '../../data/repositories/precio_repository_impl.dart';
+import '../../data/repositories/inventario_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -33,7 +35,10 @@ import '../../domain/repositories/zona_repository.dart';
 import '../../domain/repositories/cliente_repository.dart';
 import '../../domain/repositories/familia_repository.dart';
 import '../../domain/repositories/precio_repository.dart';
+import '../../domain/repositories/inventario_repository.dart';
+import '../../domain/entities/inventario_entity.dart';
 import 'auth_provider.dart';
+import 'inventario_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -238,4 +243,26 @@ final precioRepositoryProvider = Provider<PrecioRepository>((ref) {
   final remoteDataSource = ref.watch(precioRemoteDataSourceProvider);
   
   return PrecioRepositoryImpl(remoteDataSource);
+});
+
+// ============================================================================
+// INVENTARIO
+// ============================================================================
+
+/// Provider para InventarioRemoteDataSource
+final inventarioRemoteDataSourceProvider = Provider<InventarioRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return InventarioRemoteDataSourceImpl(client);
+});
+
+/// Provider para InventarioRepository
+final inventarioRepositoryProvider = Provider<InventarioRepository>((ref) {
+  final remoteDataSource = ref.watch(inventarioRemoteDataSourceProvider);
+  
+  return InventarioRepositoryImpl(remoteDataSource);
+});
+
+/// Provider para InventarioNotifier
+final inventarioProvider = NotifierProvider<InventarioNotifier, AsyncValue<List<InventarioEntity>>>(() {
+  return InventarioNotifier();
 });
