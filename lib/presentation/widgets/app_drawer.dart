@@ -242,6 +242,11 @@ class AppDrawer extends ConsumerWidget {
       return Icons.shopping_bag;
     } else if (direccion.contains('producto') || titulo.contains('producto')) {
       return Icons.inventory;
+    } else if (direccion.contains('delivery-notes') || 
+               direccion.contains('nota') || 
+               titulo.contains('nota') ||
+               titulo.contains('entrega')) {
+      return Icons.description;
     }
 
     // Ícono por defecto

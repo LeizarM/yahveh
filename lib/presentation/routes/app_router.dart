@@ -109,6 +109,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return const PaisesScreen();
         },
       ),
+      GoRoute(
+        path: '/nota_entrega',
+        name: 'delivery-notes',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo DeliveryNotesScreen');
+          return const DeliveryNotesScreen();
+        },
+      ),
     ],
     errorBuilder: (context, state) {
       debugPrint('❌ Error de ruta: ${state.error}');

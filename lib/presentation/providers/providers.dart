@@ -14,6 +14,8 @@ import '../../data/datasources/cliente_remote_datasource.dart';
 import '../../data/datasources/familia_remote_datasource.dart';
 import '../../data/datasources/precio_remote_datasource.dart';
 import '../../data/datasources/inventario_remote_datasource.dart';
+import '../../data/datasources/nota_entrega_remote_datasource.dart';
+import '../../data/datasources/detalle_nota_entrega_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -25,6 +27,8 @@ import '../../data/repositories/cliente_repository_impl.dart';
 import '../../data/repositories/familia_repository_impl.dart';
 import '../../data/repositories/precio_repository_impl.dart';
 import '../../data/repositories/inventario_repository_impl.dart';
+import '../../data/repositories/nota_entrega_repository_impl.dart';
+import '../../data/repositories/detalle_nota_entrega_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -36,9 +40,15 @@ import '../../domain/repositories/cliente_repository.dart';
 import '../../domain/repositories/familia_repository.dart';
 import '../../domain/repositories/precio_repository.dart';
 import '../../domain/repositories/inventario_repository.dart';
+import '../../domain/repositories/nota_entrega_repository.dart';
+import '../../domain/repositories/detalle_nota_entrega_repository.dart';
 import '../../domain/entities/inventario_entity.dart';
+import '../../domain/entities/nota_entrega_entity.dart';
+import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import 'auth_provider.dart';
 import 'inventario_provider.dart';
+import 'nota_entrega_provider.dart';
+import 'detalle_nota_entrega_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -265,4 +275,48 @@ final inventarioRepositoryProvider = Provider<InventarioRepository>((ref) {
 /// Provider para InventarioNotifier
 final inventarioProvider = NotifierProvider<InventarioNotifier, AsyncValue<List<InventarioEntity>>>(() {
   return InventarioNotifier();
+});
+
+// ============================================================================
+// NOTA ENTREGA
+// ============================================================================
+
+/// Provider para NotaEntregaRemoteDataSource
+final notaEntregaRemoteDataSourceProvider = Provider<NotaEntregaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return NotaEntregaRemoteDataSource(dioClient: client);
+});
+
+/// Provider para NotaEntregaRepository
+final notaEntregaRepositoryProvider = Provider<NotaEntregaRepository>((ref) {
+  final remoteDataSource = ref.watch(notaEntregaRemoteDataSourceProvider);
+  
+  return NotaEntregaRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para NotaEntregaNotifier
+final notaEntregaProvider = NotifierProvider<NotaEntregaNotifier, AsyncValue<List<NotaEntregaEntity>>>(() {
+  return NotaEntregaNotifier();
+});
+
+// ============================================================================
+// DETALLE NOTA ENTREGA
+// ============================================================================
+
+/// Provider para DetalleNotaEntregaRemoteDataSource
+final detalleNotaEntregaRemoteDataSourceProvider = Provider<DetalleNotaEntregaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return DetalleNotaEntregaRemoteDataSource(dioClient: client);
+});
+
+/// Provider para DetalleNotaEntregaRepository
+final detalleNotaEntregaRepositoryProvider = Provider<DetalleNotaEntregaRepository>((ref) {
+  final remoteDataSource = ref.watch(detalleNotaEntregaRemoteDataSourceProvider);
+  
+  return DetalleNotaEntregaRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para DetalleNotaEntregaNotifier
+final detalleNotaEntregaProvider = NotifierProvider<DetalleNotaEntregaNotifier, AsyncValue<List<DetalleNotaEntregaEntity>>>(() {
+  return DetalleNotaEntregaNotifier();
 });
