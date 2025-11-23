@@ -16,6 +16,9 @@ import '../../data/datasources/precio_remote_datasource.dart';
 import '../../data/datasources/inventario_remote_datasource.dart';
 import '../../data/datasources/nota_entrega_remote_datasource.dart';
 import '../../data/datasources/detalle_nota_entrega_remote_datasource.dart';
+import '../../data/datasources/usuario_remote_datasource.dart';
+import '../../data/datasources/persona_remote_datasource.dart';
+import '../../data/datasources/empleado_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -29,6 +32,9 @@ import '../../data/repositories/precio_repository_impl.dart';
 import '../../data/repositories/inventario_repository_impl.dart';
 import '../../data/repositories/nota_entrega_repository_impl.dart';
 import '../../data/repositories/detalle_nota_entrega_repository_impl.dart';
+import '../../data/repositories/usuario_repository_impl.dart';
+import '../../data/repositories/persona_repository_impl.dart';
+import '../../data/repositories/empleado_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -42,13 +48,22 @@ import '../../domain/repositories/precio_repository.dart';
 import '../../domain/repositories/inventario_repository.dart';
 import '../../domain/repositories/nota_entrega_repository.dart';
 import '../../domain/repositories/detalle_nota_entrega_repository.dart';
+import '../../domain/repositories/usuario_repository.dart';
+import '../../domain/repositories/persona_repository.dart';
+import '../../domain/repositories/empleado_repository.dart';
 import '../../domain/entities/inventario_entity.dart';
+import '../../domain/entities/usuario_entity.dart';
+import '../../domain/entities/persona_entity.dart';
+import '../../domain/entities/empleado_entity.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import 'auth_provider.dart';
 import 'inventario_provider.dart';
 import 'nota_entrega_provider.dart';
 import 'detalle_nota_entrega_provider.dart';
+import 'usuario_provider.dart';
+import 'persona_provider.dart';
+import 'empleado_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -319,4 +334,70 @@ final detalleNotaEntregaRepositoryProvider = Provider<DetalleNotaEntregaReposito
 /// Provider para DetalleNotaEntregaNotifier
 final detalleNotaEntregaProvider = NotifierProvider<DetalleNotaEntregaNotifier, AsyncValue<List<DetalleNotaEntregaEntity>>>(() {
   return DetalleNotaEntregaNotifier();
+});
+
+// ============================================================================
+// USUARIO
+// ============================================================================
+
+/// Provider para UsuarioRemoteDataSource
+final usuarioRemoteDataSourceProvider = Provider<UsuarioRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return UsuarioRemoteDataSource(dioClient: client);
+});
+
+/// Provider para UsuarioRepository
+final usuarioRepositoryProvider = Provider<UsuarioRepository>((ref) {
+  final remoteDataSource = ref.watch(usuarioRemoteDataSourceProvider);
+  
+  return UsuarioRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para UsuarioNotifier
+final usuarioProvider = NotifierProvider<UsuarioNotifier, AsyncValue<List<UsuarioEntity>>>(() {
+  return UsuarioNotifier();
+});
+
+// ============================================================================
+// PERSONA
+// ============================================================================
+
+/// Provider para PersonaRemoteDataSource
+final personaRemoteDataSourceProvider = Provider<PersonaRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return PersonaRemoteDataSource(dioClient: client);
+});
+
+/// Provider para PersonaRepository
+final personaRepositoryProvider = Provider<PersonaRepository>((ref) {
+  final remoteDataSource = ref.watch(personaRemoteDataSourceProvider);
+  
+  return PersonaRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para PersonaNotifier
+final personaProvider = NotifierProvider<PersonaNotifier, AsyncValue<List<PersonaEntity>>>(() {
+  return PersonaNotifier();
+});
+
+// ============================================================================
+// EMPLEADO
+// ============================================================================
+
+/// Provider para EmpleadoRemoteDataSource
+final empleadoRemoteDataSourceProvider = Provider<EmpleadoRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return EmpleadoRemoteDataSource(dioClient: client);
+});
+
+/// Provider para EmpleadoRepository
+final empleadoRepositoryProvider = Provider<EmpleadoRepository>((ref) {
+  final remoteDataSource = ref.watch(empleadoRemoteDataSourceProvider);
+  
+  return EmpleadoRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para EmpleadoNotifier
+final empleadoProvider = NotifierProvider<EmpleadoNotifier, AsyncValue<List<EmpleadoEntity>>>(() {
+  return EmpleadoNotifier();
 });

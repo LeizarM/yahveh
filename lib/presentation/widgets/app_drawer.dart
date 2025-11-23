@@ -114,6 +114,22 @@ class AppDrawer extends ConsumerWidget {
 
         const Divider(),
 
+        // Opción de perfil (disponible para todos los usuarios)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ListTile(
+            leading: const Icon(Icons.account_circle),
+            title: const Text('Mi Perfil'),
+            onTap: () {
+              final isMobile = context.screenWidth < 600;
+              if (isMobile && Scaffold.of(context).hasDrawer) {
+                Navigator.of(context).pop();
+              }
+              context.go('/perfil');
+            },
+          ),
+        ),
+
         // Opción de cerrar sesión
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -247,6 +263,10 @@ class AppDrawer extends ConsumerWidget {
                titulo.contains('nota') ||
                titulo.contains('entrega')) {
       return Icons.description;
+    } else if (direccion.contains('persona-empleado') || 
+               direccion.contains('empleado') || 
+               titulo.contains('empleado')) {
+      return Icons.badge;
     }
 
     // Ícono por defecto

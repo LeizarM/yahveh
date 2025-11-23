@@ -117,6 +117,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return const DeliveryNotesScreen();
         },
       ),
+      GoRoute(
+        path: '/usuarios',
+        name: 'usuarios',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo UsuariosScreen');
+          return const UsuariosScreen();
+        },
+      ),
+      GoRoute(
+        path: '/perfil',
+        name: 'perfil',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo ProfileScreen');
+          return const ProfileScreen();
+        },
+      ),
+      GoRoute(
+        path: '/persona-empleado',
+        name: 'persona-empleado',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo PersonaEmpleadoScreen');
+          return const PersonaEmpleadoScreen();
+        },
+      ),
     ],
     errorBuilder: (context, state) {
       debugPrint('❌ Error de ruta: ${state.error}');
