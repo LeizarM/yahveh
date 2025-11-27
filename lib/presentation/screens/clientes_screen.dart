@@ -4,10 +4,12 @@ import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/cliente_entity.dart';
+import '../../domain/entities/telefono_cliente_entity.dart';
 import '../../data/models/cliente_model.dart';
 import '../providers/cliente_provider.dart';
 import '../providers/zona_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
 /// Pantalla de Clientes con CRUD completo
@@ -167,6 +169,12 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
+                                    icon: const Icon(Icons.phone),
+                                    onPressed: () => _showTelefonosDialog(context, cliente),
+                                    tooltip: 'Teléfonos',
+                                    color: Colors.blue,
+                                  ),
+                                  IconButton(
                                     icon: const Icon(Icons.edit),
                                     onPressed: () => _showEditClienteDialog(context, cliente),
                                     tooltip: 'Editar',
@@ -267,9 +275,11 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => _ClienteFormDialog(
-        onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs) async {
+        onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs, telefonos) async {
           final user = ref.read(authProvider).value;
-          return await ref.read(clienteProvider.notifier).createCliente(
+          
+          // Crear el cliente primero - ahora devuelve el cliente creado
+          final nuevoCliente = await ref.read(clienteProvider.notifier).createCliente(
                 codZona: codZona,
                 nit: nit,
                 razonSocial: razonSocial,
@@ -279,6 +289,16 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 obs: obs,
                 audUsuario: user?.codUsuario ?? 0,
               );
+          
+          // Si hay teléfonos, usar el cliente recién creado
+          if (telefonos.isNotEmpty) {
+            await ref.read(telefonoClienteProvider.notifier).crearMultiples(
+              codCliente: nuevoCliente.codCliente,
+              telefonos: telefonos,
+            );
+          }
+          
+          return 'Cliente creado exitosamente';
         },
       ),
     );
@@ -290,7 +310,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
       barrierDismissible: false,
       builder: (context) => _ClienteFormDialog(
         cliente: cliente,
-        onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs) async {
+        onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs, telefonos) async {
           final user = ref.read(authProvider).value;
           return await ref.read(clienteProvider.notifier).updateCliente(
                 codCliente: cliente.codCliente,
@@ -309,41 +329,46 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context, ClienteEntity cliente) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Confirmar eliminación'),
         content: Text('¿Eliminar al cliente "${cliente.nombreCliente}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 final message = await ref.read(clienteProvider.notifier).deleteCliente(cliente.codCliente);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(message),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(ErrorMessages.getFriendlyMessage(e)),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(ErrorMessages.getFriendlyMessage(e)),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
+    );
+  }
+
+  void _showTelefonosDialog(BuildContext context, ClienteEntity cliente) {
+    showDialog(
+      context: context,
+      builder: (context) => _TelefonosClienteDialog(cliente: cliente),
     );
   }
 }
@@ -359,6 +384,7 @@ class _ClienteFormDialog extends ConsumerStatefulWidget {
     String direccion,
     String referencia,
     String obs,
+    List<String> telefonos,
   ) onSubmit;
 
   const _ClienteFormDialog({this.cliente, required this.onSubmit});
@@ -375,6 +401,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
   late TextEditingController _direccionController;
   late TextEditingController _referenciaController;
   late TextEditingController _obsController;
+  final List<TextEditingController> _telefonoControllers = [];
   int? _selectedZonaId;
   bool _isLoading = false;
 
@@ -388,6 +415,11 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     _referenciaController = TextEditingController(text: widget.cliente?.referencia ?? '');
     _obsController = TextEditingController(text: widget.cliente?.obs ?? '');
     _selectedZonaId = widget.cliente?.codZona;
+    
+    // Agregar un campo de teléfono inicial solo al crear
+    if (widget.cliente == null) {
+      _telefonoControllers.add(TextEditingController());
+    }
   }
 
   @override
@@ -398,7 +430,23 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     _direccionController.dispose();
     _referenciaController.dispose();
     _obsController.dispose();
+    for (var controller in _telefonoControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+  
+  void _addTelefonoField() {
+    setState(() {
+      _telefonoControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeTelefonoField(int index) {
+    setState(() {
+      _telefonoControllers[index].dispose();
+      _telefonoControllers.removeAt(index);
+    });
   }
 
   @override
@@ -565,6 +613,88 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
                   textCapitalization: TextCapitalization.sentences,
                   maxLines: 3,
                 ),
+                
+                // Sección de Teléfonos (solo al crear)
+                if (widget.cliente == null) ...[
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.phone, color: Colors.blue[700], size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Teléfonos',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: _addTelefonoField,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Agregar'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (_telefonoControllers.isEmpty)
+                    Card(
+                      color: Colors.grey[100],
+                      child: const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.grey, size: 18),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Opcional: Agrega teléfonos del cliente',
+                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ..._telefonoControllers.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final controller = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: controller,
+                                decoration: InputDecoration(
+                                  labelText: 'Teléfono ${index + 1}',
+                                  hintText: 'Ej: 70012345',
+                                  prefixIcon: const Icon(Icons.phone, size: 20),
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.phone,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: () => _removeTelefonoField(index),
+                              icon: const Icon(Icons.remove_circle, color: Colors.red, size: 22),
+                              tooltip: 'Quitar',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
               ],
             ),
           ),
@@ -599,6 +729,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
         _direccionController.text.trim(),
         _referenciaController.text.trim(),
         _obsController.text.trim(),
+        _telefonoControllers.map((c) => c.text.trim()).where((t) => t.isNotEmpty).toList(),
       );
 
       if (mounted) {
@@ -622,5 +753,344 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+}
+
+/// Diálogo para gestionar teléfonos de un cliente
+class _TelefonosClienteDialog extends ConsumerStatefulWidget {
+  final ClienteEntity cliente;
+
+  const _TelefonosClienteDialog({required this.cliente});
+
+  @override
+  ConsumerState<_TelefonosClienteDialog> createState() => _TelefonosClienteDialogState();
+}
+
+class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog> {
+  List<TelefonoClienteEntity> _telefonos = [];
+  final List<TextEditingController> _newTelefonoControllers = [];
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTelefonos();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _newTelefonoControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadTelefonos() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final telefonos = await ref
+          .read(telefonoClienteProvider.notifier)
+          .cargarPorCliente(widget.cliente.codCliente);
+      setState(() {
+        _telefonos = telefonos;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = ErrorMessages.getFriendlyMessage(e);
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _addNewTelefonoField() {
+    setState(() {
+      _newTelefonoControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeNewTelefonoField(int index) {
+    setState(() {
+      _newTelefonoControllers[index].dispose();
+      _newTelefonoControllers.removeAt(index);
+    });
+  }
+
+  Future<void> _saveTelefonos() async {
+    final telefonosToAdd = _newTelefonoControllers
+        .map((c) => c.text.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    if (telefonosToAdd.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese al menos un número de teléfono'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      await ref.read(telefonoClienteProvider.notifier).crearMultiples(
+            codCliente: widget.cliente.codCliente,
+            telefonos: telefonosToAdd,
+          );
+
+      if (mounted) {
+        // Limpiar los campos y recargar
+        for (var controller in _newTelefonoControllers) {
+          controller.dispose();
+        }
+        _newTelefonoControllers.clear();
+        await _loadTelefonos();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${telefonosToAdd.length} teléfono(s) agregado(s) exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _deleteTelefono(TelefonoClienteEntity telefono) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: Text('¿Eliminar el teléfono "${telefono.telefono}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await ref.read(telefonoClienteProvider.notifier).eliminar(telefono.codTlfCliente);
+      await _loadTelefonos();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Teléfono eliminado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorMessages.getFriendlyMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.phone, color: Colors.blue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Teléfonos - ${widget.cliente.nombreCliente}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                        const SizedBox(height: 8),
+                        Text(_error!, textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _loadTelefonos,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Teléfonos existentes
+                        if (_telefonos.isNotEmpty) ...[
+                          Text(
+                            'Teléfonos registrados (${_telefonos.length})',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          ..._telefonos.map((telefono) => Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundColor: Colors.blue,
+                                    child: Icon(Icons.phone, color: Colors.white, size: 20),
+                                  ),
+                                  title: Text(
+                                    telefono.telefono,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteTelefono(telefono),
+                                    tooltip: 'Eliminar',
+                                  ),
+                                ),
+                              )),
+                          const Divider(height: 32),
+                        ],
+
+                        // Sección para agregar nuevos teléfonos
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Text(
+                              'Agregar teléfonos',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: _addNewTelefonoField,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Agregar'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (_newTelefonoControllers.isEmpty)
+                          Card(
+                            color: Colors.grey[100],
+                            child: const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.grey),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Presiona "Agregar campo" para añadir números de teléfono',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          ..._newTelefonoControllers.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final controller = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: controller,
+                                      decoration: InputDecoration(
+                                        labelText: 'Teléfono ${index + 1}',
+                                        hintText: 'Ej: 70012345',
+                                        prefixIcon: const Icon(Icons.phone),
+                                        border: const OutlineInputBorder(),
+                                        filled: true,
+                                      ),
+                                      keyboardType: TextInputType.phone,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    onPressed: () => _removeNewTelefonoField(index),
+                                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                    tooltip: 'Quitar campo',
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+
+                        if (_newTelefonoControllers.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: _isSaving ? null : _saveTelefonos,
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.save),
+                            label: Text(_isSaving ? 'Guardando...' : 'Guardar teléfonos'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.all(16),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cerrar'),
+        ),
+      ],
+    );
   }
 }

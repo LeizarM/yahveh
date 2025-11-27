@@ -19,6 +19,7 @@ import '../../data/datasources/detalle_nota_entrega_remote_datasource.dart';
 import '../../data/datasources/usuario_remote_datasource.dart';
 import '../../data/datasources/persona_remote_datasource.dart';
 import '../../data/datasources/empleado_remote_datasource.dart';
+import '../../data/datasources/telefono_cliente_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -35,6 +36,7 @@ import '../../data/repositories/detalle_nota_entrega_repository_impl.dart';
 import '../../data/repositories/usuario_repository_impl.dart';
 import '../../data/repositories/persona_repository_impl.dart';
 import '../../data/repositories/empleado_repository_impl.dart';
+import '../../data/repositories/telefono_cliente_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -51,10 +53,12 @@ import '../../domain/repositories/detalle_nota_entrega_repository.dart';
 import '../../domain/repositories/usuario_repository.dart';
 import '../../domain/repositories/persona_repository.dart';
 import '../../domain/repositories/empleado_repository.dart';
+import '../../domain/repositories/telefono_cliente_repository.dart';
 import '../../domain/entities/inventario_entity.dart';
 import '../../domain/entities/usuario_entity.dart';
 import '../../domain/entities/persona_entity.dart';
 import '../../domain/entities/empleado_entity.dart';
+import '../../domain/entities/telefono_cliente_entity.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import 'auth_provider.dart';
@@ -64,6 +68,7 @@ import 'detalle_nota_entrega_provider.dart';
 import 'usuario_provider.dart';
 import 'persona_provider.dart';
 import 'empleado_provider.dart';
+import 'telefono_cliente_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -400,4 +405,26 @@ final empleadoRepositoryProvider = Provider<EmpleadoRepository>((ref) {
 /// Provider para EmpleadoNotifier
 final empleadoProvider = NotifierProvider<EmpleadoNotifier, AsyncValue<List<EmpleadoEntity>>>(() {
   return EmpleadoNotifier();
+});
+
+// ============================================================================
+// TELÉFONO CLIENTE
+// ============================================================================
+
+/// Provider para TelefonoClienteRemoteDataSource
+final telefonoClienteRemoteDataSourceProvider = Provider<TelefonoClienteRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return TelefonoClienteRemoteDataSource(dioClient: client);
+});
+
+/// Provider para TelefonoClienteRepository
+final telefonoClienteRepositoryProvider = Provider<TelefonoClienteRepository>((ref) {
+  final remoteDataSource = ref.watch(telefonoClienteRemoteDataSourceProvider);
+  
+  return TelefonoClienteRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+/// Provider para TelefonoClienteNotifier
+final telefonoClienteProvider = NotifierProvider<TelefonoClienteNotifier, AsyncValue<List<TelefonoClienteEntity>>>(() {
+  return TelefonoClienteNotifier();
 });

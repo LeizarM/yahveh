@@ -24,7 +24,7 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
   }
 
   /// Crear un nuevo cliente
-  Future<String> createCliente({
+  Future<ClienteEntity> createCliente({
     required int codZona,
     required String nit,
     required String razonSocial,
@@ -50,7 +50,7 @@ class ClienteNotifier extends Notifier<AsyncValue<List<ClienteEntity>>> {
       // Recargar la lista después de crear
       await loadClientes();
       
-      return result.message;
+      return result.data;
     } catch (e) {
       await loadClientes();
       rethrow;
