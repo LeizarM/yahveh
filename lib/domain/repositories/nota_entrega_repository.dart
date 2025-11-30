@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../core/utils/operation_result.dart';
 import '../entities/nota_entrega_entity.dart';
 
@@ -28,4 +29,7 @@ abstract class NotaEntregaRepository {
 
   /// Eliminar una nota de entrega
   Future<OperationResult<void>> eliminar(int codNotaEntrega);
+
+  /// Generar PDF de la nota de entrega
+  Future<OperationResult<Uint8List>> generarPDF(int codNotaEntrega);
 }

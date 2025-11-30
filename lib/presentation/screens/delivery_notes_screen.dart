@@ -1,6 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
@@ -199,6 +202,17 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     ),
                   ),
                   const Spacer(),
+                  // Botón de PDF
+                  IconButton(
+                    icon: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red[700],
+                    ),
+                    onPressed: () => _generarPDF(context, nota.codNotaEntrega, nota.nombreCliente),
+                    tooltip: 'Generar PDF',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     dateFormat.format(nota.fecha),
                     style: TextStyle(
@@ -257,6 +271,177 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
         ),
       ),
     );
+  }
+
+  /// Método para generar y abrir el PDF de una nota de entrega
+  Future<void> _generarPDF(BuildContext context, int codNotaEntrega, String nombreCliente) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    // Mostrar indicador de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Generando PDF...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final pdfBytes = await ref.read(notaEntregaProvider.notifier).generarPDF(codNotaEntrega);
+      
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (pdfBytes != null) {
+        await _mostrarOpcionesPDF(context, pdfBytes, codNotaEntrega, nombreCliente, scaffoldMessenger);
+      } else {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo generar el PDF'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al generar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Generar nombre de archivo formateado
+  String _generarNombreArchivo(String nombreCliente, int codNotaEntrega) {
+    // Reemplazar espacios y caracteres especiales
+    final nombreFormateado = nombreCliente
+        .replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '')
+        .replaceAll(' ', '_')
+        .trim();
+    return '${nombreFormateado}_#$codNotaEntrega';
+  }
+
+  /// Mostrar opciones de PDF (vista previa y compartir)
+  Future<void> _mostrarOpcionesPDF(
+    BuildContext context,
+    Uint8List pdfBytes,
+    int codNotaEntrega,
+    String nombreCliente,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    final nombreArchivo = _generarNombreArchivo(nombreCliente, codNotaEntrega);
+    
+    final opcion = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.picture_as_pdf,
+          size: 48,
+          color: Colors.red[700],
+        ),
+        title: const Text('PDF Generado'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Archivo: $nombreArchivo.pdf',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text('¿Qué deseas hacer con el PDF?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancelar'),
+            child: const Text('Cancelar'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pop(context, 'compartir'),
+            icon: const Icon(Icons.share),
+            label: const Text('Compartir'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, 'vista_previa'),
+            icon: const Icon(Icons.preview),
+            label: const Text('Vista Previa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (opcion == 'vista_previa') {
+      await _mostrarVistaPrevia(pdfBytes, nombreArchivo, scaffoldMessenger);
+    } else if (opcion == 'compartir') {
+      await _compartirPDF(pdfBytes, nombreArchivo, scaffoldMessenger);
+    }
+  }
+
+  /// Mostrar vista previa del PDF
+  Future<void> _mostrarVistaPrevia(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name: nombreArchivo,
+        format: PdfPageFormat.letter,
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al mostrar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Compartir PDF (WhatsApp, correo, etc.)
+  Future<void> _compartirPDF(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: '$nombreArchivo.pdf',
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al compartir PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showNotaDetails(BuildContext context, NotaEntregaEntity nota) {
@@ -331,6 +516,15 @@ class _NotaDetailsDialog extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
+                  // Botón para generar PDF
+                  IconButton(
+                    icon: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red[700],
+                    ),
+                    onPressed: () => _generarPDF(context, ref, nota.codNotaEntrega, nota.nombreCliente),
+                    tooltip: 'Generar PDF',
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -471,6 +665,176 @@ class _NotaDetailsDialog extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Método para generar y abrir el PDF de una nota de entrega
+  Future<void> _generarPDF(BuildContext context, WidgetRef ref, int codNotaEntrega, String nombreCliente) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    // Mostrar indicador de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Generando PDF...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final pdfBytes = await ref.read(notaEntregaProvider.notifier).generarPDF(codNotaEntrega);
+      
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (pdfBytes != null) {
+        await _mostrarOpcionesPDF(context, pdfBytes, codNotaEntrega, nombreCliente, scaffoldMessenger);
+      } else {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo generar el PDF'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al generar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Generar nombre de archivo formateado
+  String _generarNombreArchivo(String nombreCliente, int codNotaEntrega) {
+    final nombreFormateado = nombreCliente
+        .replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '')
+        .replaceAll(' ', '_')
+        .trim();
+    return '${nombreFormateado}_#$codNotaEntrega';
+  }
+
+  /// Mostrar opciones de PDF (vista previa y compartir)
+  Future<void> _mostrarOpcionesPDF(
+    BuildContext context,
+    Uint8List pdfBytes,
+    int codNotaEntrega,
+    String nombreCliente,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    final nombreArchivo = _generarNombreArchivo(nombreCliente, codNotaEntrega);
+    
+    final opcion = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.picture_as_pdf,
+          size: 48,
+          color: Colors.red[700],
+        ),
+        title: const Text('PDF Generado'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Archivo: $nombreArchivo.pdf',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text('¿Qué deseas hacer con el PDF?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancelar'),
+            child: const Text('Cancelar'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pop(context, 'compartir'),
+            icon: const Icon(Icons.share),
+            label: const Text('Compartir'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, 'vista_previa'),
+            icon: const Icon(Icons.preview),
+            label: const Text('Vista Previa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (opcion == 'vista_previa') {
+      await _mostrarVistaPrevia(pdfBytes, nombreArchivo, scaffoldMessenger);
+    } else if (opcion == 'compartir') {
+      await _compartirPDF(pdfBytes, nombreArchivo, scaffoldMessenger);
+    }
+  }
+
+  /// Mostrar vista previa del PDF
+  Future<void> _mostrarVistaPrevia(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name: nombreArchivo,
+        format: PdfPageFormat.letter,
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al mostrar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Compartir PDF (WhatsApp, correo, etc.)
+  Future<void> _compartirPDF(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: '$nombreArchivo.pdf',
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al compartir PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
@@ -1272,6 +1636,9 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
               backgroundColor: Colors.green,
             ),
           );
+
+          // Preguntar si desea generar el PDF
+          await _preguntarGenerarPDF(resultNota.data.codNotaEntrega, _selectedCliente!.nombreCliente);
         }
       }
     } catch (e) {
@@ -1284,6 +1651,215 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  /// Preguntar al usuario si desea generar el PDF de la nota de entrega
+  Future<void> _preguntarGenerarPDF(int codNotaEntrega, String nombreCliente) async {
+    final scaffoldContext = context;
+    
+    final generarPDF = await showDialog<bool>(
+      context: scaffoldContext,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.picture_as_pdf,
+          size: 48,
+          color: Colors.red[700],
+        ),
+        title: const Text('Generar PDF'),
+        content: const Text(
+          '¿Deseas generar el PDF de la nota de entrega ahora?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No, después'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text('Sí, generar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (generarPDF == true && scaffoldContext.mounted) {
+      await _generarPDF(scaffoldContext, codNotaEntrega, nombreCliente);
+    }
+  }
+
+  /// Método para generar y abrir el PDF de una nota de entrega
+  Future<void> _generarPDF(BuildContext context, int codNotaEntrega, String nombreCliente) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    // Mostrar indicador de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Generando PDF...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final pdfBytes = await ref.read(notaEntregaProvider.notifier).generarPDF(codNotaEntrega);
+      
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (pdfBytes != null) {
+        await _mostrarOpcionesPDF(context, pdfBytes, codNotaEntrega, nombreCliente, scaffoldMessenger);
+      } else {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo generar el PDF'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Cerrar dialog de carga
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al generar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Generar nombre de archivo formateado
+  String _generarNombreArchivo(String nombreCliente, int codNotaEntrega) {
+    final nombreFormateado = nombreCliente
+        .replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '')
+        .replaceAll(' ', '_')
+        .trim();
+    return '${nombreFormateado}_#$codNotaEntrega';
+  }
+
+  /// Mostrar opciones de PDF (vista previa y compartir)
+  Future<void> _mostrarOpcionesPDF(
+    BuildContext context,
+    Uint8List pdfBytes,
+    int codNotaEntrega,
+    String nombreCliente,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    final nombreArchivo = _generarNombreArchivo(nombreCliente, codNotaEntrega);
+    
+    final opcion = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.picture_as_pdf,
+          size: 48,
+          color: Colors.red[700],
+        ),
+        title: const Text('PDF Generado'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Archivo: $nombreArchivo.pdf',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text('¿Qué deseas hacer con el PDF?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancelar'),
+            child: const Text('Cancelar'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pop(context, 'compartir'),
+            icon: const Icon(Icons.share),
+            label: const Text('Compartir'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, 'vista_previa'),
+            icon: const Icon(Icons.preview),
+            label: const Text('Vista Previa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (opcion == 'vista_previa') {
+      await _mostrarVistaPrevia(pdfBytes, nombreArchivo, scaffoldMessenger);
+    } else if (opcion == 'compartir') {
+      await _compartirPDF(pdfBytes, nombreArchivo, scaffoldMessenger);
+    }
+  }
+
+  /// Mostrar vista previa del PDF
+  Future<void> _mostrarVistaPrevia(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name: nombreArchivo,
+        format: PdfPageFormat.letter,
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al mostrar PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Compartir PDF (WhatsApp, correo, etc.)
+  Future<void> _compartirPDF(
+    Uint8List pdfBytes,
+    String nombreArchivo,
+    ScaffoldMessengerState scaffoldMessenger,
+  ) async {
+    try {
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: '$nombreArchivo.pdf',
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error al compartir PDF: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

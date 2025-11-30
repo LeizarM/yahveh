@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../core/error/api_exception.dart';
@@ -120,6 +121,19 @@ class NotaEntregaNotifier extends Notifier<AsyncValue<List<NotaEntregaEntity>>> 
       rethrow;
     } catch (e) {
       throw ApiException(message: 'Error inesperado al eliminar nota', statusCode: 500);
+    }
+  }
+
+  /// Generar PDF de una nota de entrega
+  Future<Uint8List?> generarPDF(int codNotaEntrega) async {
+    try {
+      final repository = ref.read(notaEntregaRepositoryProvider);
+      final result = await repository.generarPDF(codNotaEntrega);
+      return result.data;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(message: 'Error inesperado al generar PDF', statusCode: 500);
     }
   }
 }

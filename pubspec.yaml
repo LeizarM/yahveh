@@ -40,8 +40,10 @@ dependencies:
   logger: ^2.6.2
   path_provider: ^2.1.5
   pdf: ^3.11.3
+  printing: ^5.14.2
   responsive_framework: ^1.5.1
   shared_preferences: ^2.5.3
+  universal_html: ^2.2.4
 
 dev_dependencies:
   change_app_package_name: ^1.5.0

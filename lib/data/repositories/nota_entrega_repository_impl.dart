@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../core/utils/operation_result.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/repositories/nota_entrega_repository.dart';
@@ -125,6 +126,19 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
       return OperationResult(
         data: null,
         message: 'Nota de entrega eliminada',
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<OperationResult<Uint8List>> generarPDF(int codNotaEntrega) async {
+    try {
+      final pdfBytes = await _remoteDataSource.generarPDF(codNotaEntrega);
+      return OperationResult(
+        data: pdfBytes,
+        message: 'PDF generado exitosamente',
       );
     } catch (e) {
       throw e;

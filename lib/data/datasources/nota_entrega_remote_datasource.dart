@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../models/nota_entrega_model.dart';
@@ -180,6 +182,36 @@ class NotaEntregaRemoteDataSource {
       }
     } catch (e) {
       print('❌ Error al eliminar nota de entrega: $e');
+      rethrow;
+    }
+  }
+
+  /// GET /api/reportes/nota-entrega/{codNotaEntrega} - Generar PDF de nota de entrega
+  Future<Uint8List> generarPDF(int codNotaEntrega) async {
+    try {
+      print('📤 Generando PDF de nota de entrega: $codNotaEntrega');
+      
+      final response = await _dioClient.get(
+        '/reportes/nota-entrega/$codNotaEntrega',
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {
+            'Accept': 'application/pdf',
+          },
+        ),
+      );
+      
+      print('📥 Respuesta recibida: ${response.statusCode}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data);
+        print('✅ PDF generado: ${bytes.length} bytes');
+        return bytes;
+      } else {
+        throw ApiException(message: 'Error al generar PDF de nota de entrega');
+      }
+    } catch (e) {
+      print('❌ Error al generar PDF: $e');
       rethrow;
     }
   }
