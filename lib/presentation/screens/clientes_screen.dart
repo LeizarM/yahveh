@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/utils/extensions.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/animations.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/cliente_entity.dart';
@@ -12,7 +14,7 @@ import '../providers/auth_provider.dart';
 import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
-/// Pantalla de Clientes con CRUD completo
+/// Pantalla de Clientes con CRUD completo - Diseño Glassmorphism
 class ClientesScreen extends ConsumerStatefulWidget {
   const ClientesScreen({super.key});
 
@@ -35,218 +37,341 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
     final clientesAsync = ref.watch(clienteProvider);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Clientes'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Clientes',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddClienteDialog(context),
-            tooltip: 'Agregar cliente',
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () => ref.refresh(clienteProvider),
+            tooltip: 'Actualizar',
           ),
         ],
       ),
-      drawer: context.isMobile ? const AppDrawer() : null,
-      body: Row(
-        children: [
-          if (!context.isMobile)
-            Container(
-              width: 280,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: context.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: const AppDrawer(),
-            ),
-          Expanded(
-            child: Column(
-              children: [
-                // Barra de búsqueda
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      labelText: 'Buscar cliente',
-                      hintText: 'Nombre, NIT, razón social...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      border: const OutlineInputBorder(),
+      drawer: context.isMobile ? _buildBlurredDrawer() : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddClienteDialog(context),
+        backgroundColor: AppTheme.accentGreen,
+        icon: const Icon(Icons.person_add, color: Colors.white),
+        label: const Text(
+          'Nuevo Cliente',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              if (!context.isMobile) _buildPermanentDrawer(),
+              Expanded(
+                child: Column(
+                  children: [
+                    // Barra de búsqueda con estilo glassmorphism
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildSearchBar(),
                     ),
-                    onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-                  ),
-                ),
-                // Lista de clientes
-                Expanded(
-                  child: clientesAsync.when(
-                    data: (clientes) {
-                      final filteredClientes = _searchQuery.isEmpty
-                          ? clientes
-                          : clientes.where((c) {
-                              return c.nombreCliente.toLowerCase().contains(_searchQuery) ||
-                                  c.nit.toLowerCase().contains(_searchQuery) ||
-                                  c.razonSocial.toLowerCase().contains(_searchQuery);
-                            }).toList();
-
-                      if (filteredClientes.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
-                                size: 80,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _searchQuery.isEmpty
-                                    ? 'No hay clientes registrados'
-                                    : 'No se encontraron clientes',
-                                style: context.theme.textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _searchQuery.isEmpty
-                                    ? 'Agrega el primer cliente usando el botón +'
-                                    : 'Intenta con otra búsqueda',
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: filteredClientes.length,
-                        itemBuilder: (context, index) {
-                          final cliente = filteredClientes[index];
-                          final clienteModel = cliente is ClienteModel ? cliente : null;
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ExpansionTile(
-                              leading: CircleAvatar(
-                                backgroundColor: context.colorScheme.primaryContainer,
-                                child: Text(
-                                  cliente.nombreCliente[0].toUpperCase(),
-                                  style: TextStyle(
-                                    color: context.colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                cliente.nombreCliente,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('NIT: ${cliente.nit}'),
-                                  if (clienteModel?.zonaNombre != null)
-                                    Text(
-                                      '📍 ${clienteModel!.zonaNombre}'
-                                      '${clienteModel.ciudadNombre != null ? " - ${clienteModel.ciudadNombre}" : ""}'
-                                      '${clienteModel.paisNombre != null ? " - ${clienteModel.paisNombre}" : ""}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.phone),
-                                    onPressed: () => _showTelefonosDialog(context, cliente),
-                                    tooltip: 'Teléfonos',
-                                    color: Colors.blue,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () => _showEditClienteDialog(context, cliente),
-                                    tooltip: 'Editar',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () => _showDeleteConfirmation(context, cliente),
-                                    color: Colors.red,
-                                    tooltip: 'Eliminar',
-                                  ),
-                                ],
-                              ),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildDetailRow('Razón Social', cliente.razonSocial),
-                                      _buildDetailRow('Dirección', cliente.direccion),
-                                      _buildDetailRow('Referencia', cliente.referencia),
-                                      if (cliente.obs.isNotEmpty)
-                                        _buildDetailRow('Observaciones', cliente.obs),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 80,
-                              color: Colors.red[300],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No se pudieron cargar los clientes',
-                              style: context.theme.textTheme.titleLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              ErrorMessages.getFriendlyMessage(error),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            const SizedBox(height: 16),
-                            FilledButton.icon(
-                              onPressed: () => ref.refresh(clienteProvider),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Reintentar'),
-                            ),
-                          ],
+                    // Lista de clientes
+                    Expanded(
+                      child: clientesAsync.when(
+                        data: (clientes) => _buildClientesList(clientes),
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
                         ),
+                        error: (error, stack) => _buildErrorWidget(error),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlurredDrawer() {
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+            ),
+            child: const AppDrawer(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermanentDrawer() {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: 280,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            border: Border(
+              right: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
             ),
           ),
-        ],
+          child: const AppDrawer(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        cursorColor: AppTheme.accentCyan,
+        decoration: InputDecoration(
+          hintText: 'Buscar cliente por nombre, NIT o razón social...',
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+          prefixIcon: Icon(Icons.search, color: AppTheme.accentCyan),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.8)),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.transparent,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+        onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+      ),
+    );
+  }
+
+  Widget _buildClientesList(List<ClienteEntity> clientes) {
+    final filteredClientes = _searchQuery.isEmpty
+        ? clientes
+        : clientes.where((c) {
+            return c.nombreCliente.toLowerCase().contains(_searchQuery) ||
+                c.nit.toLowerCase().contains(_searchQuery) ||
+                c.razonSocial.toLowerCase().contains(_searchQuery);
+          }).toList();
+
+    if (filteredClientes.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: filteredClientes.length,
+      itemBuilder: (context, index) {
+        final cliente = filteredClientes[index];
+        return FadeSlideAnimation(
+          delay: Duration(milliseconds: 50 * index),
+          child: _buildClienteCard(cliente),
+        );
+      },
+    );
+  }
+
+  Widget _buildClienteCard(ClienteEntity cliente) {
+    final clienteModel = cliente is ClienteModel ? cliente : null;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          leading: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.accentGreen,
+                  AppTheme.accentGreen.withOpacity(0.7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                cliente.nombreCliente[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            cliente.nombreCliente,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                'NIT: ${cliente.nit}',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 13,
+                ),
+              ),
+              if (clienteModel?.zonaNombre != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: AppTheme.accentOrange,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${clienteModel!.zonaNombre}'
+                          '${clienteModel.ciudadNombre != null ? " - ${clienteModel.ciudadNombre}" : ""}'
+                          '${clienteModel.paisNombre != null ? " - ${clienteModel.paisNombre}" : ""}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildIconButton(
+                icon: Icons.phone,
+                color: AppTheme.accentCyan,
+                tooltip: 'Teléfonos',
+                onPressed: () => _showTelefonosDialog(context, cliente),
+              ),
+              _buildIconButton(
+                icon: Icons.edit,
+                color: AppTheme.accentOrange,
+                tooltip: 'Editar',
+                onPressed: () => _showEditClienteDialog(context, cliente),
+              ),
+              _buildIconButton(
+                icon: Icons.delete,
+                color: AppTheme.errorColor,
+                tooltip: 'Eliminar',
+                onPressed: () => _showDeleteConfirmation(context, cliente),
+              ),
+            ],
+          ),
+          iconColor: Colors.white.withOpacity(0.7),
+          collapsedIconColor: Colors.white.withOpacity(0.7),
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailRow('Razón Social', cliente.razonSocial),
+                  _buildDetailRow('Dirección', cliente.direccion),
+                  _buildDetailRow('Referencia', cliente.referencia),
+                  if (cliente.obs.isNotEmpty)
+                    _buildDetailRow('Observaciones', cliente.obs),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(icon, color: color, size: 20),
+          ),
+        ),
       ),
     );
   }
@@ -261,11 +386,124 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
             width: 120,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 13,
+              ),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 13,
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: FadeSlideAnimation(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
+                size: 64,
+                color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              _searchQuery.isEmpty
+                  ? 'No hay clientes registrados'
+                  : 'No se encontraron clientes',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _searchQuery.isEmpty
+                  ? 'Agrega el primer cliente usando el botón +'
+                  : 'Intenta con otra búsqueda',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(Object error) {
+    return Center(
+      child: FadeSlideAnimation(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorColor.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: AppTheme.errorColor,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'No se pudieron cargar los clientes',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                ErrorMessages.getFriendlyMessage(error),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => ref.refresh(clienteProvider),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.15),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -278,7 +516,6 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
         onSubmit: (codZona, nit, razonSocial, nombreCliente, direccion, referencia, obs, telefonos) async {
           final user = ref.read(authProvider).value;
           
-          // Crear el cliente primero - ahora devuelve el cliente creado
           final nuevoCliente = await ref.read(clienteProvider.notifier).createCliente(
                 codZona: codZona,
                 nit: nit,
@@ -290,7 +527,6 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 audUsuario: user?.codUsuario ?? 0,
               );
           
-          // Si hay teléfonos, usar el cliente recién creado
           if (telefonos.isNotEmpty) {
             await ref.read(telefonoClienteProvider.notifier).crearMultiples(
               codCliente: nuevoCliente.codCliente,
@@ -333,12 +569,18 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
     
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirmar eliminación'),
-        content: Text('¿Eliminar al cliente "${cliente.nombreCliente}"?'),
+      builder: (dialogContext) => _GlassDialog(
+        title: 'Confirmar eliminación',
+        content: '¿Eliminar al cliente "${cliente.nombreCliente}"?',
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
+          ),
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
               try {
@@ -346,19 +588,23 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 scaffoldMessenger.showSnackBar(
                   SnackBar(
                     content: Text(message),
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppTheme.successColor,
                   ),
                 );
               } catch (e) {
                 scaffoldMessenger.showSnackBar(
                   SnackBar(
                     content: Text(ErrorMessages.getFriendlyMessage(e)),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppTheme.errorColor,
                   ),
                 );
               }
             },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -373,7 +619,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
   }
 }
 
-/// Formulario de cliente
+/// Formulario de cliente con estilo glassmorphism
 class _ClienteFormDialog extends ConsumerStatefulWidget {
   final ClienteEntity? cliente;
   final Future<String> Function(
@@ -416,7 +662,6 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     _obsController = TextEditingController(text: widget.cliente?.obs ?? '');
     _selectedZonaId = widget.cliente?.codZona;
     
-    // Agregar un campo de teléfono inicial solo al crear
     if (widget.cliente == null) {
       _telefonoControllers.add(TextEditingController());
     }
@@ -449,269 +694,425 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
     });
   }
 
+  InputDecoration _glassInputDecoration(String label, {String? hint, IconData? prefixIcon, String? helperText}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      helperText: helperText,
+      labelStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+      helperStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+      floatingLabelStyle: const TextStyle(
+        color: AppTheme.accentGreen,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppTheme.accentGreen) : null,
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.accentGreen, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.errorColor),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.errorColor, width: 2),
+      ),
+      errorStyle: const TextStyle(color: AppTheme.errorColor),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final zonasAsync = ref.watch(zonaProvider);
 
-    return AlertDialog(
-      title: Text(widget.cliente == null ? 'Agregar Cliente' : 'Editar Cliente'),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-          maxWidth: MediaQuery.of(context).size.width * 0.9,
-        ),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: MediaQuery.of(context).size.width > 500 
+                ? 500 
+                : MediaQuery.of(context).size.width * 0.95,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Dropdown de Zona
-                zonasAsync.when(
-                  data: (zonas) {
-                    if (zonas.isEmpty) {
-                      return Card(
-                        color: Colors.orange[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.warning, color: Colors.orange[700]),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'No hay zonas registradas.\nPrimero debes crear una zona.',
-                                  style: TextStyle(color: Colors.orange[900]),
-                                ),
-                              ),
-                            ],
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentGreen.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.cliente == null ? Icons.person_add : Icons.edit,
+                          color: AppTheme.accentGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          widget.cliente == null ? 'Agregar Cliente' : 'Editar Cliente',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
-
-                    return DropdownButtonFormField<int>(
-                      initialValue: _selectedZonaId,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Zona *',
-                        border: OutlineInputBorder(),
-                        helperText: 'Zona - Ciudad - País',
                       ),
-                      items: zonas.map((zona) {
-                        final zonaModel = zona as dynamic;
-                        final ciudadNombre = zonaModel.ciudadNombre ?? '';
-                        final paisNombre = zonaModel.paisNombre ?? '';
-                        
-                        String displayText = zona.zona;
-                        if (ciudadNombre.isNotEmpty && paisNombre.isNotEmpty) {
-                          displayText = '${zona.zona} - $ciudadNombre - $paisNombre';
-                        } else if (ciudadNombre.isNotEmpty) {
-                          displayText = '${zona.zona} - $ciudadNombre';
-                        }
-
-                        return DropdownMenuItem(
-                          value: zona.codZona,
-                          child: Text(
-                            displayText,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) => setState(() => _selectedZonaId = value),
-                      validator: (value) => value == null ? 'Selecciona una zona' : null,
-                    );
-                  },
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                  error: (e, _) => Card(
-                    color: Colors.red[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(
-                        'Error al cargar zonas: $e',
-                        style: TextStyle(color: Colors.red[900]),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // NIT
-                TextFormField(
-                  controller: _nitController,
-                  decoration: const InputDecoration(
-                    labelText: 'NIT *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty ? 'El NIT es requerido' : null,
-                ),
-                const SizedBox(height: 16),
-                // Razón Social
-                TextFormField(
-                  controller: _razonSocialController,
-                  decoration: const InputDecoration(
-                    labelText: 'Razón Social *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty ? 'La razón social es requerida' : null,
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 16),
-                // Nombre del Cliente
-                TextFormField(
-                  controller: _nombreClienteController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre del Cliente *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty ? 'El nombre es requerido' : null,
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 16),
-                // Dirección
-                TextFormField(
-                  controller: _direccionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Dirección *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty ? 'La dirección es requerida' : null,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-                // Referencia
-                TextFormField(
-                  controller: _referenciaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Referencia *',
-                    border: OutlineInputBorder(),
-                    helperText: 'Punto de referencia para ubicar',
-                  ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty ? 'La referencia es requerida' : null,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-                // Observaciones
-                TextFormField(
-                  controller: _obsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Observaciones',
-                    border: OutlineInputBorder(),
-                    helperText: 'Opcional',
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLines: 3,
-                ),
-                
-                // Sección de Teléfonos (solo al crear)
-                if (widget.cliente == null) ...[
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.phone, color: Colors.blue[700], size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Teléfonos',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
-                      ),
-                      TextButton.icon(
-                        onPressed: _addTelefonoField,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Agregar'),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  if (_telefonoControllers.isEmpty)
-                    Card(
-                      color: Colors.grey[100],
-                      child: const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info_outline, color: Colors.grey, size: 18),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Opcional: Agrega teléfonos del cliente',
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Dropdown de Zona
+                          zonasAsync.when(
+                            data: (zonas) {
+                              if (zonas.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.warningColor.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: AppTheme.warningColor.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.warning, color: AppTheme.warningColor),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'No hay zonas registradas.\nPrimero debes crear una zona.',
+                                          style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              return DropdownButtonFormField<int>(
+                                value: _selectedZonaId,
+                                isExpanded: true,
+                                dropdownColor: const Color(0xFF2D3250),
+                                style: const TextStyle(color: Colors.white),
+                                decoration: _glassInputDecoration('Zona *', helperText: 'Zona - Ciudad - País'),
+                                items: zonas.map((zona) {
+                                  final zonaModel = zona as dynamic;
+                                  final ciudadNombre = zonaModel.ciudadNombre ?? '';
+                                  final paisNombre = zonaModel.paisNombre ?? '';
+                                  
+                                  String displayText = zona.zona;
+                                  if (ciudadNombre.isNotEmpty && paisNombre.isNotEmpty) {
+                                    displayText = '${zona.zona} - $ciudadNombre - $paisNombre';
+                                  } else if (ciudadNombre.isNotEmpty) {
+                                    displayText = '${zona.zona} - $ciudadNombre';
+                                  }
+
+                                  return DropdownMenuItem(
+                                    value: zona.codZona,
+                                    child: Text(
+                                      displayText,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) => setState(() => _selectedZonaId = value),
+                                validator: (value) => value == null ? 'Selecciona una zona' : null,
+                              );
+                            },
+                            loading: () => const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: CircularProgressIndicator(color: AppTheme.accentGreen),
                               ),
                             ),
+                            error: (e, _) => Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Error al cargar zonas: $e',
+                                style: const TextStyle(color: AppTheme.errorColor),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // NIT
+                          TextFormField(
+                            controller: _nitController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration('NIT *'),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty ? 'El NIT es requerido' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          // Razón Social
+                          TextFormField(
+                            controller: _razonSocialController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration('Razón Social *'),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty ? 'La razón social es requerida' : null,
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                          const SizedBox(height: 16),
+                          // Nombre del Cliente
+                          TextFormField(
+                            controller: _nombreClienteController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration('Nombre del Cliente *'),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty ? 'El nombre es requerido' : null,
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                          const SizedBox(height: 16),
+                          // Dirección
+                          TextFormField(
+                            controller: _direccionController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration('Dirección *'),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty ? 'La dirección es requerida' : null,
+                            textCapitalization: TextCapitalization.sentences,
+                            maxLines: 2,
+                          ),
+                          const SizedBox(height: 16),
+                          // Referencia
+                          TextFormField(
+                            controller: _referenciaController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration(
+                              'Referencia *',
+                              helperText: 'Punto de referencia para ubicar',
+                            ),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty ? 'La referencia es requerida' : null,
+                            textCapitalization: TextCapitalization.sentences,
+                            maxLines: 2,
+                          ),
+                          const SizedBox(height: 16),
+                          // Observaciones
+                          TextFormField(
+                            controller: _obsController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _glassInputDecoration(
+                              'Observaciones',
+                              helperText: 'Opcional',
+                            ),
+                            textCapitalization: TextCapitalization.sentences,
+                            maxLines: 3,
+                          ),
+                          
+                          // Sección de Teléfonos (solo al crear)
+                          if (widget.cliente == null) ...[
+                            const SizedBox(height: 24),
+                            Divider(color: Colors.white.withOpacity(0.1)),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.phone, color: AppTheme.accentCyan, size: 20),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Teléfonos',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                TextButton.icon(
+                                  onPressed: _addTelefonoField,
+                                  icon: const Icon(Icons.add, size: 18, color: AppTheme.accentGreen),
+                                  label: const Text(
+                                    'Agregar',
+                                    style: TextStyle(color: AppTheme.accentGreen),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (_telefonoControllers.isEmpty)
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, color: Colors.white.withOpacity(0.5), size: 18),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Opcional: Agrega teléfonos del cliente',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.5),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              ..._telefonoControllers.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final controller = entry.value;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: controller,
+                                          style: const TextStyle(color: Colors.white),
+                                          decoration: _glassInputDecoration(
+                                            'Teléfono ${index + 1}',
+                                            hint: 'Ej: 70012345',
+                                            prefixIcon: Icons.phone,
+                                          ),
+                                          keyboardType: TextInputType.phone,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        onPressed: () => _removeTelefonoField(index),
+                                        icon: const Icon(Icons.remove_circle, color: AppTheme.errorColor),
+                                        tooltip: 'Quitar',
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
                           ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _isLoading ? null : () => Navigator.pop(context),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(color: Colors.white.withOpacity(0.7)),
                         ),
                       ),
-                    )
-                  else
-                    ..._telefonoControllers.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final controller = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: controller,
-                                decoration: InputDecoration(
-                                  labelText: 'Teléfono ${index + 1}',
-                                  hintText: 'Ej: 70012345',
-                                  prefixIcon: const Icon(Icons.phone, size: 20),
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                                keyboardType: TextInputType.phone,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              onPressed: () => _removeTelefonoField(index),
-                              icon: const Icon(Icons.remove_circle, color: Colors.red, size: 22),
-                              tooltip: 'Quitar',
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ],
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      );
-                    }),
-                ],
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(widget.cliente == null ? 'Crear' : 'Actualizar'),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _handleSubmit,
-          child: _isLoading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(widget.cliente == null ? 'Crear' : 'Actualizar'),
-        ),
-      ],
     );
   }
 
@@ -737,7 +1138,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.successColor,
           ),
         );
       }
@@ -746,7 +1147,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -756,7 +1157,79 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
   }
 }
 
-/// Diálogo para gestionar teléfonos de un cliente
+/// Diálogo de confirmación con estilo glassmorphism
+class _GlassDialog extends StatelessWidget {
+  final String title;
+  final String content;
+  final List<Widget> actions;
+
+  const _GlassDialog({
+    required this.title,
+    required this.content,
+    required this.actions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  content,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Diálogo para gestionar teléfonos de un cliente con estilo glassmorphism
 class _TelefonosClienteDialog extends ConsumerStatefulWidget {
   final ClienteEntity cliente;
 
@@ -822,6 +1295,31 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
     });
   }
 
+  InputDecoration _glassInputDecoration(String label, {String? hint, IconData? prefixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+      floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
+      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppTheme.accentCyan) : null,
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.accentCyan, width: 2),
+      ),
+    );
+  }
+
   Future<void> _saveTelefonos() async {
     final telefonosToAdd = _newTelefonoControllers
         .map((c) => c.text.trim())
@@ -832,7 +1330,7 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Ingrese al menos un número de teléfono'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.warningColor,
         ),
       );
       return;
@@ -847,7 +1345,6 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
           );
 
       if (mounted) {
-        // Limpiar los campos y recargar
         for (var controller in _newTelefonoControllers) {
           controller.dispose();
         }
@@ -857,7 +1354,7 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${telefonosToAdd.length} teléfono(s) agregado(s) exitosamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.successColor,
           ),
         );
       }
@@ -866,7 +1363,7 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -878,17 +1375,24 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
   Future<void> _deleteTelefono(TelefonoClienteEntity telefono) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar eliminación'),
-        content: Text('¿Eliminar el teléfono "${telefono.telefono}"?'),
+      builder: (context) => _GlassDialog(
+        title: 'Confirmar eliminación',
+        content: '¿Eliminar el teléfono "${telefono.telefono}"?',
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -904,7 +1408,7 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Teléfono eliminado exitosamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.successColor,
           ),
         );
       }
@@ -913,7 +1417,7 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -922,175 +1426,342 @@ class _TelefonosClienteDialogState extends ConsumerState<_TelefonosClienteDialog
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.phone, color: Colors.blue),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Teléfonos - ${widget.cliente.nombreCliente}',
-              overflow: TextOverflow.ellipsis,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+              maxWidth: 500,
             ),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                        const SizedBox(height: 8),
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: _loadTelefonos,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Reintentar'),
-                        ),
-                      ],
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withOpacity(0.1),
+                      ),
                     ),
-                  )
-                : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Teléfonos existentes
-                        if (_telefonos.isNotEmpty) ...[
-                          Text(
-                            'Teléfonos registrados (${_telefonos.length})',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          ..._telefonos.map((telefono) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: ListTile(
-                                  leading: const CircleAvatar(
-                                    backgroundColor: Colors.blue,
-                                    child: Icon(Icons.phone, color: Colors.white, size: 20),
-                                  ),
-                                  title: Text(
-                                    telefono.telefono,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteTelefono(telefono),
-                                    tooltip: 'Eliminar',
-                                  ),
-                                ),
-                              )),
-                          const Divider(height: 32),
-                        ],
-
-                        // Sección para agregar nuevos teléfonos
-                        Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentCyan.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.phone,
+                          color: AppTheme.accentCyan,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Agregar teléfonos',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            const Text(
+                              'Teléfonos',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            FilledButton.tonalIcon(
-                              onPressed: _addNewTelefonoField,
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Agregar'),
+                            Text(
+                              widget.cliente.nombreCliente,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-
-                        if (_newTelefonoControllers.isEmpty)
-                          Card(
-                            color: Colors.grey[100],
-                            child: const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: Colors.grey),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Presiona "Agregar campo" para añadir números de teléfono',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        else
-                          ..._newTelefonoControllers.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final controller = entry.value;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: controller,
-                                      decoration: InputDecoration(
-                                        labelText: 'Teléfono ${index + 1}',
-                                        hintText: 'Ej: 70012345',
-                                        prefixIcon: const Icon(Icons.phone),
-                                        border: const OutlineInputBorder(),
-                                        filled: true,
-                                      ),
-                                      keyboardType: TextInputType.phone,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    onPressed: () => _removeNewTelefonoField(index),
-                                    icon: const Icon(Icons.remove_circle, color: Colors.red),
-                                    tooltip: 'Quitar campo',
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-
-                        if (_newTelefonoControllers.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: _isSaving ? null : _saveTelefonos,
-                            icon: _isSaving
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.save),
-                            label: Text(_isSaving ? 'Guardando...' : 'Guardar teléfonos'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.all(16),
-                            ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: _isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(40),
+                            child: CircularProgressIndicator(color: AppTheme.accentCyan),
                           ),
-                        ],
-                      ],
+                        )
+                      : _error != null
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.errorColor.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.error_outline,
+                                        size: 40,
+                                        color: AppTheme.errorColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _error!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: _loadTelefonos,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white.withOpacity(0.15),
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Reintentar'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Teléfonos existentes
+                                  if (_telefonos.isNotEmpty) ...[
+                                    Text(
+                                      'Teléfonos registrados (${_telefonos.length})',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ..._telefonos.map((telefono) => FadeSlideAnimation(
+                                          child: Container(
+                                            margin: const EdgeInsets.only(bottom: 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.08),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withOpacity(0.1),
+                                              ),
+                                            ),
+                                            child: ListTile(
+                                              leading: Container(
+                                                padding: const EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.accentCyan.withOpacity(0.2),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.phone,
+                                                  color: AppTheme.accentCyan,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              title: Text(
+                                                telefono.telefono,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              trailing: IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: AppTheme.errorColor,
+                                                ),
+                                                onPressed: () => _deleteTelefono(telefono),
+                                                tooltip: 'Eliminar',
+                                              ),
+                                            ),
+                                          ),
+                                        )),
+                                    const SizedBox(height: 16),
+                                    Divider(color: Colors.white.withOpacity(0.1)),
+                                    const SizedBox(height: 16),
+                                  ],
+
+                                  // Sección para agregar nuevos teléfonos
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Agregar teléfonos',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: _addNewTelefonoField,
+                                        icon: const Icon(Icons.add, size: 18, color: AppTheme.accentGreen),
+                                        label: const Text(
+                                          'Agregar',
+                                          style: TextStyle(color: AppTheme.accentGreen),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  if (_newTelefonoControllers.isEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.info_outline,
+                                            color: Colors.white.withOpacity(0.5),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              'Presiona "Agregar" para añadir números de teléfono',
+                                              style: TextStyle(
+                                                color: Colors.white.withOpacity(0.5),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  else
+                                    ..._newTelefonoControllers.asMap().entries.map((entry) {
+                                      final index = entry.key;
+                                      final controller = entry.value;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller: controller,
+                                                style: const TextStyle(color: Colors.white),
+                                                decoration: _glassInputDecoration(
+                                                  'Teléfono ${index + 1}',
+                                                  hint: 'Ej: 70012345',
+                                                  prefixIcon: Icons.phone,
+                                                ),
+                                                keyboardType: TextInputType.phone,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              onPressed: () => _removeNewTelefonoField(index),
+                                              icon: const Icon(
+                                                Icons.remove_circle,
+                                                color: AppTheme.errorColor,
+                                              ),
+                                              tooltip: 'Quitar campo',
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+
+                                  if (_newTelefonoControllers.isNotEmpty) ...[
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: _isSaving ? null : _saveTelefonos,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.accentGreen,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.all(16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      icon: _isSaving
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Icon(Icons.save),
+                                      label: Text(_isSaving ? 'Guardando...' : 'Guardar teléfonos'),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                ),
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withOpacity(0.1),
+                      ),
                     ),
                   ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cerrar'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cerrar',
+                          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 }

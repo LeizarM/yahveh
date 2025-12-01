@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/usuario_entity.dart';
 import '../../core/error/api_exception.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/animations.dart';
 import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
@@ -17,7 +20,6 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar usuarios al iniciar
     Future.microtask(() {
       ref.read(usuarioProvider.notifier).cargarUsuarios();
     });
@@ -26,125 +28,374 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
   @override
   Widget build(BuildContext context) {
     final usuariosAsync = ref.watch(usuarioProvider);
+    final isMobile = context.screenWidth < 600;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Gestión de Usuarios'),
-        centerTitle: true,
-        flexibleSpace: Container(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.read(usuarioProvider.notifier).cargarUsuarios(),
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
+      drawer: isMobile ? _buildBlurredDrawer() : null,
+      floatingActionButton: FadeSlideAnimation(
+        delay: const Duration(milliseconds: 300),
+        child: FloatingActionButton.extended(
+          onPressed: _showCreateFromEmpleadoDialog,
+          backgroundColor: AppTheme.accentPink,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Nuevo Usuario', style: TextStyle(fontWeight: FontWeight.w600)),
+        ),
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Row(
+          children: [
+            if (!isMobile) _buildPermanentDrawer(),
+            Expanded(
+              child: SafeArea(
+                child: usuariosAsync.when(
+                  data: (usuarios) => _buildContent(usuarios),
+                  loading: () => _buildLoadingState(),
+                  error: (error, stack) => _buildErrorState(error),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlurredDrawer() {
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+            ),
+            child: const AppDrawer(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermanentDrawer() {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: 280,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.secondary,
+            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            border: Border(
+              right: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: const AppDrawer(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(List<UsuarioEntity> usuarios) {
+    if (usuarios.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: usuarios.length,
+      itemBuilder: (context, index) {
+        final usuario = usuarios[index];
+        return FadeSlideAnimation(
+          delay: Duration(milliseconds: 50 * index),
+          child: _buildUsuarioCard(usuario),
+        );
+      },
+    );
+  }
+
+  Widget _buildUsuarioCard(UsuarioEntity usuario) {
+    final isActive = usuario.estado == 'D';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showEditDialog(usuario),
+          borderRadius: BorderRadius.circular(16),
+          splashColor: Colors.white.withOpacity(0.1),
+          highlightColor: Colors.white.withOpacity(0.05),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      usuario.login.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isActive ? AppTheme.accentGreen : AppTheme.accentOrange,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        usuario.login,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentPink.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              usuario.tipoUsuario.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.accentPink,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isActive ? 'ACTIVO' : 'BLOQUEADO',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isActive ? AppTheme.accentGreen : AppTheme.accentOrange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit_rounded,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 20,
+                      ),
+                      onPressed: () => _showEditDialog(usuario),
+                      tooltip: 'Editar',
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppTheme.accentOrange.withOpacity(0.8),
+                        size: 20,
+                      ),
+                      onPressed: () => _confirmDelete(usuario),
+                      tooltip: 'Eliminar',
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
-      drawer: context.screenWidth < 600 ? const AppDrawer() : null,
-      body: Row(
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Drawer permanente en desktop/tablet
-          if (context.screenWidth >= 600)
-            Container(
-              width: 280,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: context.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: const AppDrawer(),
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-
-          // Contenido principal
-          Expanded(
-            child: usuariosAsync.when(
-        data: (usuarios) {
-          if (usuarios.isEmpty) {
-            return const Center(
-              child: Text('No hay usuarios registrados'),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: usuarios.map((usuario) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12.0),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: usuario.estado == 'D'
-                          ? Colors.green
-                          : Colors.red,
-                      child: Text(
-                        usuario.login.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    title: Text(
-                      usuario.login,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Tipo: ${usuario.tipoUsuario}'),
-                        Text(
-                          'Estado: ${usuario.estado == "D" ? "Desbloqueado" : "Bloqueado"}',
-                        ),
-                        Text('Auditoría: ${usuario.audUsuario}'),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showEditDialog(usuario),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _confirmDelete(usuario),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+            child: Icon(
+              Icons.person_off_rounded,
+              size: 50,
+              color: Colors.white.withOpacity(0.4),
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(error.toString()),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.read(usuarioProvider.notifier).cargarUsuarios();
-                },
-                child: const Text('Reintentar'),
-              ),
-            ],
           ),
-        ),
+          const SizedBox(height: 24),
+          const Text(
+            'No hay usuarios registrados',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Crea un usuario para comenzar',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.6),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateFromEmpleadoDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo Usuario'),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Cargando usuarios...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 40,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Error al cargar usuarios',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => ref.read(usuarioProvider.notifier).cargarUsuarios(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -172,18 +423,12 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             if (!mounted) return;
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Usuario actualizado exitosamente'),
-                backgroundColor: Colors.green,
-              ),
+              _buildSnackBar('Usuario actualizado exitosamente'),
             );
           } on ApiException catch (e) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${e.message}'),
-                backgroundColor: Colors.red,
-              ),
+              _buildSnackBar('Error: ${e.message}', isError: true),
             );
           }
         },
@@ -209,18 +454,12 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             if (!mounted) return;
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Usuario creado exitosamente'),
-                backgroundColor: Colors.green,
-              ),
+              _buildSnackBar('Usuario creado exitosamente'),
             );
           } on ApiException catch (e) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(e.message),
-                backgroundColor: Colors.red,
-              ),
+              _buildSnackBar(e.message, isError: true),
             );
           }
         },
@@ -232,50 +471,139 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
   void _confirmDelete(UsuarioEntity usuario) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Eliminación'),
-        content: Text(
-          '¿Está seguro que desea eliminar al usuario "${usuario.login}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 340),
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF2D3250).withOpacity(0.95),
+                const Color(0xFF1A1D2E).withOpacity(0.98),
+              ],
             ),
-            onPressed: () async {
-              Navigator.of(context).pop();
-
-              try {
-                await ref
-                    .read(usuarioProvider.notifier)
-                    .eliminar(usuario.codUsuario);
-
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Usuario eliminado exitosamente'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } on ApiException catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: ${e.message}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Eliminar'),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 40,
+                spreadRadius: 0,
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentOrange.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete_outline_rounded,
+                  size: 32,
+                  color: AppTheme.accentOrange,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                '¿Eliminar Usuario?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Esta acción eliminará al usuario "${usuario.login}" de forma permanente.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.6),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(dialogContext).pop();
+                        try {
+                          await ref.read(usuarioProvider.notifier).eliminar(usuario.codUsuario);
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            _buildSnackBar('Usuario eliminado'),
+                          );
+                        } on ApiException catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            _buildSnackBar('Error: ${e.message}', isError: true),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.accentOrange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  SnackBar _buildSnackBar(String message, {bool isError = false}) {
+    return SnackBar(
+      content: Text(message),
+      backgroundColor: isError ? AppTheme.errorColor : AppTheme.accentGreen,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.all(16),
     );
   }
 }
@@ -340,124 +668,267 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.usuario != null;
 
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _codEmpleadoController,
-                decoration: const InputDecoration(
-                  labelText: 'Código Empleado',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Campo requerido';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Debe ser un número';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _loginController,
-                decoration: const InputDecoration(
-                  labelText: 'Login',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Campo requerido';
-                  }
-                  if (value.length < 3) {
-                    return 'Mínimo 3 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: isEditing
-                      ? 'Contraseña (dejar vacío si no desea cambiar)'
-                      : 'Contraseña',
-                  border: const OutlineInputBorder(),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  // Si es creación, la contraseña es obligatoria
-                  if (!isEditing && (value == null || value.isEmpty)) {
-                    return 'Campo requerido';
-                  }
-                  // Si se ingresó contraseña, validar longitud mínima
-                  if (value != null && value.isNotEmpty && value.length < 6) {
-                    return 'Mínimo 6 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _tipoUsuario,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo Usuario',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Administrador')),
-                  DropdownMenuItem(value: 'lim', child: Text('Limitado')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _tipoUsuario = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _estado,
-                decoration: const InputDecoration(
-                  labelText: 'Estado',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'D', child: Text('Desbloqueado')),
-                  DropdownMenuItem(value: 'B', child: Text('Bloqueado')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _estado = value!;
-                  });
-                },
-              ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 450),
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF2D3250).withOpacity(0.95),
+              const Color(0xFF1A1D2E).withOpacity(0.98),
             ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 40,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentPink.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: AppTheme.accentPink,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildTextField(
+                  controller: _codEmpleadoController,
+                  label: 'Código Empleado',
+                  icon: Icons.badge_rounded,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Campo requerido';
+                    if (int.tryParse(value) == null) return 'Debe ser un número';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _loginController,
+                  label: 'Login',
+                  icon: Icons.account_circle_rounded,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Campo requerido';
+                    if (value.length < 3) return 'Mínimo 3 caracteres';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _passwordController,
+                  label: isEditing ? 'Contraseña (opcional)' : 'Contraseña',
+                  icon: Icons.lock_rounded,
+                  obscureText: true,
+                  validator: (value) {
+                    if (!isEditing && (value == null || value.isEmpty)) return 'Campo requerido';
+                    if (value != null && value.isNotEmpty && value.length < 6) return 'Mínimo 6 caracteres';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildDropdown(
+                  value: _tipoUsuario,
+                  label: 'Tipo Usuario',
+                  icon: Icons.admin_panel_settings_rounded,
+                  items: const [
+                    DropdownMenuItem(value: 'admin', child: Text('Administrador')),
+                    DropdownMenuItem(value: 'lim', child: Text('Limitado')),
+                  ],
+                  onChanged: (value) => setState(() => _tipoUsuario = value!),
+                ),
+                const SizedBox(height: 16),
+                _buildDropdown(
+                  value: _estado,
+                  label: 'Estado',
+                  icon: Icons.check_circle_rounded,
+                  items: const [
+                    DropdownMenuItem(value: 'D', child: Text('Desbloqueado')),
+                    DropdownMenuItem(value: 'B', child: Text('Bloqueado')),
+                  ],
+                  onChanged: (value) => setState(() => _estado = value!),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _handleSave,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentPink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Guardar',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+      cursorColor: AppTheme.accentPink,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        floatingLabelStyle: TextStyle(color: AppTheme.accentPink, fontWeight: FontWeight.w600),
+        prefixIcon: Icon(icon, color: AppTheme.accentPink),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
         ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleSave,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Guardar'),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.accentPink, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.errorColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String value,
+    required String label,
+    required IconData icon,
+    required List<DropdownMenuItem<String>> items,
+    required void Function(String?) onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+      dropdownColor: const Color(0xFF1A1D2E),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        floatingLabelStyle: TextStyle(color: AppTheme.accentPink, fontWeight: FontWeight.w600),
+        prefixIcon: Icon(icon, color: AppTheme.accentPink),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.accentPink, width: 2),
+        ),
+      ),
     );
   }
 

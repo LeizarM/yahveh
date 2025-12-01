@@ -1,4 +1,6 @@
-﻿import '../../core/error/exceptions.dart';
+﻿import 'package:flutter/foundation.dart';
+import '../../core/error/exceptions.dart';
+import '../../core/utils/jwt_utils.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
@@ -60,8 +62,30 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<bool> isAuthenticated() async {
     try {
       final token = await localDataSource.getToken();
-      return token != null && token.isNotEmpty;
+      
+      if (token == null || token.isEmpty) {
+        debugPrint('🔐 No hay token almacenado');
+        return false;
+      }
+
+      // Verificar si el token ha expirado
+      if (JwtUtils.isTokenExpired(token)) {
+        debugPrint('⏰ Token expirado - limpiando sesión');
+        // Limpiar datos de sesión si el token expiró
+        await localDataSource.deleteUser();
+        await localDataSource.deleteToken();
+        return false;
+      }
+
+      // Log del tiempo restante (solo en debug)
+      final timeLeft = JwtUtils.getTimeUntilExpiration(token);
+      if (timeLeft != null) {
+        debugPrint('✅ Token válido - expira en ${timeLeft.inMinutes} minutos');
+      }
+
+      return true;
     } catch (e) {
+      debugPrint('❌ Error verificando autenticación: $e');
       return false;
     }
   }

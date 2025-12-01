@@ -1,4 +1,3 @@
-import '../../core/error/api_exception.dart';
 import '../../core/network/dio_client.dart';
 import '../models/persona_model.dart';
 

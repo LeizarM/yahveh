@@ -9,32 +9,60 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     debugLogDiagnostics: true, // Activar logs para debug
     redirect: (context, state) {
+      final isLoading = authState.isLoading;
       final isAuthenticated = authState.hasValue && authState.value != null;
+      final isSplash = state.matchedLocation == '/splash';
       final isLoggingIn = state.matchedLocation == '/login';
 
-      if (!isAuthenticated && !isLoggingIn) {
-        
+      // Si está cargando, mantener en splash
+      if (isLoading && !isSplash) {
+        return '/splash';
+      }
+
+      // Si terminó de cargar y está en splash, redirigir según autenticación
+      if (!isLoading && isSplash) {
+        return isAuthenticated ? '/dashboard' : '/login';
+      }
+
+      // Si no está autenticado y no está en login ni splash, ir a login
+      if (!isAuthenticated && !isLoggingIn && !isSplash) {
         return '/login';
       }
       
+      // Si está autenticado y está en login, ir a dashboard
       if (isAuthenticated && isLoggingIn) {
-        
         return '/dashboard';
       }
-      
       
       return null;
     },
     routes: [
       GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo SplashScreen');
+          return const SplashScreen();
+        },
+      ),
+      GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           debugPrint('🏗️ Construyendo LoginScreen');
-          return const LoginScreen();
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const LoginScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
         },
       ),
       GoRoute(

@@ -1,11 +1,14 @@
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../core/utils/animations.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import '../../domain/entities/cliente_entity.dart';
@@ -36,13 +39,18 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
   @override
   Widget build(BuildContext context) {
     final notasAsync = ref.watch(notaEntregaProvider);
+    final isMobile = context.isMobile;
     
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Notas de Entrega'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Notas de Entrega', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
               ref.read(notaEntregaProvider.notifier).cargarNotas();
             },
@@ -50,67 +58,92 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
           ),
         ],
       ),
-      drawer: context.isMobile ? const AppDrawer() : null,
+      drawer: isMobile
+          ? ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                child: const AppDrawer(),
+              ),
+            )
+          : null,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateNotaDialog(context),
         icon: const Icon(Icons.add),
         label: const Text('Nueva Nota'),
+        backgroundColor: AppTheme.accentGreen,
       ),
-      body: Row(
-        children: [
-          // Drawer permanente en desktop/tablet
-          if (!context.isMobile)
-            Container(
-              width: 280,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: context.colorScheme.outline.withValues(alpha: 0.2),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              // Drawer permanente en desktop/tablet con blur
+              if (!isMobile)
+                ClipRRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      width: 280,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        border: Border(
+                          right: BorderSide(
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                        ),
+                      ),
+                      child: const AppDrawer(),
+                    ),
                   ),
                 ),
-              ),
-              child: const AppDrawer(),
-            ),
 
-          // Contenido principal
-          Expanded(
-            child: notasAsync.when(
-              data: (notas) => _buildNotasList(context, notas),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No se pudieron cargar las notas',
-                        style: context.theme.textTheme.titleLarge,
-                        textAlign: TextAlign.center,
+              // Contenido principal
+              Expanded(
+                child: notasAsync.when(
+                  data: (notas) => _buildNotasList(context, notas),
+                  loading: () => Center(child: CircularProgressIndicator(color: AppTheme.accentCyan)),
+                  error: (error, stack) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 80, color: Colors.red.shade300),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No se pudieron cargar las notas',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.9)),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            error.toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              ref.read(notaEntregaProvider.notifier).cargarNotas();
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reintentar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.accentCyan,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        error.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          ref.read(notaEntregaProvider.notifier).cargarNotas();
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Reintentar'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -121,18 +154,20 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.description_outlined, size: 120, color: Colors.grey[300]),
+            Icon(Icons.description_outlined, size: 120, color: Colors.white.withOpacity(0.3)),
             const SizedBox(height: 16),
             Text(
               'No hay notas de entrega',
-              style: context.theme.textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Crea tu primera nota usando el botón (+)',
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: Colors.white.withOpacity(0.5)),
             ),
           ],
         ),
@@ -144,7 +179,10 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
       itemCount: notas.length,
       itemBuilder: (context, index) {
         final nota = notas[index];
-        return _buildNotaCard(context, nota);
+        return FadeSlideAnimation(
+          delay: Duration(milliseconds: 50 * (index % 10)),
+          child: _buildNotaCard(context, nota),
+        );
       },
     );
   }
@@ -152,25 +190,18 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
   Widget _buildNotaCard(BuildContext context, NotaEntregaEntity nota) {
     final dateFormat = DateFormat('dd/MM/yyyy');
     
-    return Card(
-      elevation: 2,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.15)),
+      ),
       child: InkWell(
         onTap: () => _showNotaDetails(context, nota),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                context.colorScheme.surface,
-                context.colorScheme.surface.withValues(alpha: 0.5),
-              ],
-            ),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -179,7 +210,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: context.colorScheme.primaryContainer,
+                      color: AppTheme.accentCyan.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -188,13 +219,13 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                         Icon(
                           Icons.numbers,
                           size: 16,
-                          color: context.colorScheme.onPrimaryContainer,
+                          color: AppTheme.accentCyan,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '#${nota.codNotaEntrega}',
                           style: TextStyle(
-                            color: context.colorScheme.onPrimaryContainer,
+                            color: AppTheme.accentCyan,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -203,20 +234,26 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                   ),
                   const Spacer(),
                   // Botón de PDF
-                  IconButton(
-                    icon: Icon(
-                      Icons.picture_as_pdf,
-                      color: Colors.red[700],
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    onPressed: () => _generarPDF(context, nota.codNotaEntrega, nota.nombreCliente),
-                    tooltip: 'Generar PDF',
-                    visualDensity: VisualDensity.compact,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.picture_as_pdf,
+                        color: Colors.red.shade300,
+                      ),
+                      onPressed: () => _generarPDF(context, nota.codNotaEntrega, nota.nombreCliente),
+                      tooltip: 'Generar PDF',
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     dateFormat.format(nota.fecha),
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 14,
                     ),
                   ),
@@ -225,13 +262,15 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.person, size: 20, color: Colors.grey[600]),
+                  Icon(Icons.person, size: 20, color: Colors.white.withOpacity(0.5)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       nota.nombreCliente,
-                      style: context.theme.textTheme.titleMedium?.copyWith(
+                      style: const TextStyle(
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -241,12 +280,12 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
               if (nota.direccion.isNotEmpty)
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
+                    Icon(Icons.location_on, size: 18, color: Colors.white.withOpacity(0.5)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         nota.direccion,
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -257,11 +296,11 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.map, size: 18, color: Colors.grey[600]),
+                    Icon(Icons.map, size: 18, color: Colors.white.withOpacity(0.5)),
                     const SizedBox(width: 8),
                     Text(
                       nota.zona,
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
                     ),
                   ],
                 ),
@@ -281,17 +320,26 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Generando PDF...'),
-              ],
+      builder: (context) => Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppTheme.accentCyan),
+                  const SizedBox(height: 16),
+                  const Text('Generando PDF...', style: TextStyle(color: Colors.white)),
+                ],
+              ),
             ),
           ),
         ),

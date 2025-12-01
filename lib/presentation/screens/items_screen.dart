@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
+import '../../core/utils/animations.dart';
 import '../../domain/entities/articulo_entity.dart';
 import '../../domain/entities/linea_entity.dart';
 import '../../domain/entities/precio_entity.dart';
@@ -14,7 +17,7 @@ import '../providers/auth_provider.dart';
 import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
-/// Pantalla de Artículos/Items
+/// Pantalla de Artículos/Items con diseño moderno
 class ItemsScreen extends ConsumerStatefulWidget {
   const ItemsScreen({super.key});
 
@@ -35,89 +38,212 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   @override
   Widget build(BuildContext context) {
     final articulosAsync = ref.watch(articuloProvider);
+    final isMobile = context.isMobile;
     
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Artículos'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              _showAddArticuloDialog(context);
-            },
-            tooltip: 'Agregar artículo',
-          ),
-        ],
-      ),
-      drawer: context.isMobile ? const AppDrawer() : null,
-      body: Row(
-        children: [
-          // Drawer permanente en desktop/tablet
-          if (!context.isMobile)
-            Container(
-              width: 280,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: context.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: const AppDrawer(),
-            ),
-
-          // Contenido principal
-          Expanded(
-            child: articulosAsync.when(
-              data: (articulos) {
-                final filteredArticulos = _filterArticulos(articulos);
-                
-                return ResponsiveLayout(
-                  mobile: _buildMobileLayout(context, filteredArticulos),
-                  tablet: _buildTabletLayout(context, filteredArticulos),
-                  desktop: _buildDesktopLayout(context, filteredArticulos),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No se pudieron cargar los artículos',
-                        style: context.theme.textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        ErrorMessages.getFriendlyMessage(error),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => ref.refresh(articuloProvider),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Reintentar'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: context.isMobile
-          ? FloatingActionButton(
+          if (!isMobile)
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
               onPressed: () => _showAddArticuloDialog(context),
-              child: const Icon(Icons.add),
+              tooltip: 'Agregar artículo',
+            ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.refresh(articuloProvider),
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
+      drawer: isMobile ? _buildBlurredDrawer() : null,
+      floatingActionButton: isMobile
+          ? FadeSlideAnimation(
+              delay: const Duration(milliseconds: 300),
+              child: FloatingActionButton.extended(
+                onPressed: () => _showAddArticuloDialog(context),
+                backgroundColor: AppTheme.accentCyan,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Nuevo', style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
             )
-          : null,
+          : FloatingActionButton.extended(
+              onPressed: () => _showAddArticuloDialog(context),
+              backgroundColor: AppTheme.accentCyan,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Nuevo Artículo', style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Row(
+          children: [
+            if (!isMobile) _buildPermanentDrawer(),
+            Expanded(
+              child: SafeArea(
+                child: articulosAsync.when(
+                  data: (articulos) {
+                    final filteredArticulos = _filterArticulos(articulos);
+                    return ResponsiveLayout(
+                      mobile: _buildMobileLayout(context, filteredArticulos),
+                      tablet: _buildTabletLayout(context, filteredArticulos),
+                      desktop: _buildDesktopLayout(context, filteredArticulos),
+                    );
+                  },
+                  loading: () => _buildLoadingState(),
+                  error: (error, stack) => _buildErrorState(context, error),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlurredDrawer() {
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1A1D2E).withOpacity(0.95),
+                  const Color(0xFF2D3250).withOpacity(0.92),
+                ],
+              ),
+            ),
+            child: const AppDrawer(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermanentDrawer() {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: 280,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            border: Border(
+              right: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: const AppDrawer(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Cargando artículos...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 40,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'No se pudieron cargar los artículos',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              ErrorMessages.getFriendlyMessage(error),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => ref.refresh(articuloProvider),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -142,7 +268,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   padding: context.screenPadding,
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
-                    return _buildItemCard(context, articulos[index]);
+                    return _buildItemCard(context, articulos[index], index);
                   },
                 ),
         ),
@@ -168,7 +294,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
-                    return _buildItemCard(context, articulos[index]);
+                    return _buildItemCard(context, articulos[index], index);
                   },
                 ),
         ),
@@ -194,7 +320,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
-                    return _buildItemCard(context, articulos[index]);
+                    return _buildItemCard(context, articulos[index], index);
                   },
                 ),
         ),
@@ -207,10 +333,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     return Container(
       padding: EdgeInsets.all(context.isMobile ? 16 : 24),
       decoration: BoxDecoration(
-        color: context.colorScheme.surface,
+        color: Colors.white.withOpacity(0.1),
         border: Border(
           bottom: BorderSide(
-            color: context.colorScheme.outline.withValues(alpha: 0.2),
+            color: Colors.white.withOpacity(0.15),
           ),
         ),
       ),
@@ -219,12 +345,19 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
           constraints: const BoxConstraints(maxWidth: 600),
           child: TextField(
             controller: _searchController,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            cursorColor: AppTheme.accentCyan,
             decoration: InputDecoration(
               hintText: 'Buscar artículos...',
-              prefixIcon: const Icon(Icons.search),
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              prefixIcon: Icon(Icons.search, color: AppTheme.accentCyan),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear),
+                      icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
                       onPressed: () {
                         setState(() {
                           _searchController.clear();
@@ -235,8 +368,18 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
               ),
               filled: true,
+              fillColor: Colors.white.withOpacity(0.15),
             ),
             onChanged: (value) {
               setState(() {
@@ -250,27 +393,19 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   }
 
   /// Card de artículo con diseño mejorado
-  Widget _buildItemCard(BuildContext context, ArticuloEntity articulo) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: () => _showItemDetails(context, articulo),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                context.colorScheme.primary.withOpacity(0.02),
-              ],
-            ),
-          ),
+  Widget _buildItemCard(BuildContext context, ArticuloEntity articulo, int index) {
+    return FadeSlideAnimation(
+      delay: Duration(milliseconds: 50 * (index % 10)),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
+        ),
+        child: InkWell(
+          onTap: () => _showItemDetails(context, articulo),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -283,13 +418,13 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: context.colorScheme.primary.withOpacity(0.1),
+                        color: AppTheme.accentCyan.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.inventory_2,
                         size: 20,
-                        color: context.colorScheme.primary,
+                        color: AppTheme.accentCyan,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -299,18 +434,19 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                         children: [
                           Text(
                             articulo.codArticulo ?? "N/A",
-                            style: context.theme.textTheme.labelLarge?.copyWith(
-                              color: context.colorScheme.primary,
+                            style: const TextStyle(
+                              color: AppTheme.accentCyan,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
+                              fontSize: 14,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             articulo.linea ?? 'Sin línea',
-                            style: context.theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
                               fontSize: 10,
                             ),
                             maxLines: 1,
@@ -322,14 +458,14 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     // Botón de entrada de inventario
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
+                        color: AppTheme.accentGreen.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
                         icon: Icon(
                           Icons.warehouse,
                           size: 20,
-                          color: Colors.green.shade700,
+                          color: AppTheme.accentGreen,
                         ),
                         padding: const EdgeInsets.all(8),
                         constraints: const BoxConstraints(),
@@ -341,14 +477,14 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     // Botón de precios
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
+                        color: AppTheme.accentOrange.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
                         icon: Icon(
                           Icons.attach_money,
                           size: 20,
-                          color: Colors.amber.shade700,
+                          color: AppTheme.accentOrange,
                         ),
                         padding: const EdgeInsets.all(8),
                         constraints: const BoxConstraints(),
@@ -363,7 +499,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 
                 // Separador visual
                 Divider(
-                  color: Colors.grey.shade200,
+                  color: Colors.white.withOpacity(0.1),
                   height: 1,
                   thickness: 1,
                 ),
@@ -373,9 +509,11 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 // Descripción
                 Text(
                   articulo.descripcion,
-                  style: context.theme.textTheme.titleSmall?.copyWith(
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
                     height: 1.3,
+                    fontSize: 14,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -385,8 +523,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   const SizedBox(height: 6),
                   Text(
                     articulo.descripcion2,
-                    style: context.theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 12,
                     ),
                     maxLines: 1,
@@ -405,12 +543,12 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.green.shade700, Colors.green.shade600],
+                          colors: [AppTheme.accentGreen, AppTheme.accentGreen.withOpacity(0.7)],
                         ),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.shade200,
+                            color: AppTheme.accentGreen.withOpacity(0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -418,7 +556,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                       ),
                       child: Text(
                         '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
-                        style: context.theme.textTheme.titleMedium?.copyWith(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -430,13 +568,13 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: (articulo.stockActual ?? 0) > 0 
-                            ? Colors.blue.shade50 
-                            : Colors.red.shade50,
+                            ? AppTheme.accentCyan.withOpacity(0.2) 
+                            : Colors.red.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: (articulo.stockActual ?? 0) > 0 
-                              ? Colors.blue.shade300 
-                              : Colors.red.shade300,
+                              ? AppTheme.accentCyan.withOpacity(0.5) 
+                              : Colors.red.withOpacity(0.5),
                           width: 1.5,
                         ),
                       ),
@@ -449,16 +587,16 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                                 : Icons.warning_amber_rounded,
                             size: 16,
                             color: (articulo.stockActual ?? 0) > 0 
-                                ? Colors.blue.shade700 
-                                : Colors.red.shade700,
+                                ? AppTheme.accentCyan 
+                                : Colors.red.shade300,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '${articulo.stockActual ?? 0}',
-                            style: context.theme.textTheme.bodyMedium?.copyWith(
+                            style: TextStyle(
                               color: (articulo.stockActual ?? 0) > 0 
-                                  ? Colors.blue.shade700 
-                                  : Colors.red.shade700,
+                                  ? AppTheme.accentCyan 
+                                  : Colors.red.shade300,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -485,15 +623,17 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
           Icon(
             Icons.inventory_2_outlined,
             size: 100,
-            color: Colors.grey.shade400,
+            color: Colors.white.withOpacity(0.3),
           ),
           const SizedBox(height: 16),
           Text(
             _searchQuery.isEmpty
                 ? 'No hay artículos disponibles'
                 : 'No se encontraron artículos',
-            style: context.theme.textTheme.titleLarge?.copyWith(
-              color: Colors.grey,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
@@ -501,8 +641,9 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             _searchQuery.isEmpty
                 ? 'Agrega tu primer artículo'
                 : 'Intenta con otra búsqueda',
-            style: context.theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 14,
             ),
           ),
         ],
@@ -514,84 +655,182 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   void _showItemDetails(BuildContext context, ArticuloEntity articulo) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(articulo.descripcion),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Icon(
-                  Icons.inventory_2,
-                  size: 80,
-                  color: context.colorScheme.primary,
-                ),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 450),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
-              const SizedBox(height: 16),
-              _buildDetailRow('Código', articulo.codArticulo ?? 'N/A'),
-              _buildDetailRow('Descripción', articulo.descripcion),
-              _buildDetailRow('Descripción 2', articulo.descripcion2),
-              _buildDetailRow('Línea', articulo.linea ?? 'Sin línea (ID: ${articulo.codLinea})'),
-              const Divider(),
-              _buildDetailRow('Precio', '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}'),
-              _buildDetailRow('Stock', '${articulo.stockActual ?? 0} unidades'),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentCyan.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.inventory_2, color: AppTheme.accentCyan, size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            articulo.descripcion,
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        _buildDetailRow('Código', articulo.codArticulo ?? 'N/A'),
+                        _buildDetailRow('Descripción', articulo.descripcion),
+                        _buildDetailRow('Descripción 2', articulo.descripcion2),
+                        _buildDetailRow('Línea', articulo.linea ?? 'Sin línea (ID: ${articulo.codLinea})'),
+                        Divider(color: Colors.white.withOpacity(0.1)),
+                        _buildDetailRow('Precio', '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}'),
+                        _buildDetailRow('Stock', '${articulo.stockActual ?? 0} unidades'),
+                      ],
+                    ),
+                  ),
+                  // Actions
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('Cerrar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showEditArticuloDialog(context, articulo);
+                          },
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Editar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentCyan,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            final confirmed = await _showDeleteConfirmation(context, articulo);
+                            if (confirmed == true && context.mounted) {
+                              try {
+                                final message = await ref.read(articuloProvider.notifier).deleteArticulo(articulo.codArticulo!);
+                                if (context.mounted) {
+                                  context.showSnackBar(message, isError: false);
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  context.showSnackBar(ErrorMessages.getFriendlyMessage(e), isError: true);
+                                }
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.delete, size: 18),
+                          label: const Text('Eliminar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade400,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+      ),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context, ArticuloEntity articulo) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 64, color: Colors.red.shade300),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Confirmar eliminación',
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '¿Estás seguro de eliminar "${articulo.descripcion}"?',
+                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text('Cancelar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400),
+                        child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              _showEditArticuloDialog(context, articulo);
-            },
-            icon: const Icon(Icons.edit),
-            label: const Text('Editar'),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              Navigator.pop(context);
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirmar eliminación'),
-                  content: Text('¿Estás seguro de eliminar "${articulo.descripcion}"?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancelar'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Eliminar'),
-                    ),
-                  ],
-                ),
-              );
-              
-              if (confirmed == true && context.mounted) {
-                try {
-                  final message = await ref.read(articuloProvider.notifier).deleteArticulo(articulo.codArticulo!);
-                  if (context.mounted) {
-                    context.showSnackBar(message, isError: false);
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    context.showSnackBar(ErrorMessages.getFriendlyMessage(e), isError: true);
-                  }
-                }
-              }
-            },
-            icon: const Icon(Icons.delete),
-            label: const Text('Eliminar'),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -599,17 +838,25 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   /// Fila de detalle
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             '$label:',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.7),
             ),
           ),
-          Text(value),
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white),
+              textAlign: TextAlign.end,
+            ),
+          ),
         ],
       ),
     );
@@ -721,149 +968,278 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
   @override
   Widget build(BuildContext context) {
     final lineasAsync = ref.watch(lineaProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return AlertDialog(
-      title: Text(widget.articulo == null ? 'Nuevo Artículo' : 'Editar Artículo'),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: screenWidth > 500 ? 500 : screenWidth * 0.95,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Código de artículo
-                TextFormField(
-                  controller: _codArticuloController,
-                  decoration: const InputDecoration(
-                    labelText: 'Código de Artículo',
-                    prefixIcon: Icon(Icons.qr_code),
-                    border: OutlineInputBorder(),
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
                   ),
-                  enabled: widget.articulo == null,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'El código es obligatorio';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Descripción
-                TextFormField(
-                  controller: _descripcionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descripción',
-                    prefixIcon: Icon(Icons.description),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'La descripción es obligatoria';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Descripción 2
-                TextFormField(
-                  controller: _descripcion2Controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Descripción 2',
-                    prefixIcon: Icon(Icons.notes),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'La descripción 2 es obligatoria';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Línea con búsqueda integrada
-                lineasAsync.when(
-                  data: (lineas) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _LineaSearchableDropdown(
-                                lineas: lineas,
-                                selectedLineaId: _selectedLineaId,
-                                onChanged: (lineaId) {
-                                  setState(() {
-                                    _selectedLineaId = lineaId;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return 'La línea es obligatoria';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton.filled(
-                              onPressed: () {
-                                setState(() {
-                                  _showLineaQuickAdd = !_showLineaQuickAdd;
-                                });
-                              },
-                              icon: Icon(_showLineaQuickAdd ? Icons.close : Icons.add),
-                              tooltip: _showLineaQuickAdd ? 'Cerrar' : 'Agregar línea rápida',
-                            ),
-                          ],
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentCyan.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        
-                        // Formulario rápido de línea
-                        if (_showLineaQuickAdd) ...[
-                          const SizedBox(height: 16),
-                          _QuickLineaForm(
-                            onLineaCreated: (nuevaLinea) {
-                              setState(() {
-                                _selectedLineaId = nuevaLinea.codLinea;
-                                _showLineaQuickAdd = false;
-                              });
-                              ref.read(lineaProvider.notifier).loadLineas();
+                        child: Icon(
+                          widget.articulo == null ? Icons.add_circle : Icons.edit,
+                          color: AppTheme.accentCyan,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          widget.articulo == null ? 'Nuevo Artículo' : 'Editar Artículo',
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _isLoading ? null : () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7)),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Código de artículo
+                          _buildGlassTextField(
+                            controller: _codArticuloController,
+                            label: 'Código de Artículo',
+                            icon: Icons.qr_code,
+                            enabled: widget.articulo == null,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'El código es obligatorio';
+                              }
+                              return null;
                             },
                           ),
+                          const SizedBox(height: 16),
+
+                          // Descripción
+                          _buildGlassTextField(
+                            controller: _descripcionController,
+                            label: 'Descripción',
+                            icon: Icons.description,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'La descripción es obligatoria';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Descripción 2
+                          _buildGlassTextField(
+                            controller: _descripcion2Controller,
+                            label: 'Descripción 2',
+                            icon: Icons.notes,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'La descripción 2 es obligatoria';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Línea con búsqueda integrada
+                          lineasAsync.when(
+                            data: (lineas) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _LineaSearchableDropdown(
+                                          lineas: lineas,
+                                          selectedLineaId: _selectedLineaId,
+                                          onChanged: (lineaId) {
+                                            setState(() {
+                                              _selectedLineaId = lineaId;
+                                            });
+                                          },
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'La línea es obligatoria';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.accentCyan.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _showLineaQuickAdd = !_showLineaQuickAdd;
+                                            });
+                                          },
+                                          icon: Icon(
+                                            _showLineaQuickAdd ? Icons.close : Icons.add,
+                                            color: AppTheme.accentCyan,
+                                          ),
+                                          tooltip: _showLineaQuickAdd ? 'Cerrar' : 'Agregar línea rápida',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                  // Formulario rápido de línea
+                                  if (_showLineaQuickAdd) ...[
+                                    const SizedBox(height: 16),
+                                    _QuickLineaForm(
+                                      onLineaCreated: (nuevaLinea) {
+                                        setState(() {
+                                          _selectedLineaId = nuevaLinea.codLinea;
+                                          _showLineaQuickAdd = false;
+                                        });
+                                        ref.read(lineaProvider.notifier).loadLineas();
+                                      },
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
+                            loading: () => Center(child: CircularProgressIndicator(color: AppTheme.accentCyan)),
+                            error: (error, stack) => Text('Error: $error', style: TextStyle(color: Colors.red.shade300)),
+                          ),
                         ],
-                      ],
-                    );
-                  },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Text('Error: $error'),
+                      ),
+                    ),
+                  ),
+                ),
+                // Actions
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _isLoading ? null : () => Navigator.pop(context),
+                        child: Text('Cancelar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _handleSubmit,
+                        icon: _isLoading
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.save),
+                        label: Text(widget.articulo == null ? 'Crear' : 'Actualizar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentGreen,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+    );
+  }
+
+  Widget _buildGlassTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool enabled = true,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      style: TextStyle(
+        color: enabled ? Colors.white : Colors.white.withOpacity(0.5),
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
+      cursorColor: AppTheme.accentCyan,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
-        FilledButton.icon(
-          onPressed: _isLoading ? null : _handleSubmit,
-          icon: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.save),
-          label: Text(widget.articulo == null ? 'Crear' : 'Actualizar'),
+        floatingLabelStyle: const TextStyle(
+          color: AppTheme.accentCyan,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
         ),
-      ],
+        prefixIcon: Icon(icon, color: AppTheme.accentCyan),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red.shade300),
+        ),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.15),
+      ),
+      validator: validator,
     );
   }
 
@@ -928,130 +1304,162 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
   Widget build(BuildContext context) {
     final familiasAsync = ref.watch(familiaProvider);
     
-    return Card(
-      color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.add_circle, color: Colors.blue),
-                const SizedBox(width: 8),
-                Text(
-                  'Crear Línea Rápida',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
-                  ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.accentCyan.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.accentCyan.withOpacity(0.3)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.add_circle, color: AppTheme.accentCyan),
+              const SizedBox(width: 8),
+              Text(
+                'Crear Línea Rápida',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.accentCyan,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Dropdown de Familias
-            familiasAsync.when(
-              data: (familias) {
-                if (familias.isEmpty) {
-                  return Card(
-                    color: Colors.orange.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning, color: Colors.orange.shade700),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'No hay familias disponibles. Crea una familia primero.',
-                              style: TextStyle(color: Colors.orange.shade700),
-                            ),
-                          ),
-                        ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Dropdown de Familias
+          familiasAsync.when(
+            data: (familias) {
+              if (familias.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.orange.shade300),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'No hay familias disponibles. Crea una familia primero.',
+                          style: TextStyle(color: Colors.orange.shade300),
+                        ),
                       ),
+                    ],
+                  ),
+                );
+              }
+              
+              return DropdownButtonFormField<int>(
+                decoration: InputDecoration(
+                  labelText: 'Familia',
+                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                  floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
+                  prefixIcon: Icon(Icons.folder_special, color: AppTheme.accentCyan),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.15),
+                ),
+                dropdownColor: const Color(0xFF2A2A4A),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                value: _selectedFamiliaId,
+                isExpanded: true,
+                items: familias.map((familia) {
+                  return DropdownMenuItem<int>(
+                    value: familia.codFamilia,
+                    child: Text(
+                      '${familia.codFamilia} - ${familia.familia}',
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
-                }
-                
-                return DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(
-                    labelText: 'Familia',
-                    prefixIcon: Icon(Icons.folder_special),
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  value: _selectedFamiliaId,
-                  isExpanded: true,
-                  items: familias.map((familia) {
-                    return DropdownMenuItem<int>(
-                      value: familia.codFamilia,
-                      child: Text(
-                        '${familia.codFamilia} - ${familia.familia}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: _isCreating ? null : (value) {
-                    setState(() {
-                      _selectedFamiliaId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'La familia es obligatoria';
-                    }
-                    return null;
-                  },
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              error: (error, stack) => Card(
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    'Error al cargar familias: ${ErrorMessages.getFriendlyMessage(error)}',
-                    style: TextStyle(color: Colors.red.shade700),
-                  ),
-                ),
+                }).toList(),
+                onChanged: _isCreating ? null : (value) {
+                  setState(() {
+                    _selectedFamiliaId = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'La familia es obligatoria';
+                  }
+                  return null;
+                },
+              );
+            },
+            loading: () => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: CircularProgressIndicator(color: AppTheme.accentCyan),
               ),
             ),
-            const SizedBox(height: 12),
-            
-            TextField(
-              controller: _lineaController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre de la línea',
-                border: OutlineInputBorder(),
-                filled: true,
-                fillColor: Colors.white,
+            error: (error, stack) => Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
               ),
-              enabled: !_isCreating,
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _isCreating ? null : _createLinea,
-                icon: _isCreating
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add),
-                label: const Text('Crear Línea'),
+              child: Text(
+                'Error al cargar familias: ${ErrorMessages.getFriendlyMessage(error)}',
+                style: TextStyle(color: Colors.red.shade300),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          
+          TextField(
+            controller: _lineaController,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+            cursorColor: AppTheme.accentCyan,
+            decoration: InputDecoration(
+              labelText: 'Nombre de la línea',
+              labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.15),
+            ),
+            enabled: !_isCreating,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isCreating ? null : _createLinea,
+              icon: _isCreating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.add),
+              label: const Text('Crear Línea'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentCyan,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1178,121 +1586,139 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
           link: _layerLink,
           showWhenUnlinked: false,
           offset: Offset(0.0, size.height + 5.0),
-          child: Material(
-            elevation: 4.0,
-            borderRadius: BorderRadius.circular(8),
-            child: StatefulBuilder(
-              builder: (context, setOverlayState) {
-                return Container(
-                  constraints: const BoxConstraints(maxHeight: 300),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                    color: Colors.white,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Buscador dentro del dropdown
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          controller: _searchController,
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            hintText: 'Buscar línea...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 20),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setOverlayState(() {
-                                        _searchQuery = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            isDense: true,
-                          ),
-                          onChanged: (value) {
-                            setOverlayState(() {
-                              _searchQuery = value.toLowerCase();
-                            });
-                          },
-                        ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Material(
+                color: Colors.transparent,
+                child: StatefulBuilder(
+                  builder: (context, setOverlayState) {
+                    return Container(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A4A).withOpacity(0.95),
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const Divider(height: 1),
-                      
-                      // Lista de líneas filtradas
-                      Flexible(
-                        child: Builder(
-                          builder: (context) {
-                            final filteredLineas = _searchQuery.isEmpty
-                                ? widget.lineas
-                                : widget.lineas.where((linea) {
-                                    return linea.linea.toLowerCase().contains(_searchQuery) ||
-                                        (linea.codLinea?.toString() ?? '').contains(_searchQuery);
-                                  }).toList();
-
-                            if (filteredLineas.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: Text(
-                                    'No se encontraron líneas',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Buscador dentro del dropdown
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: 'Buscar línea...',
+                                hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                prefixIcon: Icon(Icons.search, size: 20, color: AppTheme.accentCyan),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear, size: 20, color: Colors.white.withOpacity(0.7)),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setOverlayState(() {
+                                            _searchQuery = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
                                 ),
-                              );
-                            }
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.15),
+                              ),
+                              onChanged: (value) {
+                                setOverlayState(() {
+                                  _searchQuery = value.toLowerCase();
+                                });
+                              },
+                            ),
+                          ),
+                          Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+                          
+                          // Lista de líneas filtradas
+                          Flexible(
+                            child: Builder(
+                              builder: (context) {
+                                final filteredLineas = _searchQuery.isEmpty
+                                    ? widget.lineas
+                                    : widget.lineas.where((linea) {
+                                        return linea.linea.toLowerCase().contains(_searchQuery) ||
+                                            (linea.codLinea?.toString() ?? '').contains(_searchQuery);
+                                      }).toList();
 
-                            return ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: filteredLineas.length,
-                              itemBuilder: (context, index) {
-                                final linea = filteredLineas[index];
-                                final isSelected = linea.codLinea == widget.selectedLineaId;
-
-                                return ListTile(
-                                  dense: true,
-                                  selected: isSelected,
-                                  selectedTileColor: Colors.blue.shade50,
-                                  leading: Icon(
-                                    Icons.category,
-                                    size: 20,
-                                    color: isSelected ? Colors.blue : Colors.grey,
-                                  ),
-                                  title: Text(
-                                    linea.linea,
-                                    style: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? Colors.blue : Colors.black,
+                                if (filteredLineas.isEmpty) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Center(
+                                      child: Text(
+                                        'No se encontraron líneas',
+                                        style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                      ),
                                     ),
-                                  ),
-                                  subtitle: Text(
-                                    'Código: ${linea.codLinea}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  onTap: () {
-                                    widget.onChanged(linea.codLinea);
-                                    _closeDropdown();
+                                  );
+                                }
+
+                                return ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: filteredLineas.length,
+                                  itemBuilder: (context, index) {
+                                    final linea = filteredLineas[index];
+                                    final isSelected = linea.codLinea == widget.selectedLineaId;
+
+                                    return ListTile(
+                                      dense: true,
+                                      selected: isSelected,
+                                      selectedTileColor: AppTheme.accentCyan.withOpacity(0.2),
+                                      leading: Icon(
+                                        Icons.category,
+                                        size: 20,
+                                        color: isSelected ? AppTheme.accentCyan : Colors.white.withOpacity(0.5),
+                                      ),
+                                      title: Text(
+                                        linea.linea,
+                                        style: TextStyle(
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          color: isSelected ? AppTheme.accentCyan : Colors.white,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        'Código: ${linea.codLinea}',
+                                        style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                                      ),
+                                      onTap: () {
+                                        widget.onChanged(linea.codLinea);
+                                        _closeDropdown();
+                                      },
+                                    );
                                   },
                                 );
                               },
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),
@@ -1326,25 +1752,63 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
             children: [
               InkWell(
                 onTap: _toggleDropdown,
-                borderRadius: BorderRadius.circular(8),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Línea',
-                    prefixIcon: const Icon(Icons.category),
-                    suffixIcon: Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
-                    border: const OutlineInputBorder(),
-                    errorText: field.errorText,
-                  ),
-                  child: Text(
-                    selectedLinea == null
-                        ? ''
-                        : '${selectedLinea.codLinea} - ${selectedLinea.linea}',
-                    style: TextStyle(
-                      color: selectedLinea == null ? Colors.grey : Colors.black,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: field.hasError 
+                          ? Colors.red.shade300 
+                          : Colors.white.withOpacity(0.3),
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.category, color: AppTheme.accentCyan),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Línea',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              selectedLinea == null
+                                  ? 'Seleccionar línea'
+                                  : '${selectedLinea.codLinea} - ${selectedLinea.linea}',
+                              style: TextStyle(
+                                color: selectedLinea == null 
+                                    ? Colors.white.withOpacity(0.5) 
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              if (field.hasError)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 8),
+                  child: Text(
+                    field.errorText!,
+                    style: TextStyle(color: Colors.red.shade300, fontSize: 12),
+                  ),
+                ),
             ],
           ),
         );

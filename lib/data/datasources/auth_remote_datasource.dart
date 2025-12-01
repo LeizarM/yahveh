@@ -32,19 +32,80 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final data = response.data['data'] as Map<String, dynamic>;
         return UserModel.fromJson(data);
       } else {
-        throw ServerException(
-          response.data['message'] ?? 'Error al iniciar sesión'
-        );
+        final message = response.data['message'] ?? 'Error al iniciar sesión';
+        throw ServerException(_parseLoginErrorMessage(message));
       }
     } on DioException catch (e) {
-      if (e.response != null && e.response!.data != null) {
-        final message = e.response!.data['message'] ?? 'Error de servidor';
-        throw ServerException(message);
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw ServerException('Tiempo de espera agotado. Por favor, verifica tu conexión a internet.');
       }
-      throw ServerException('Error de conexión: ${e.message}');
+      
+      if (e.type == DioExceptionType.connectionError) {
+        throw ServerException('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+      }
+      
+      if (e.response != null && e.response!.data != null) {
+        final message = e.response!.data['message'] ?? '';
+        final statusCode = e.response!.statusCode;
+        
+        // Mensajes específicos según código de estado
+        if (statusCode == 401) {
+          throw ServerException('Usuario o contraseña incorrectos. Por favor, verifica tus credenciales.');
+        } else if (statusCode == 404) {
+          throw ServerException('El usuario ingresado no existe en el sistema.');
+        } else if (statusCode == 403) {
+          throw ServerException('Tu cuenta está deshabilitada. Contacta al administrador.');
+        } else if (statusCode == 429) {
+          throw ServerException('Demasiados intentos fallidos. Espera unos minutos antes de intentar de nuevo.');
+        } else if (statusCode! >= 500) {
+          throw ServerException('Error en el servidor. Por favor, intenta más tarde.');
+        }
+        
+        throw ServerException(_parseLoginErrorMessage(message));
+      }
+      throw ServerException('Error de conexión. Por favor, verifica tu internet e intenta de nuevo.');
     } catch (e) {
-      throw ServerException('Error inesperado: $e');
+      if (e is ServerException) rethrow;
+      throw ServerException('Ocurrió un error inesperado. Por favor, intenta de nuevo.');
     }
+  }
+  
+  /// Parsea mensajes de error del servidor para hacerlos más amigables
+  String _parseLoginErrorMessage(String serverMessage) {
+    final lowerMessage = serverMessage.toLowerCase();
+    
+    if (lowerMessage.contains('password') || 
+        lowerMessage.contains('contraseña') ||
+        lowerMessage.contains('incorrect') ||
+        lowerMessage.contains('invalid')) {
+      return 'Usuario o contraseña incorrectos. Por favor, verifica tus credenciales.';
+    }
+    
+    if (lowerMessage.contains('user not found') ||
+        lowerMessage.contains('usuario no encontrado') ||
+        lowerMessage.contains('no existe')) {
+      return 'El usuario ingresado no existe en el sistema.';
+    }
+    
+    if (lowerMessage.contains('disabled') ||
+        lowerMessage.contains('deshabilitado') ||
+        lowerMessage.contains('inactive') ||
+        lowerMessage.contains('inactivo')) {
+      return 'Tu cuenta está deshabilitada. Contacta al administrador.';
+    }
+    
+    if (lowerMessage.contains('locked') ||
+        lowerMessage.contains('bloqueado')) {
+      return 'Tu cuenta ha sido bloqueada temporalmente. Intenta más tarde.';
+    }
+    
+    if (serverMessage.isNotEmpty && serverMessage.length < 100) {
+      return serverMessage;
+    }
+    
+    return 'Error al iniciar sesión. Por favor, intenta de nuevo.';
   }
 
   @override
