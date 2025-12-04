@@ -18,7 +18,33 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
       final notas = await _remoteDataSource.listar();
       return OperationResult(
         data: notas.map((model) => model.toEntity()).toList(),
-        message: 'Notas de entrega obtenidas exitosamente',
+        message: 'Notas de entrega válidas obtenidas exitosamente',
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<OperationResult<List<NotaEntregaEntity>>> listarTodas() async {
+    try {
+      final notas = await _remoteDataSource.listarTodas();
+      return OperationResult(
+        data: notas.map((model) => model.toEntity()).toList(),
+        message: 'Todas las notas de entrega obtenidas exitosamente',
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<OperationResult<List<NotaEntregaEntity>>> listarAnuladas() async {
+    try {
+      final notas = await _remoteDataSource.listarAnuladas();
+      return OperationResult(
+        data: notas.map((model) => model.toEntity()).toList(),
+        message: 'Notas anuladas obtenidas exitosamente',
       );
     } catch (e) {
       throw e;
@@ -80,6 +106,8 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         fecha: notaEntrega.fecha,
         direccion: notaEntrega.direccion,
         zona: notaEntrega.zona,
+        estado: notaEntrega.estado,
+        estadoTexto: notaEntrega.estadoTexto,
         audUsuario: notaEntrega.audUsuario,
       );
       
@@ -106,6 +134,8 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         fecha: notaEntrega.fecha,
         direccion: notaEntrega.direccion,
         zona: notaEntrega.zona,
+        estado: notaEntrega.estado,
+        estadoTexto: notaEntrega.estadoTexto,
         audUsuario: notaEntrega.audUsuario,
       );
       
@@ -113,6 +143,19 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
       return OperationResult(
         data: notaActualizada.toEntity(),
         message: 'Nota de entrega actualizada',
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<OperationResult<NotaEntregaEntity>> anular(int codNotaEntrega) async {
+    try {
+      final notaAnulada = await _remoteDataSource.anular(codNotaEntrega);
+      return OperationResult(
+        data: notaAnulada.toEntity(),
+        message: 'Nota de entrega anulada. Stock devuelto al inventario',
       );
     } catch (e) {
       throw e;

@@ -10,10 +10,10 @@ class NotaEntregaRemoteDataSource {
   NotaEntregaRemoteDataSource({required DioClient dioClient})
       : _dioClient = dioClient;
 
-  /// GET /api/notas-entrega - Listar todas las notas de entrega
+  /// GET /api/notas-entrega - Listar solo notas de entrega válidas
   Future<List<NotaEntregaModel>> listar() async {
     try {
-      print('📤 Solicitando lista de notas de entrega...');
+      print('📤 Solicitando lista de notas de entrega válidas...');
       
       final response = await _dioClient.get('/notas-entrega');
       
@@ -22,13 +22,59 @@ class NotaEntregaRemoteDataSource {
       if (response.data['success'] == true) {
         final List<dynamic> dataList = response.data['data'] ?? [];
         final notas = dataList.map((json) => NotaEntregaModel.fromJson(json)).toList();
-        print('✅ ${notas.length} notas de entrega obtenidas');
+        print('✅ ${notas.length} notas de entrega válidas obtenidas');
         return notas;
       } else {
         throw ApiException(message: response.data['message'] ?? 'Error al listar notas de entrega');
       }
     } catch (e) {
       print('❌ Error al listar notas de entrega: $e');
+      rethrow;
+    }
+  }
+
+  /// GET /api/notas-entrega/todas - Listar todas las notas (válidas y anuladas)
+  Future<List<NotaEntregaModel>> listarTodas() async {
+    try {
+      print('📤 Solicitando lista de todas las notas de entrega...');
+      
+      final response = await _dioClient.get('/notas-entrega/todas');
+      
+      print('📥 Respuesta recibida: ${response.statusCode}');
+      
+      if (response.data['success'] == true) {
+        final List<dynamic> dataList = response.data['data'] ?? [];
+        final notas = dataList.map((json) => NotaEntregaModel.fromJson(json)).toList();
+        print('✅ ${notas.length} notas de entrega (todas) obtenidas');
+        return notas;
+      } else {
+        throw ApiException(message: response.data['message'] ?? 'Error al listar todas las notas');
+      }
+    } catch (e) {
+      print('❌ Error al listar todas las notas: $e');
+      rethrow;
+    }
+  }
+
+  /// GET /api/notas-entrega/anuladas - Listar solo notas anuladas
+  Future<List<NotaEntregaModel>> listarAnuladas() async {
+    try {
+      print('📤 Solicitando lista de notas anuladas...');
+      
+      final response = await _dioClient.get('/notas-entrega/anuladas');
+      
+      print('📥 Respuesta recibida: ${response.statusCode}');
+      
+      if (response.data['success'] == true) {
+        final List<dynamic> dataList = response.data['data'] ?? [];
+        final notas = dataList.map((json) => NotaEntregaModel.fromJson(json)).toList();
+        print('✅ ${notas.length} notas anuladas obtenidas');
+        return notas;
+      } else {
+        throw ApiException(message: response.data['message'] ?? 'Error al listar notas anuladas');
+      }
+    } catch (e) {
+      print('❌ Error al listar notas anuladas: $e');
       rethrow;
     }
   }
@@ -88,10 +134,10 @@ class NotaEntregaRemoteDataSource {
       
       final queryParams = <String, dynamic>{};
       if (fechaInicio != null) {
-        queryParams['fechaInicio'] = fechaInicio.toIso8601String().split('T')[0];
+        queryParams['desde'] = fechaInicio.toIso8601String().split('T')[0];
       }
       if (fechaFin != null) {
-        queryParams['fechaFin'] = fechaFin.toIso8601String().split('T')[0];
+        queryParams['hasta'] = fechaFin.toIso8601String().split('T')[0];
       }
       
       final response = await _dioClient.get(
@@ -162,6 +208,28 @@ class NotaEntregaRemoteDataSource {
       }
     } catch (e) {
       print('❌ Error al actualizar nota de entrega: $e');
+      rethrow;
+    }
+  }
+
+  /// PUT /api/notas-entrega/{id}/anular - Anular nota de entrega (devuelve stock automáticamente)
+  Future<NotaEntregaModel> anular(int codNotaEntrega) async {
+    try {
+      print('📤 Anulando nota de entrega: $codNotaEntrega');
+      
+      final response = await _dioClient.put('/notas-entrega/$codNotaEntrega/anular');
+      
+      print('📥 Respuesta recibida: ${response.statusCode}');
+      
+      if (response.data['success'] == true) {
+        final nota = NotaEntregaModel.fromJson(response.data['data']);
+        print('✅ Nota de entrega anulada - Stock devuelto');
+        return nota;
+      } else {
+        throw ApiException(message: response.data['message'] ?? 'Error al anular nota de entrega');
+      }
+    } catch (e) {
+      print('❌ Error al anular nota de entrega: $e');
       rethrow;
     }
   }

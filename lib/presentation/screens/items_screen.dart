@@ -1569,10 +1569,14 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
     _overlayEntry?.remove();
     _overlayEntry = null;
     _isOpen = false;
-    if (mounted) {
-      _searchController.clear();
-    }
     _searchQuery = '';
+    // Programar la limpieza para después del frame actual para evitar
+    // el error "setState() called when widget tree was locked"
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _searchController.clear();
+      }
+    });
   }
 
   OverlayEntry _createOverlayEntry() {

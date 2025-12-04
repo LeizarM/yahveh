@@ -15,6 +15,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
     required super.fecha,
     required super.direccion,
     required super.zona,
+    super.estado = 1,
+    super.estadoTexto = 'Válido',
     required super.audUsuario,
   });
 
@@ -27,6 +29,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
             : DateTime.now(),
         direccion: json["direccion"] ?? '',
         zona: json["zona"] ?? '',
+        estado: json["estado"] ?? 1,
+        estadoTexto: json["estadoTexto"] ?? 'Válido',
         audUsuario: json["audUsuario"] ?? 0,
       );
 
@@ -37,6 +41,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
         "fecha": "${fecha.year.toString().padLeft(4, '0')}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}",
         "direccion": direccion,
         "zona": zona,
+        "estado": estado,
+        "estadoTexto": estadoTexto,
         "audUsuario": audUsuario,
       };
 
@@ -54,6 +60,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
         fecha: fecha,
         direccion: direccion,
         zona: zona,
+        estado: estado,
+        estadoTexto: estadoTexto,
         audUsuario: audUsuario,
       );
 }
