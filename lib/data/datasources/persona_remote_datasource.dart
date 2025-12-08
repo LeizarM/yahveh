@@ -1,5 +1,6 @@
 import '../../core/network/dio_client.dart';
 import '../models/persona_model.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 
 /// DataSource remoto para Persona
 class PersonaRemoteDataSource {
@@ -10,16 +11,16 @@ class PersonaRemoteDataSource {
   /// Listar todas las personas
   Future<List<PersonaModel>> listar() async {
     try {
-      print('📤 GET /personas - Listando personas');
+      console('📤 GET /personas - Listando personas');
       
       final response = await dioClient.get('/personas');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       final List<dynamic> data = response.data['data'] as List;
       return data.map((json) => PersonaModel.fromJson(json)).toList();
     } catch (e) {
-      print('❌ Error al listar personas: $e');
+      console('❌ Error al listar personas: $e');
       rethrow;
     }
   }
@@ -27,15 +28,15 @@ class PersonaRemoteDataSource {
   /// Buscar persona por código
   Future<PersonaModel> buscarPorCodigo(int codPersona) async {
     try {
-      print('📤 GET /personas/$codPersona');
+      console('📤 GET /personas/$codPersona');
       
       final response = await dioClient.get('/personas/$codPersona');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       return PersonaModel.fromJson(response.data['data']);
     } catch (e) {
-      print('❌ Error al buscar persona: $e');
+      console('❌ Error al buscar persona: $e');
       rethrow;
     }
   }
@@ -43,15 +44,15 @@ class PersonaRemoteDataSource {
   /// Buscar persona por CI
   Future<PersonaModel> buscarPorCI(String ciNumero, String ciExpedido) async {
     try {
-      print('📤 GET /personas/ci/$ciNumero/$ciExpedido');
+      console('📤 GET /personas/ci/$ciNumero/$ciExpedido');
       
       final response = await dioClient.get('/personas/ci/$ciNumero/$ciExpedido');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       return PersonaModel.fromJson(response.data['data']);
     } catch (e) {
-      print('❌ Error al buscar persona por CI: $e');
+      console('❌ Error al buscar persona por CI: $e');
       rethrow;
     }
   }
@@ -59,18 +60,18 @@ class PersonaRemoteDataSource {
   /// Buscar personas por nombre
   Future<List<PersonaModel>> buscarPorNombre(String nombre) async {
     try {
-      print('📤 GET /personas/buscar?nombre=$nombre');
+      console('📤 GET /personas/buscar?nombre=$nombre');
       
       final response = await dioClient.get('/personas/buscar', queryParameters: {
         'nombre': nombre,
       });
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       final List<dynamic> data = response.data['data'] as List;
       return data.map((json) => PersonaModel.fromJson(json)).toList();
     } catch (e) {
-      print('❌ Error al buscar personas por nombre: $e');
+      console('❌ Error al buscar personas por nombre: $e');
       rethrow;
     }
   }
@@ -78,20 +79,20 @@ class PersonaRemoteDataSource {
   /// Crear persona
   Future<PersonaModel> crear(PersonaModel persona) async {
     try {
-      print('📤 POST /personas');
-      print('   Body: ${persona.toCreateJson()}');
+      console('📤 POST /personas');
+      console('   Body: ${persona.toCreateJson()}');
       
       final response = await dioClient.post(
         '/personas',
         data: persona.toCreateJson(),
       );
       
-      print('📥 Response: ${response.statusCode}');
-      print('✅ Persona creada exitosamente');
+      console('📥 Response: ${response.statusCode}');
+      console('✅ Persona creada exitosamente');
       
       return PersonaModel.fromJson(response.data['data']);
     } catch (e) {
-      print('❌ Error al crear persona: $e');
+      console('❌ Error al crear persona: $e');
       rethrow;
     }
   }
@@ -99,20 +100,20 @@ class PersonaRemoteDataSource {
   /// Actualizar persona
   Future<PersonaModel> actualizar(int codPersona, PersonaModel persona) async {
     try {
-      print('📤 PUT /personas/$codPersona');
-      print('   Body: ${persona.toUpdateJson()}');
+      console('📤 PUT /personas/$codPersona');
+      console('   Body: ${persona.toUpdateJson()}');
       
       final response = await dioClient.put(
         '/personas/$codPersona',
         data: persona.toUpdateJson(),
       );
       
-      print('📥 Response: ${response.statusCode}');
-      print('✅ Persona actualizada exitosamente');
+      console('📥 Response: ${response.statusCode}');
+      console('✅ Persona actualizada exitosamente');
       
       return PersonaModel.fromJson(response.data['data']);
     } catch (e) {
-      print('❌ Error al actualizar persona: $e');
+      console('❌ Error al actualizar persona: $e');
       rethrow;
     }
   }
@@ -120,14 +121,14 @@ class PersonaRemoteDataSource {
   /// Eliminar persona
   Future<void> eliminar(int codPersona) async {
     try {
-      print('📤 DELETE /personas/$codPersona');
+      console('📤 DELETE /personas/$codPersona');
       
       final response = await dioClient.delete('/personas/$codPersona');
       
-      print('📥 Response: ${response.statusCode}');
-      print('✅ Persona eliminada exitosamente');
+      console('📥 Response: ${response.statusCode}');
+      console('✅ Persona eliminada exitosamente');
     } catch (e) {
-      print('❌ Error al eliminar persona: $e');
+      console('❌ Error al eliminar persona: $e');
       rethrow;
     }
   }

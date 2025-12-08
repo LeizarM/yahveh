@@ -48,13 +48,13 @@ class AppDrawer extends ConsumerWidget {
                           Icon(
                             Icons.menu_open_rounded,
                             size: 48,
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'No hay opciones disponibles',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 14,
                             ),
                           ),
@@ -90,7 +90,7 @@ class AppDrawer extends ConsumerWidget {
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withOpacity(0.7),
+                            Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
@@ -99,7 +99,7 @@ class AppDrawer extends ConsumerWidget {
                         'Cargando menú...',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -118,20 +118,20 @@ class AppDrawer extends ConsumerWidget {
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.2),
+                              color: Colors.red.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.cloud_off_rounded,
                               size: 28,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                             ),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No se pudo cargar el menú',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -147,7 +147,7 @@ class AppDrawer extends ConsumerWidget {
                             label: const Text('Reintentar'),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white,
-                              backgroundColor: Colors.white.withOpacity(0.1),
+                              backgroundColor: Colors.white.withValues(alpha: 0.1),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
                                 vertical: 12,
@@ -182,7 +182,7 @@ class AppDrawer extends ConsumerWidget {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -209,10 +209,10 @@ class AppDrawer extends ConsumerWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 width: 1,
               ),
             ),
@@ -228,13 +228,13 @@ class AppDrawer extends ConsumerWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppTheme.accentCyan.withOpacity(0.8),
-                        AppTheme.primaryColor.withOpacity(0.8),
+                        AppTheme.accentCyan.withValues(alpha: 0.8),
+                        AppTheme.primaryColor.withValues(alpha: 0.8),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.3),
                         blurRadius: 12,
                         spreadRadius: 0,
                       ),
@@ -276,7 +276,7 @@ class AppDrawer extends ConsumerWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentGreen.withOpacity(0.2),
+                          color: AppTheme.accentGreen.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -301,7 +301,7 @@ class AppDrawer extends ConsumerWidget {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -311,7 +311,7 @@ class AppDrawer extends ConsumerWidget {
               height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
             const SizedBox(width: 14),
@@ -323,7 +323,7 @@ class AppDrawer extends ConsumerWidget {
                     width: double.infinity,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -332,7 +332,7 @@ class AppDrawer extends ConsumerWidget {
                     width: 80,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -371,8 +371,8 @@ class AppDrawer extends ConsumerWidget {
             context.go(path);
           },
           borderRadius: BorderRadius.circular(14),
-          splashColor: Colors.white.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.05),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
@@ -384,13 +384,13 @@ class AppDrawer extends ConsumerWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -400,14 +400,14 @@ class AppDrawer extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ],
             ),
@@ -425,10 +425,10 @@ class AppDrawer extends ConsumerWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -447,7 +447,7 @@ class AppDrawer extends ConsumerWidget {
           ),
           
           Divider(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             height: 1,
           ),
           
@@ -482,8 +482,8 @@ class AppDrawer extends ConsumerWidget {
                 icon,
                 size: 22,
                 color: isLogout 
-                    ? AppTheme.accentOrange.withOpacity(0.8)
-                    : Colors.white.withOpacity(0.7),
+                    ? AppTheme.accentOrange.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 14),
               Text(
@@ -492,8 +492,8 @@ class AppDrawer extends ConsumerWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: isLogout 
-                      ? AppTheme.accentOrange.withOpacity(0.9)
-                      : Colors.white.withOpacity(0.8),
+                      ? AppTheme.accentOrange.withValues(alpha: 0.9)
+                      : Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -566,18 +566,18 @@ class AppDrawer extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF2D3250).withOpacity(0.95),
-                const Color(0xFF1A1D2E).withOpacity(0.98),
+                const Color(0xFF2D3250).withValues(alpha: 0.95),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.98),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 40,
                 spreadRadius: 0,
               ),
@@ -591,7 +591,7 @@ class AppDrawer extends ConsumerWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.15),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -621,7 +621,7 @@ class AppDrawer extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   height: 1.4,
                 ),
               ),
@@ -639,14 +639,14 @@ class AppDrawer extends ConsumerWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                           ),
                         ),
                       ),
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

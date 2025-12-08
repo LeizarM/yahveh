@@ -153,22 +153,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.white.withOpacity(0.25),
-                                  Colors.white.withOpacity(0.1),
+                                  Colors.white.withValues(alpha: 0.25),
+                                  Colors.white.withValues(alpha: 0.1),
                                 ],
                               ),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 ),
                                 BoxShadow(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   spreadRadius: -5,
                                 ),
@@ -203,7 +203,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       shaderCallback: (bounds) => LinearGradient(
                         colors: [
                           Colors.white,
-                          Colors.white.withOpacity(0.8),
+                          Colors.white.withValues(alpha: 0.8),
                         ],
                       ).createShader(bounds),
                       child: const Text(
@@ -240,7 +240,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       'Sistema de Gestión',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         letterSpacing: 3,
                         fontWeight: FontWeight.w300,
                       ),
@@ -266,7 +266,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withOpacity(0.8),
+                              Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ),
@@ -274,7 +274,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Text(
                           'Verificando sesión...',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 14,
                             letterSpacing: 1,
                           ),
@@ -314,10 +314,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     blurRadius: size,
                     spreadRadius: size / 2,
                   ),
@@ -338,8 +338,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            Colors.white.withOpacity(opacity),
-            Colors.white.withOpacity(0),
+            Colors.white.withValues(alpha: opacity),
+            Colors.white.withValues(alpha: 0),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+﻿
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
@@ -223,14 +223,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.25),
-                Colors.white.withOpacity(0.1),
+                Colors.white.withValues(alpha: 0.25),
+                Colors.white.withValues(alpha: 0.1),
               ],
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 30,
                 spreadRadius: 5,
               ),
@@ -267,7 +267,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           'Sistema de Gestión',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             letterSpacing: 2,
           ),
         ),
@@ -279,12 +279,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 40,
             spreadRadius: 0,
             offset: const Offset(0, 20),
@@ -313,7 +313,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               'Ingresa tus credenciales para continuar',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -344,7 +344,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   _obscurePassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 onPressed: () {
                   setState(() {
@@ -398,14 +398,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         prefixIcon: Icon(icon, color: Colors.white),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -438,7 +438,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: AppTheme.primaryColor,
-          disabledBackgroundColor: Colors.white.withOpacity(0.5),
+          disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -450,7 +450,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppTheme.primaryColor.withOpacity(0.7),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.7),
                 ),
               )
             : const Row(
@@ -495,10 +495,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     blurRadius: size,
                     spreadRadius: size / 3,
                   ),
@@ -519,8 +519,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            Colors.white.withOpacity(opacity),
-            Colors.white.withOpacity(0),
+            Colors.white.withValues(alpha: opacity),
+            Colors.white.withValues(alpha: 0),
           ],
         ),
       ),

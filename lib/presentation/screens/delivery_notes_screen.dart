@@ -213,10 +213,10 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       child: Container(
                         width: 280,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           border: Border(
                             right: BorderSide(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
                           ),
                         ),
@@ -259,7 +259,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -268,7 +268,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                                     error.toString(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
@@ -316,25 +316,25 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
           // Barra de búsqueda
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: TextField(
               controller: _searchController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Buscar por cliente, dirección o código...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                 prefixIcon: Icon(
                   Icons.search,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: Icon(
                           Icons.clear,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                         onPressed: () {
                           _searchController.clear();
@@ -420,9 +420,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -625,7 +625,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
             Icon(
               Icons.description_outlined,
               size: 120,
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
@@ -633,13 +633,13 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Crea tu primera nota usando el botón (+)',
-              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
           ],
         ),
@@ -669,13 +669,13 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: isAnulada
-              ? Colors.red.withOpacity(0.08)
-              : Colors.white.withOpacity(0.08),
+              ? Colors.red.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isAnulada
-                ? Colors.red.withOpacity(0.3)
-                : Colors.white.withOpacity(0.15),
+                ? Colors.red.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.15),
           ),
         ),
         child: InkWell(
@@ -696,8 +696,8 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isAnulada
-                            ? Colors.red.withOpacity(0.2)
-                            : AppTheme.accentCyan.withOpacity(0.2),
+                            ? Colors.red.withValues(alpha: 0.2)
+                            : AppTheme.accentCyan.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -732,13 +732,13 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isAnulada
-                            ? Colors.red.withOpacity(0.2)
-                            : AppTheme.accentGreen.withOpacity(0.2),
+                            ? Colors.red.withValues(alpha: 0.2)
+                            : AppTheme.accentGreen.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isAnulada
-                              ? Colors.red.withOpacity(0.3)
-                              : AppTheme.accentGreen.withOpacity(0.3),
+                              ? Colors.red.withValues(alpha: 0.3)
+                              : AppTheme.accentGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -772,7 +772,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     if (!isAnulada)
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.2),
+                          color: Colors.orange.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: IconButton(
@@ -793,7 +793,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     // Botón de PDF
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.2),
+                        color: Colors.red.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
@@ -815,7 +815,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     Text(
                       dateFormat.format(nota.fecha),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 14,
                       ),
                     ),
@@ -827,7 +827,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     Icon(
                       Icons.person,
                       size: 20,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -852,14 +852,14 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       Icon(
                         Icons.location_on,
                         size: 18,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           nota.direccion,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -874,12 +874,12 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       Icon(
                         Icons.map,
                         size: 18,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         nota.zona,
-                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                       ),
                     ],
                   ),
@@ -976,7 +976,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -1021,7 +1021,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       'Stock devuelto al inventario',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -1066,9 +1066,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
             child: Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1320,10 +1320,10 @@ class _NotaDetailsDialog extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isAnulada
-                                    ? Colors.white.withOpacity(0.2)
+                                    ? Colors.white.withValues(alpha: 0.2)
                                     : (nota.isValida
-                                          ? Colors.green.withOpacity(0.2)
-                                          : Colors.grey.withOpacity(0.2)),
+                                          ? Colors.green.withValues(alpha: 0.2)
+                                          : Colors.grey.withValues(alpha: 0.2)),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -1345,7 +1345,7 @@ class _NotaDetailsDialog extends ConsumerWidget {
                           dateFormat.format(nota.fecha),
                           style: TextStyle(
                             color: isAnulada
-                                ? Colors.white.withOpacity(0.8)
+                                ? Colors.white.withValues(alpha: 0.8)
                                 : context.colorScheme.onPrimaryContainer
                                       .withValues(alpha: 0.8),
                           ),

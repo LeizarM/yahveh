@@ -58,7 +58,7 @@ class CustomTextField extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           fontSize: 14,
         ),
         floatingLabelStyle: TextStyle(
@@ -71,19 +71,19 @@ class CustomTextField extends StatelessWidget {
             : null,
         suffixIcon: suffixIcon != null
             ? IconButton(
-                icon: Icon(suffixIcon, color: Colors.white.withOpacity(0.7)),
+                icon: Icon(suffixIcon, color: Colors.white.withValues(alpha: 0.7)),
                 onPressed: onSuffixIconTap,
               )
             : null,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -91,7 +91,7 @@ class CustomTextField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

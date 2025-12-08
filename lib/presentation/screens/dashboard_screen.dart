@@ -60,10 +60,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Container(
                 width: 280,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   border: Border(
                     right: BorderSide(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -170,15 +170,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         width: double.infinity,
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 30,
               spreadRadius: 0,
               offset: const Offset(0, 15),
@@ -197,12 +197,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withOpacity(0.3),
-                    Colors.white.withOpacity(0.1),
+                    Colors.white.withValues(alpha: 0.3),
+                    Colors.white.withValues(alpha: 0.1),
                   ],
                 ),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   width: 2,
                 ),
               ),
@@ -229,7 +229,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     '¡Bienvenido de vuelta!',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -249,7 +249,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -277,7 +277,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
@@ -287,7 +287,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.2),
+                color: AppTheme.errorColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -311,7 +311,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),

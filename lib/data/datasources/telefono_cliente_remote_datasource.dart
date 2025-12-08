@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../models/telefono_cliente_model.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 
 /// DataSource remoto para Teléfono de Cliente
 class TelefonoClienteRemoteDataSource {
@@ -12,11 +13,11 @@ class TelefonoClienteRemoteDataSource {
   /// Listar todos los teléfonos
   Future<List<TelefonoClienteModel>> listar() async {
     try {
-      print('📤 GET /telefonos-cliente - Listando teléfonos');
+      console('📤 GET /telefonos-cliente - Listando teléfonos');
       
       final response = await dioClient.get('/telefonos-cliente');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] as List;
@@ -25,7 +26,7 @@ class TelefonoClienteRemoteDataSource {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al listar teléfonos: $e');
+      console('❌ Error al listar teléfonos: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -44,11 +45,11 @@ class TelefonoClienteRemoteDataSource {
   /// Buscar teléfono por código
   Future<TelefonoClienteModel> buscarPorCodigo(int codTlfCliente) async {
     try {
-      print('📤 GET /telefonos-cliente/$codTlfCliente');
+      console('📤 GET /telefonos-cliente/$codTlfCliente');
       
       final response = await dioClient.get('/telefonos-cliente/$codTlfCliente');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       if (response.data != null && response.data['success'] == true) {
         return TelefonoClienteModel.fromJson(response.data['data']);
@@ -56,7 +57,7 @@ class TelefonoClienteRemoteDataSource {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al buscar teléfono: $e');
+      console('❌ Error al buscar teléfono: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -75,11 +76,11 @@ class TelefonoClienteRemoteDataSource {
   /// Listar teléfonos por cliente
   Future<List<TelefonoClienteModel>> listarPorCliente(int codCliente) async {
     try {
-      print('📤 GET /telefonos-cliente/cliente/$codCliente');
+      console('📤 GET /telefonos-cliente/cliente/$codCliente');
       
       final response = await dioClient.get('/telefonos-cliente/cliente/$codCliente');
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] as List;
@@ -88,7 +89,7 @@ class TelefonoClienteRemoteDataSource {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al listar teléfonos por cliente: $e');
+      console('❌ Error al listar teléfonos por cliente: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -107,24 +108,24 @@ class TelefonoClienteRemoteDataSource {
   /// Crear teléfono
   Future<TelefonoClienteModel> crear(TelefonoClienteModel telefono) async {
     try {
-      print('📤 POST /telefonos-cliente');
-      print('   Body: ${telefono.toCreateJson()}');
+      console('📤 POST /telefonos-cliente');
+      console('   Body: ${telefono.toCreateJson()}');
       
       final response = await dioClient.post(
         '/telefonos-cliente',
         data: telefono.toCreateJson(),
       );
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       if (response.data != null && response.data['success'] == true) {
-        print('✅ Teléfono creado exitosamente');
+        console('✅ Teléfono creado exitosamente');
         return TelefonoClienteModel.fromJson(response.data['data']);
       } else {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al crear teléfono: $e');
+      console('❌ Error al crear teléfono: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -143,24 +144,24 @@ class TelefonoClienteRemoteDataSource {
   /// Actualizar teléfono
   Future<TelefonoClienteModel> actualizar(int codTlfCliente, TelefonoClienteModel telefono) async {
     try {
-      print('📤 PUT /telefonos-cliente/$codTlfCliente');
-      print('   Body: ${telefono.toUpdateJson()}');
+      console('📤 PUT /telefonos-cliente/$codTlfCliente');
+      console('   Body: ${telefono.toUpdateJson()}');
       
       final response = await dioClient.put(
         '/telefonos-cliente/$codTlfCliente',
         data: telefono.toUpdateJson(),
       );
       
-      print('📥 Response: ${response.statusCode}');
+      console('📥 Response: ${response.statusCode}');
       
       if (response.data != null && response.data['success'] == true) {
-        print('✅ Teléfono actualizado exitosamente');
+        console('✅ Teléfono actualizado exitosamente');
         return TelefonoClienteModel.fromJson(response.data['data']);
       } else {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al actualizar teléfono: $e');
+      console('❌ Error al actualizar teléfono: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -179,17 +180,17 @@ class TelefonoClienteRemoteDataSource {
   /// Eliminar teléfono
   Future<void> eliminar(int codTlfCliente) async {
     try {
-      print('📤 DELETE /telefonos-cliente/$codTlfCliente');
+      console('📤 DELETE /telefonos-cliente/$codTlfCliente');
       
       final response = await dioClient.delete('/telefonos-cliente/$codTlfCliente');
       
       if (response.data != null && response.data['success'] == true) {
-        print('✅ Teléfono eliminado exitosamente');
+        console('✅ Teléfono eliminado exitosamente');
       } else {
         throw ApiException.fromResponse(response.data, response.statusCode);
       }
     } catch (e) {
-      print('❌ Error al eliminar teléfono: $e');
+      console('❌ Error al eliminar teléfono: $e');
       if (e is ApiException) rethrow;
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;

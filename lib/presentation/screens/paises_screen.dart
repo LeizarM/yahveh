@@ -117,8 +117,8 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -141,13 +141,13 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withOpacity(0.95),
-                const Color(0xFF2D3250).withOpacity(0.92),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                const Color(0xFF2D3250).withValues(alpha: 0.92),
               ],
             ),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -164,10 +164,10 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
       child: FadeSlideAnimation(
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
             ),
           ),
           child: TextField(
@@ -177,7 +177,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
             cursorColor: AppTheme.accentCyan,
             decoration: InputDecoration(
               hintText: 'Buscar país...',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
               prefixIcon: Icon(
                 Icons.search,
                 color: AppTheme.accentCyan,
@@ -186,7 +186,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                   ? IconButton(
                       icon: Icon(
                         Icons.clear,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                       onPressed: () {
                         _searchController.clear();
@@ -227,10 +227,10 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
           padding: const EdgeInsets.all(32),
           margin: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
           child: Column(
@@ -239,7 +239,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
               Icon(
                 Icons.public_off,
                 size: 80,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -258,7 +258,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                     ? 'Agrega el primer país usando el botón +'
                     : 'Intenta con otra búsqueda',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
               ),
@@ -277,10 +277,10 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
           padding: const EdgeInsets.all(32),
           margin: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
           child: Column(
@@ -306,7 +306,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 ErrorMessages.getFriendlyMessage(error),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 24),
@@ -354,10 +354,10 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             child: ListTile(
@@ -369,7 +369,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.2),
+                  color: accentColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -388,7 +388,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
               subtitle: Text(
                 'ID: ${pais.codPais}',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 13,
                 ),
               ),
@@ -471,13 +471,13 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             child: Column(
@@ -486,7 +486,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.2),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -509,7 +509,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                   '¿Estás seguro de eliminar "${pais.pais}"?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 16,
                   ),
                 ),
@@ -524,7 +524,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                         ),
@@ -628,13 +628,13 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withOpacity(0.95),
-                const Color(0xFF2D3250).withOpacity(0.92),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                const Color(0xFF2D3250).withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
           child: Form(
@@ -649,7 +649,7 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentCyan.withOpacity(0.2),
+                        color: AppTheme.accentCyan.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -672,7 +672,7 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       icon: Icon(
                         Icons.close,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -689,23 +689,23 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
                     labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                     floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                     hintText: 'Ingresa el nombre del país',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                     prefixIcon: Icon(
                       Icons.public,
                       color: AppTheme.accentCyan,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.15),
+                    fillColor: Colors.white.withValues(alpha: 0.15),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -750,7 +750,7 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                         ),

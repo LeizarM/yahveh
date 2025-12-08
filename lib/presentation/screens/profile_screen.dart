@@ -10,6 +10,7 @@ import '../../core/utils/animations.dart';
 import '../providers/providers.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -69,11 +70,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             final persona = await ref.read(personaProvider.notifier).buscarPorCodigo(empleado.codPersona);
             _persona = persona;
           } catch (e) {
-            print('Error al cargar persona: $e');
+            console('Error al cargar persona: $e');
           }
         }
       } catch (e) {
-        print('Error al cargar empleado: $e');
+        console('Error al cargar empleado: $e');
       }
 
       setState(() {
@@ -150,8 +151,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -169,10 +170,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -194,7 +195,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -203,7 +204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             'Cargando perfil...',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -220,7 +221,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppTheme.errorColor.withOpacity(0.2),
+              color: AppTheme.errorColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -310,13 +311,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.accentCyan.withOpacity(0.8),
-                  AppTheme.primaryColor.withOpacity(0.8),
+                  AppTheme.accentCyan.withValues(alpha: 0.8),
+                  AppTheme.primaryColor.withValues(alpha: 0.8),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 0,
                 ),
@@ -349,7 +350,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               '@${_currentUser!.login}',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -357,7 +358,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.accentGreen.withOpacity(0.2),
+              color: AppTheme.accentGreen.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -424,10 +425,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -440,7 +441,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.2),
+                  color: iconColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: iconColor, size: 22),
@@ -471,13 +472,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         icon: const Icon(Icons.lock_rounded),
         label: const Text('Cambiar Contraseña'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.15),
+          backgroundColor: Colors.white.withValues(alpha: 0.15),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
           ),
         ),
       ),
@@ -496,7 +497,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -597,18 +598,18 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF2D3250).withOpacity(0.95),
-              const Color(0xFF1A1D2E).withOpacity(0.98),
+              const Color(0xFF2D3250).withValues(alpha: 0.95),
+              const Color(0xFF1A1D2E).withValues(alpha: 0.98),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 40,
               spreadRadius: 0,
             ),
@@ -626,7 +627,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.accentCyan.withOpacity(0.2),
+                      color: AppTheme.accentCyan.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -649,7 +650,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   IconButton(
                     icon: Icon(
                       Icons.close_rounded,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -689,13 +690,13 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                         ),
                       ),
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -759,19 +760,19 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
           onPressed: onToggle,
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

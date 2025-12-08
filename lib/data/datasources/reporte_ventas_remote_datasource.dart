@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../models/venta_reporte_model.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 
 /// DataSource remoto para el reporte de ventas
 class ReporteVentasRemoteDataSource {
@@ -18,20 +19,20 @@ class ReporteVentasRemoteDataSource {
     required String fechaHasta,
   }) async {
     try {
-      print('📤 Solicitando reporte de ventas: $fechaDesde - $fechaHasta');
+      console('📤 Solicitando reporte de ventas: $fechaDesde - $fechaHasta');
 
       final response = await _dioClient.get(
         '/notas-entrega/reporte-ventas/$fechaDesde/$fechaHasta',
       );
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
         final List<dynamic> dataList = response.data['data'] ?? [];
         final ventas = dataList
             .map((json) => VentaReporteModel.fromJson(json))
             .toList();
-        print('✅ ${ventas.length} registros de ventas obtenidos');
+        console('✅ ${ventas.length} registros de ventas obtenidos');
         return ventas;
       } else {
         throw ApiException(
@@ -40,13 +41,13 @@ class ReporteVentasRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      print('❌ Error DioException: ${e.message}');
+      console('❌ Error DioException: ${e.message}');
       if (e.response?.data != null && e.response?.data['message'] != null) {
         throw ApiException(message: e.response!.data['message']);
       }
       throw ApiException(message: 'Error de conexión al obtener reporte');
     } catch (e) {
-      print('❌ Error al obtener reporte de ventas: $e');
+      console('❌ Error al obtener reporte de ventas: $e');
       rethrow;
     }
   }
@@ -58,7 +59,7 @@ class ReporteVentasRemoteDataSource {
     required String fechaHasta,
   }) async {
     try {
-      print('📤 Descargando PDF del reporte: $fechaDesde - $fechaHasta');
+      console('📤 Descargando PDF del reporte: $fechaDesde - $fechaHasta');
 
       final response = await _dioClient.get(
         '/notas-entrega/reporte-ventas/pdf/$fechaDesde/$fechaHasta',
@@ -68,17 +69,17 @@ class ReporteVentasRemoteDataSource {
         ),
       );
 
-      print('📥 PDF recibido: ${response.statusCode}');
+      console('📥 PDF recibido: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final bytes = Uint8List.fromList(response.data);
-        print('✅ PDF descargado: ${bytes.length} bytes');
+        console('✅ PDF descargado: ${bytes.length} bytes');
         return bytes;
       } else {
         throw ApiException(message: 'Error al descargar el PDF del reporte');
       }
     } on DioException catch (e) {
-      print('❌ Error DioException al descargar PDF: ${e.message}');
+      console('❌ Error DioException al descargar PDF: ${e.message}');
       if (e.response?.statusCode == 404) {
         throw ApiException(
           message: 'No se encontraron datos para generar el reporte',
@@ -86,7 +87,7 @@ class ReporteVentasRemoteDataSource {
       }
       throw ApiException(message: 'Error de conexión al descargar PDF');
     } catch (e) {
-      print('❌ Error al descargar PDF: $e');
+      console('❌ Error al descargar PDF: $e');
       rethrow;
     }
   }

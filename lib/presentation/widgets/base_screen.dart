@@ -87,10 +87,10 @@ class _PermanentDrawer extends StatelessWidget {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -119,8 +119,8 @@ class _BlurredDrawer extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -153,15 +153,15 @@ class GlassCard extends StatelessWidget {
       margin: margin,
       padding: padding ?? const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: 0,
           ),
@@ -200,15 +200,15 @@ class ModernListTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.white.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.05),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -219,7 +219,7 @@ class ModernListTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (iconColor ?? AppTheme.accentCyan).withOpacity(0.2),
+                      color: (iconColor ?? AppTheme.accentCyan).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: leading,
@@ -244,7 +244,7 @@ class ModernListTile extends StatelessWidget {
                           subtitle!,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -289,7 +289,7 @@ class ModernButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          side: BorderSide(color: Colors.white.withOpacity(0.3)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -381,21 +381,21 @@ class ModernTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: Colors.white.withOpacity(0.7))
+            ? Icon(prefixIcon, color: Colors.white.withValues(alpha: 0.7))
             : null,
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -407,7 +407,7 @@ class ModernTextField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
       ),
     );
@@ -439,13 +439,13 @@ class ModernEmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 50,
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
             ),
           ),
           const SizedBox(height: 24),
@@ -464,7 +464,7 @@ class ModernEmptyState extends StatelessWidget {
               subtitle!,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -502,7 +502,7 @@ class ModernErrorState extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.2),
+                color: AppTheme.errorColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -526,7 +526,7 @@ class ModernErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             if (onRetry != null) ...[
@@ -562,7 +562,7 @@ class ModernLoadingIndicator extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -572,7 +572,7 @@ class ModernLoadingIndicator extends StatelessWidget {
               message!,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
           ],

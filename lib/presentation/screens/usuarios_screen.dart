@@ -98,8 +98,8 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -117,10 +117,10 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -159,15 +159,15 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
         child: InkWell(
           onTap: () => _showEditDialog(usuario),
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.white.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.05),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -177,7 +177,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withOpacity(0.2),
+                    color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
@@ -210,7 +210,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppTheme.accentPink.withOpacity(0.2),
+                              color: AppTheme.accentPink.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -226,7 +226,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withOpacity(0.2),
+                              color: (isActive ? AppTheme.accentGreen : AppTheme.accentOrange).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -249,7 +249,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.edit_rounded,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         size: 20,
                       ),
                       onPressed: () => _showEditDialog(usuario),
@@ -258,7 +258,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline_rounded,
-                        color: AppTheme.accentOrange.withOpacity(0.8),
+                        color: AppTheme.accentOrange.withValues(alpha: 0.8),
                         size: 20,
                       ),
                       onPressed: () => _confirmDelete(usuario),
@@ -283,13 +283,13 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.person_off_rounded,
               size: 50,
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
             ),
           ),
           const SizedBox(height: 24),
@@ -306,7 +306,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             'Crea un usuario para comenzar',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -325,7 +325,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -334,7 +334,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
             'Cargando usuarios...',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -353,7 +353,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.2),
+                color: AppTheme.errorColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -377,7 +377,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -481,18 +481,18 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF2D3250).withOpacity(0.95),
-                const Color(0xFF1A1D2E).withOpacity(0.98),
+                const Color(0xFF2D3250).withValues(alpha: 0.95),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.98),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 40,
                 spreadRadius: 0,
               ),
@@ -505,7 +505,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.15),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -529,7 +529,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   height: 1.4,
                 ),
               ),
@@ -543,13 +543,13 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                         ),
                       ),
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -678,18 +678,18 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF2D3250).withOpacity(0.95),
-              const Color(0xFF1A1D2E).withOpacity(0.98),
+              const Color(0xFF2D3250).withValues(alpha: 0.95),
+              const Color(0xFF1A1D2E).withValues(alpha: 0.98),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 40,
               spreadRadius: 0,
             ),
@@ -708,7 +708,7 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppTheme.accentPink.withOpacity(0.2),
+                        color: AppTheme.accentPink.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -731,7 +731,7 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
                     IconButton(
                       icon: Icon(
                         Icons.close_rounded,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -804,13 +804,13 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -875,14 +875,14 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
         floatingLabelStyle: TextStyle(color: AppTheme.accentPink, fontWeight: FontWeight.w600),
         prefixIcon: Icon(icon, color: AppTheme.accentPink),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -904,7 +904,7 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
@@ -915,14 +915,14 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
         floatingLabelStyle: TextStyle(color: AppTheme.accentPink, fontWeight: FontWeight.w600),
         prefixIcon: Icon(icon, color: AppTheme.accentPink),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -1061,7 +1061,7 @@ class _CreateUsuarioFromEmpleadoDialogState
                         }
 
                         return DropdownButtonFormField<int>(
-                          value: _selectedEmpleadoId,
+                          initialValue: _selectedEmpleadoId,
                           decoration: const InputDecoration(
                             labelText: 'Seleccionar Empleado *',
                             border: OutlineInputBorder(),
@@ -1155,7 +1155,7 @@ class _CreateUsuarioFromEmpleadoDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _tipoUsuario,
+                  initialValue: _tipoUsuario,
                   decoration: const InputDecoration(
                     labelText: 'Tipo Usuario *',
                     border: OutlineInputBorder(),
@@ -1179,7 +1179,7 @@ class _CreateUsuarioFromEmpleadoDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _estado,
+                  initialValue: _estado,
                   decoration: const InputDecoration(
                     labelText: 'Estado *',
                     border: OutlineInputBorder(),

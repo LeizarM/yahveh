@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../error/api_exception.dart';
 
 /// Utilidad para convertir errores técnicos en mensajes amigables para el usuario
@@ -85,5 +87,13 @@ class ErrorMessages {
       default:
         return baseMessage;
     }
+  }
+
+}
+
+void console(Object? object) {
+  if (kDebugMode) {
+    // ignore: avoid_print
+    print(object);
   }
 }

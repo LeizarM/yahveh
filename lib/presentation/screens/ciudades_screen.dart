@@ -123,8 +123,8 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -142,10 +142,10 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -159,10 +159,10 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -173,11 +173,11 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
         cursorColor: AppTheme.accentCyan,
         decoration: InputDecoration(
           hintText: 'Buscar ciudades...',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
           prefixIcon: Icon(Icons.search, color: AppTheme.accentCyan),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                  icon: Icon(Icons.clear, color: Colors.white.withValues(alpha: 0.7)),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -204,13 +204,13 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.location_city_outlined,
                 size: 64,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -231,7 +231,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                   : 'Intenta con otro término de búsqueda',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -251,13 +251,13 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.2),
+                  color: AppTheme.errorColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 24),
@@ -276,7 +276,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 24),
@@ -285,7 +285,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Reintentar'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -319,10 +319,10 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -332,7 +332,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppTheme.accentOrange.withOpacity(0.2),
+            color: AppTheme.accentOrange.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -351,7 +351,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
         subtitle: Text(
           'País: ${ciudadModel?.paisNombre ?? "ID ${ciudad.codPais}"}',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 13,
           ),
         ),
@@ -361,14 +361,14 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
             IconButton(
               icon: Icon(
                 Icons.edit_outlined,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
               onPressed: () => _showEditCiudadDialog(context, ciudad),
             ),
             IconButton(
               icon: Icon(
                 Icons.delete_outline,
-                color: AppTheme.errorColor.withOpacity(0.8),
+                color: AppTheme.errorColor.withValues(alpha: 0.8),
               ),
               onPressed: () => _showDeleteConfirmation(context, ciudad),
             ),
@@ -428,13 +428,13 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -444,7 +444,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withOpacity(0.2),
+                    color: AppTheme.errorColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -466,7 +466,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 Text(
                   '¿Eliminar "${ciudad.ciudad}"?',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -482,14 +482,14 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                             ),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ),
@@ -590,13 +590,13 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withOpacity(0.95),
-                const Color(0xFF2D3250).withOpacity(0.92),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                const Color(0xFF2D3250).withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -612,7 +612,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentOrange.withOpacity(0.2),
+                        color: AppTheme.accentOrange.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -638,7 +638,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                 Text(
                   'País',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -648,14 +648,14 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                   data: (paises) {
                     return Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: DropdownButtonFormField<int>(
-                        value: _selectedPaisId,
+                        initialValue: _selectedPaisId,
                         dropdownColor: const Color(0xFF2D3250),
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
@@ -666,14 +666,14 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                           border: InputBorder.none,
                           hintText: 'Selecciona un país',
                           hintStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                           filled: true,
                           fillColor: Colors.transparent,
                         ),
                         icon: Icon(
                           Icons.keyboard_arrow_down,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                         items: paises.map((pais) {
                           return DropdownMenuItem(
@@ -693,7 +693,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                   loading: () => Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
@@ -710,12 +710,12 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                   error: (e, _) => Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.errorColor.withOpacity(0.2),
+                      color: AppTheme.errorColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'Error al cargar países',
-                      style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                     ),
                   ),
                 ),
@@ -725,7 +725,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                 Text(
                   'Nombre de la Ciudad',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -733,10 +733,10 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   child: TextFormField(
@@ -751,7 +751,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                       border: InputBorder.none,
                       hintText: 'Ingresa el nombre',
                       hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
                       filled: true,
                       fillColor: Colors.transparent,
@@ -775,14 +775,14 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                             ),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ),
@@ -799,7 +799,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           disabledBackgroundColor:
-                              AppTheme.accentOrange.withOpacity(0.5),
+                              AppTheme.accentOrange.withValues(alpha: 0.5),
                         ),
                         child: _isLoading
                             ? const SizedBox(

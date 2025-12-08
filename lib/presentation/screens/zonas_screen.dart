@@ -114,8 +114,8 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -133,10 +133,10 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -152,10 +152,10 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -166,11 +166,11 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
           cursorColor: AppTheme.accentGreen,
           decoration: InputDecoration(
             hintText: 'Buscar zonas...',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
             prefixIcon: Icon(Icons.search, color: AppTheme.accentGreen),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                    icon: Icon(Icons.clear, color: Colors.white.withValues(alpha: 0.7)),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -198,13 +198,13 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.map_outlined,
                 size: 64,
-                color: AppTheme.accentGreen.withOpacity(0.8),
+                color: AppTheme.accentGreen.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 24),
@@ -224,7 +224,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                   ? 'Intenta con otro término de búsqueda'
                   : 'Agrega la primera zona usando el botón +',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -245,13 +245,13 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.15),
+                  color: AppTheme.errorColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: AppTheme.errorColor.withOpacity(0.9),
+                  color: AppTheme.errorColor.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 24),
@@ -268,7 +268,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               Text(
                 ErrorMessages.getFriendlyMessage(error),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -305,10 +305,10 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -318,7 +318,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentGreen.withOpacity(0.2),
+                    color: AppTheme.accentGreen.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -342,7 +342,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                         ? '${zonaModel!.ciudadNombre} - ${zonaModel.paisNombre}'
                         : 'Ciudad ID: ${zona.codCiudad}',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13,
                     ),
                   ),
@@ -353,14 +353,14 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.edit_outlined,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       onPressed: () => _showEditZonaDialog(context, zona),
                     ),
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline,
-                        color: AppTheme.errorColor.withOpacity(0.8),
+                        color: AppTheme.errorColor.withValues(alpha: 0.8),
                       ),
                       onPressed: () => _showDeleteConfirmation(context, zona),
                     ),
@@ -422,13 +422,13 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withOpacity(0.95),
-                const Color(0xFF2D3250).withOpacity(0.95),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                const Color(0xFF2D3250).withValues(alpha: 0.95),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -439,13 +439,13 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.15),
+                  color: AppTheme.errorColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.delete_outline,
                   size: 40,
-                  color: AppTheme.errorColor.withOpacity(0.9),
+                  color: AppTheme.errorColor.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 20),
@@ -461,7 +461,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               Text(
                 '¿Eliminar la zona "${zona.zona}"?',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 15,
                 ),
                 textAlign: TextAlign.center,
@@ -476,12 +476,12 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                         ),
                       ),
                       child: Text(
                         'Cancelar',
-                        style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                       ),
                     ),
                   ),
@@ -575,13 +575,13 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A1D2E).withOpacity(0.95),
-              const Color(0xFF2D3250).withOpacity(0.95),
+              const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+              const Color(0xFF2D3250).withValues(alpha: 0.95),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -598,7 +598,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentGreen.withOpacity(0.2),
+                        color: AppTheme.accentGreen.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -624,7 +624,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                 Text(
                   'Ciudad',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -636,10 +636,10 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                       return Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.warningColor.withOpacity(0.15),
+                          color: AppTheme.warningColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppTheme.warningColor.withOpacity(0.3),
+                            color: AppTheme.warningColor.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -649,7 +649,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                             Expanded(
                               child: Text(
                                 'No hay ciudades registradas.\nPrimero debes crear una ciudad.',
-                                style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
                               ),
                             ),
                           ],
@@ -659,22 +659,22 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: DropdownButtonFormField<int>(
-                        value: _selectedCiudadId,
+                        initialValue: _selectedCiudadId,
                         dropdownColor: const Color(0xFF2D3250),
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                        icon: Icon(Icons.keyboard_arrow_down, color: Colors.white.withOpacity(0.8)),
+                        icon: Icon(Icons.keyboard_arrow_down, color: Colors.white.withValues(alpha: 0.8)),
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           border: InputBorder.none,
                           hintText: 'Selecciona una ciudad',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                           filled: true,
                           fillColor: Colors.transparent,
                         ),
@@ -701,7 +701,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                   loading: () => Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
@@ -711,12 +711,12 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                   error: (e, _) => Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.errorColor.withOpacity(0.15),
+                      color: AppTheme.errorColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'Error al cargar ciudades: $e',
-                      style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
                     ),
                   ),
                 ),
@@ -726,7 +726,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                 Text(
                   'Nombre de la Zona',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -734,10 +734,10 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   child: TextFormField(
@@ -748,7 +748,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       border: InputBorder.none,
                       hintText: 'Ej: Zona Norte, Zona Centro...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                       filled: true,
                       fillColor: Colors.transparent,
                     ),
@@ -769,12 +769,12 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
-                          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                         ),
                       ),
                     ),

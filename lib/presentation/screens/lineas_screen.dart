@@ -130,13 +130,13 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A1D2E).withOpacity(0.95),
-              const Color(0xFF2D3250).withOpacity(0.95),
+              const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+              const Color(0xFF2D3250).withValues(alpha: 0.95),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -148,7 +148,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.2),
+                  color: Colors.red.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -170,7 +170,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               Text(
                 '¿Está seguro de eliminar esta línea?',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -186,14 +186,14 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                           ),
                         ),
                       ),
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -246,8 +246,8 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -265,10 +265,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -349,10 +349,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               delay: const Duration(milliseconds: 100),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -368,7 +368,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentCyan.withOpacity(0.2),
+                                color: AppTheme.accentCyan.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -462,10 +462,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               delay: const Duration(milliseconds: 300),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -475,7 +475,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                   cursorColor: AppTheme.accentCyan,
                   decoration: InputDecoration(
                     hintText: 'Buscar línea...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                     prefixIcon: Icon(
                       Icons.search,
                       color: AppTheme.accentCyan,
@@ -484,7 +484,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                         ? IconButton(
                             icon: Icon(
                               Icons.clear,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                             onPressed: () {
                               setState(() {
@@ -545,10 +545,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
 
                   return Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 1,
                       ),
                     ),
@@ -558,7 +558,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                         itemCount: filteredLineas.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                         itemBuilder: (context, index) {
                           final linea = filteredLineas[index];
@@ -592,7 +592,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: AppTheme.accentCyan.withOpacity(0.2),
+          color: AppTheme.accentCyan.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
@@ -614,7 +614,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             Text(
               'Código: ${linea.codLinea}',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
@@ -623,7 +623,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               'Artículos: ${linea.totalArticulos} (${linea.articulosActivos ?? 0} activos)',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
         ],
@@ -662,20 +662,20 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 48,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 16),
           Text(
             title,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -685,7 +685,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             Text(
               subtitle,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
             ),
@@ -705,7 +705,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -729,7 +729,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               ErrorMessages.getFriendlyMessage(error),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 16),
@@ -762,10 +762,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
           return Container(
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.orange.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.orange.withOpacity(0.3),
+                color: Colors.orange.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -786,15 +786,15 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
 
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: DropdownButtonFormField<int>(
-            value: _selectedFamiliaId,
+            initialValue: _selectedFamiliaId,
             isExpanded: true,
             dropdownColor: const Color(0xFF1A1D2E),
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
@@ -805,7 +805,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               helperText: 'Selecciona una familia',
-              helperStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+              helperStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
               prefixIcon: Icon(
                 Icons.family_restroom,
                 color: AppTheme.accentCyan,
@@ -815,7 +815,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             ),
             icon: Icon(
               Icons.arrow_drop_down,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             items: familias.map((familia) {
               return DropdownMenuItem(
@@ -840,10 +840,10 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
       error: (error, stack) => Container(
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.2),
+          color: Colors.red.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.red.withOpacity(0.3),
+            color: Colors.red.withValues(alpha: 0.3),
             width: 1,
           ),
         ),

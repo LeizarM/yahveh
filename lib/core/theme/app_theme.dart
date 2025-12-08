@@ -49,15 +49,15 @@ class AppTheme {
   
   /// Decoración de vidrio para modo claro
   static BoxDecoration get glassDecorationLight => BoxDecoration(
-    color: Colors.white.withOpacity(0.7),
+    color: Colors.white.withValues(alpha: 0.7),
     borderRadius: BorderRadius.circular(20),
     border: Border.all(
-      color: Colors.white.withOpacity(0.5),
+      color: Colors.white.withValues(alpha: 0.5),
       width: 1.5,
     ),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.05),
+        color: Colors.black.withValues(alpha: 0.05),
         blurRadius: 20,
         spreadRadius: 0,
         offset: const Offset(0, 10),
@@ -67,15 +67,15 @@ class AppTheme {
 
   /// Decoración de vidrio para modo oscuro
   static BoxDecoration get glassDecorationDark => BoxDecoration(
-    color: Colors.white.withOpacity(0.05),
+    color: Colors.white.withValues(alpha: 0.05),
     borderRadius: BorderRadius.circular(20),
     border: Border.all(
-      color: Colors.white.withOpacity(0.1),
+      color: Colors.white.withValues(alpha: 0.1),
       width: 1.5,
     ),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         blurRadius: 20,
         spreadRadius: 0,
         offset: const Offset(0, 10),
@@ -175,7 +175,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        side: BorderSide(color: primaryColor.withOpacity(0.5), width: 1.5),
+        side: BorderSide(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -313,7 +313,7 @@ class AppTheme {
       elevation: 0,
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: primaryColor.withOpacity(0.12),
+      indicatorColor: primaryColor.withValues(alpha: 0.12),
       indicatorShape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -358,7 +358,7 @@ class AppTheme {
     
     // Chips
     chipTheme: ChipThemeData(
-      backgroundColor: primaryColor.withOpacity(0.1),
+      backgroundColor: primaryColor.withValues(alpha: 0.1),
       labelStyle: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w500,
@@ -414,7 +414,7 @@ class AppTheme {
       ),
       indicator: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: primaryColor.withOpacity(0.12),
+        color: primaryColor.withValues(alpha: 0.12),
       ),
       indicatorSize: TabBarIndicatorSize.tab,
     ),
@@ -504,7 +504,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        side: BorderSide(color: primaryLight.withOpacity(0.5), width: 1.5),
+        side: BorderSide(color: primaryLight.withValues(alpha: 0.5), width: 1.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -642,7 +642,7 @@ class AppTheme {
       elevation: 0,
       backgroundColor: surfaceDark,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: primaryLight.withOpacity(0.15),
+      indicatorColor: primaryLight.withValues(alpha: 0.15),
       indicatorShape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -687,7 +687,7 @@ class AppTheme {
     
     // Chips
     chipTheme: ChipThemeData(
-      backgroundColor: primaryLight.withOpacity(0.15),
+      backgroundColor: primaryLight.withValues(alpha: 0.15),
       labelStyle: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w500,
@@ -743,7 +743,7 @@ class AppTheme {
       ),
       indicator: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: primaryLight.withOpacity(0.15),
+        color: primaryLight.withValues(alpha: 0.15),
       ),
       indicatorSize: TabBarIndicatorSize.tab,
     ),

@@ -113,8 +113,8 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -132,10 +132,10 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -151,10 +151,10 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -165,11 +165,11 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
           cursorColor: AppTheme.accentPink,
           decoration: InputDecoration(
             hintText: 'Buscar familias...',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
             prefixIcon: Icon(Icons.search, color: AppTheme.accentPink),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.8)),
+                    icon: Icon(Icons.clear, color: Colors.white.withValues(alpha: 0.8)),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -197,7 +197,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -223,7 +223,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                   ? 'Agrega la primera familia usando el botón +'
                   : 'Intenta con otro término de búsqueda',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -241,10 +241,10 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -254,7 +254,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withOpacity(0.2),
+                    color: AppTheme.errorColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -278,7 +278,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                   ErrorMessages.getFriendlyMessage(error),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -321,10 +321,10 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -340,7 +340,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentPink.withOpacity(0.2),
+                    color: AppTheme.accentPink.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -366,7 +366,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                       Text(
                         'Código: ${familia.codFamilia}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 13,
                         ),
                       ),
@@ -452,13 +452,13 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -468,7 +468,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withOpacity(0.2),
+                    color: AppTheme.errorColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -490,7 +490,7 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                 Text(
                   '¿Eliminar la familia "${familia.familia}"?',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -504,33 +504,33 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: () async {
+                        // Guardar referencia al ScaffoldMessenger antes de cerrar
+                        final scaffoldMessenger = ScaffoldMessenger.of(context);
                         Navigator.pop(context);
                         try {
                           final message = await ref.read(familiaProvider.notifier).deleteFamilia(familia.codFamilia);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(message),
-                                backgroundColor: AppTheme.successColor,
-                              ),
-                            );
-                          }
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text(message),
+                              backgroundColor: AppTheme.successColor,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(ErrorMessages.getFriendlyMessage(e)),
-                                backgroundColor: AppTheme.errorColor,
-                              ),
-                            );
-                          }
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text(ErrorMessages.getFriendlyMessage(e)),
+                              backgroundColor: AppTheme.errorColor,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -598,13 +598,13 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withOpacity(0.95),
-                const Color(0xFF2D3250).withOpacity(0.92),
+                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                const Color(0xFF2D3250).withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -619,7 +619,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentPink.withOpacity(0.2),
+                        color: AppTheme.accentPink.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -643,7 +643,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                       onPressed: _isLoading ? null : () => Navigator.pop(context),
                       icon: Icon(
                         Icons.close,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -652,7 +652,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                 Text(
                   'Nombre de la Familia *',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -664,19 +664,19 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                   cursorColor: AppTheme.accentPink,
                   decoration: InputDecoration(
                     hintText: 'Ej: Electrónica, Ropa, Alimentos',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.15),
+                    fillColor: Colors.white.withValues(alpha: 0.15),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -702,7 +702,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                     errorStyle: const TextStyle(color: AppTheme.errorColor),
                     prefixIcon: Icon(
                       Icons.category_outlined,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                   textCapitalization: TextCapitalization.words,
@@ -722,7 +722,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -767,11 +767,14 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
       final message = await widget.onSubmit(_familiaController.text.trim());
 
       if (mounted) {
+        // Guardar referencia al ScaffoldMessenger antes de cerrar
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(message),
             backgroundColor: AppTheme.successColor,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -781,6 +784,7 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
           SnackBar(
             content: Text(ErrorMessages.getFriendlyMessage(e)),
             backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }

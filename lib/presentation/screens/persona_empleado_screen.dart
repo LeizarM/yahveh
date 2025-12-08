@@ -104,8 +104,8 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -123,10 +123,10 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -145,12 +145,12 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: TabBar(
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withOpacity(0.5),
+              unselectedLabelColor: Colors.white.withValues(alpha: 0.5),
               indicatorColor: AppTheme.accentCyan,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
@@ -189,7 +189,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                     decoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -233,9 +233,9 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withOpacity(0.2)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(20.0),
@@ -247,7 +247,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.accentCyan.withOpacity(0.2),
+                                          color: AppTheme.accentCyan.withValues(alpha: 0.2),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Icon(
@@ -274,17 +274,17 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                   decoration: InputDecoration(
                                     labelText: 'Nombres *',
-                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                     floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                     hintText: 'Ingrese los nombres',
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -292,7 +292,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     ),
                                     prefixIcon: Icon(Icons.person, color: AppTheme.accentCyan),
                                     filled: true,
-                                    fillColor: Colors.white.withOpacity(0.12),
+                                    fillColor: Colors.white.withValues(alpha: 0.12),
                                   ),
                                   validator: (value) =>
                                       value?.isEmpty ?? true ? 'Campo requerido' : null,
@@ -309,24 +309,24 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'Apellido Paterno *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           hintText: 'Paterno',
-                                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
                                             borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
                                           ),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                         ),
                                         validator: (value) =>
                                             value?.isEmpty ?? true ? 'Requerido' : null,
@@ -340,24 +340,24 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'Apellido Materno *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           hintText: 'Materno',
-                                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
                                             borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
                                           ),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                         ),
                                         validator: (value) =>
                                             value?.isEmpty ?? true ? 'Requerido' : null,
@@ -378,17 +378,17 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'CI Número *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           hintText: '12345678',
-                                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
@@ -396,7 +396,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                           ),
                                           prefixIcon: Icon(Icons.badge, color: AppTheme.accentCyan),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                         ),
                                         keyboardType: TextInputType.number,
                                         validator: (value) =>
@@ -406,29 +406,29 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: DropdownButtonFormField<String>(
-                                        value: _ciExpedidoController.text.isEmpty
+                                        initialValue: _ciExpedidoController.text.isEmpty
                                             ? 'LP'
                                             : _ciExpedidoController.text,
                                         dropdownColor: const Color(0xFF1A2E3D),
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'Expedido *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
                                             borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
                                           ),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                         ),
                                         isExpanded: true,
                                         items: const [
@@ -469,19 +469,19 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   child: InputDecorator(
                                     decoration: InputDecoration(
                                       labelText: 'CI Fecha Vencimiento',
-                                      labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                       floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                       ),
                                       suffixIcon: Icon(Icons.calendar_today, color: AppTheme.accentCyan),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.12),
+                                      fillColor: Colors.white.withValues(alpha: 0.12),
                                     ),
                                     child: Text(
                                       _ciFechaVencimiento != null
@@ -490,7 +490,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                       style: TextStyle(
                                         color: _ciFechaVencimiento != null
                                             ? Colors.white
-                                            : Colors.white.withOpacity(0.6),
+                                            : Colors.white.withValues(alpha: 0.6),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -504,17 +504,17 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                   decoration: InputDecoration(
                                     labelText: 'Dirección *',
-                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                     floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                     hintText: 'Calle, número, zona',
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -522,7 +522,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     ),
                                     prefixIcon: Icon(Icons.home, color: AppTheme.accentCyan),
                                     filled: true,
-                                    fillColor: Colors.white.withOpacity(0.12),
+                                    fillColor: Colors.white.withValues(alpha: 0.12),
                                   ),
                                   maxLines: 2,
                                   validator: (value) =>
@@ -536,20 +536,20 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   children: [
                                     Expanded(
                                       child: DropdownButtonFormField<String>(
-                                        value: _estadoCivil,
+                                        initialValue: _estadoCivil,
                                         dropdownColor: const Color(0xFF1A2E3D),
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'Estado Civil *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
@@ -557,7 +557,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                           ),
                                           prefixIcon: Icon(Icons.favorite, color: AppTheme.accentCyan),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                                         ),
                                         isExpanded: true,
@@ -589,20 +589,20 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: DropdownButtonFormField<String>(
-                                        value: _sexo,
+                                        initialValue: _sexo,
                                         dropdownColor: const Color(0xFF1A2E3D),
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         decoration: InputDecoration(
                                           labelText: 'Sexo *',
-                                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                           floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12),
@@ -613,7 +613,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                             color: AppTheme.accentCyan,
                                           ),
                                           filled: true,
-                                          fillColor: Colors.white.withOpacity(0.12),
+                                          fillColor: Colors.white.withValues(alpha: 0.12),
                                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                                         ),
                                         isExpanded: true,
@@ -656,19 +656,19 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   child: InputDecorator(
                                     decoration: InputDecoration(
                                       labelText: 'Fecha de Nacimiento',
-                                      labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                       floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                       ),
                                       suffixIcon: Icon(Icons.calendar_today, color: AppTheme.accentCyan),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.12),
+                                      fillColor: Colors.white.withValues(alpha: 0.12),
                                     ),
                                     child: Text(
                                       _fechaNacimiento != null
@@ -677,7 +677,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                       style: TextStyle(
                                         color: _fechaNacimiento != null
                                             ? Colors.white
-                                            : Colors.white.withOpacity(0.6),
+                                            : Colors.white.withValues(alpha: 0.6),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -691,17 +691,17 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                   decoration: InputDecoration(
                                     labelText: 'Lugar de Nacimiento *',
-                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
+                                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
                                     floatingLabelStyle: const TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
                                     hintText: 'Ciudad, país',
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -709,7 +709,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     ),
                                     prefixIcon: Icon(Icons.place, color: AppTheme.accentCyan),
                                     filled: true,
-                                    fillColor: Colors.white.withOpacity(0.12),
+                                    fillColor: Colors.white.withValues(alpha: 0.12),
                                   ),
                                   validator: (value) =>
                                       value?.isEmpty ?? true ? 'Campo requerido' : null,
@@ -869,13 +869,13 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                 Icon(
                   Icons.people_outline,
                   size: 64,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No hay empleados registrados',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -901,10 +901,10 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                   return Container(
                     margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                       ),
                     ),
                     child: ListTile(
@@ -952,14 +952,14 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                       Icon(
                                         Icons.badge_outlined,
                                         size: 14,
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'CI: ${persona.ciNumero} ${persona.ciExpedido}',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -970,14 +970,14 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                       Icon(
                                         Icons.work_outline,
                                         size: 14,
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Empleado #${empleado.codEmpleado}',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -1004,7 +1004,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
                                     'Obteniendo datos...',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.white.withOpacity(0.7),
+                                      color: Colors.white.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -1036,7 +1036,7 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 16),
@@ -1233,7 +1233,7 @@ class _EditPersonaDialogState extends State<_EditPersonaDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _ciExpedidoController.text,
+                        initialValue: _ciExpedidoController.text,
                         decoration: const InputDecoration(
                           labelText: 'Exp. *',
                           border: OutlineInputBorder(),
@@ -1271,7 +1271,7 @@ class _EditPersonaDialogState extends State<_EditPersonaDialog> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _estadoCivil,
+                        initialValue: _estadoCivil,
                         decoration: const InputDecoration(
                           labelText: 'Estado Civil *',
                           border: OutlineInputBorder(),
@@ -1289,7 +1289,7 @@ class _EditPersonaDialogState extends State<_EditPersonaDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _sexo,
+                        initialValue: _sexo,
                         decoration: const InputDecoration(
                           labelText: 'Sexo *',
                           border: OutlineInputBorder(),

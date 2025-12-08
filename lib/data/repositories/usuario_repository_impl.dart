@@ -19,7 +19,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
         message: 'Usuarios obtenidos exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -32,7 +32,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
         message: 'Usuario encontrado',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -57,7 +57,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
         message: 'Usuario creado exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -84,7 +84,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
         message: 'Usuario actualizado exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -97,7 +97,7 @@ class UsuarioRepositoryImpl implements UsuarioRepository {
         message: 'Usuario eliminado exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

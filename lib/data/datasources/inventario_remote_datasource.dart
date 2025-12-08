@@ -3,6 +3,8 @@ import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../../core/utils/operation_result.dart';
 import '../models/inventario_model.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
+
 
 /// Interfaz del datasource remoto de Inventario
 abstract class InventarioRemoteDataSource {
@@ -168,12 +170,12 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
     String? observacion,
   }) async {
     try {
-      print('📤 Enviando movimiento de inventario:');
-      print('   codArticulo: $codArticulo');
-      print('   tipoMovimiento: $tipoMovimiento');
-      print('   cantidad: $cantidad');
-      print('   precioUnitario: $precioUnitario');
-      print('   observacion: $observacion');
+      console('📤 Enviando movimiento de inventario:');
+      console('   codArticulo: $codArticulo');
+      console('   tipoMovimiento: $tipoMovimiento');
+      console('   cantidad: $cantidad');
+      console('   precioUnitario: $precioUnitario');
+      console('   observacion: $observacion');
       
       final response = await _client.post(
         '/inventario',
@@ -186,9 +188,9 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
         },
       );
 
-      print('📥 Respuesta recibida:');
-      print('   statusCode: ${response.statusCode}');
-      print('   data: ${response.data}');
+      console('📥 Respuesta recibida:');
+      console('   statusCode: ${response.statusCode}');
+      console('   data: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
         final message = response.data['message'] as String? ?? 'Movimiento creado exitosamente';
@@ -202,11 +204,11 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
 
       throw ApiException(message: 'Error al crear movimiento', statusCode: 500);
     } on DioException catch (e) {
-      print('❌ DioException capturado:');
-      print('   type: ${e.type}');
-      print('   message: ${e.message}');
-      print('   statusCode: ${e.response?.statusCode}');
-      print('   responseData: ${e.response?.data}');
+      console('❌ DioException capturado:');
+      console('   type: ${e.type}');
+      console('   message: ${e.message}');
+      console('   statusCode: ${e.response?.statusCode}');
+      console('   responseData: ${e.response?.data}');
       
       final errorData = e.response?.data;
       if (errorData is Map<String, dynamic> && errorData['message'] != null) {
@@ -214,9 +216,9 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
       }
       throw ApiException.fromError(e, 'Error al crear movimiento de inventario');
     } catch (e, stackTrace) {
-      print('❌ Error genérico capturado:');
-      print('   error: $e');
-      print('   stackTrace: $stackTrace');
+      console('❌ Error genérico capturado:');
+      console('   error: $e');
+      console('   stackTrace: $stackTrace');
       throw ApiException(message: 'Error inesperado: $e', statusCode: 500);
     }
   }

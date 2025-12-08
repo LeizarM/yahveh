@@ -78,3 +78,52 @@ final authProvider = NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(
     return AuthNotifier();
   },
 );
+
+// ============================================================================
+// PROVIDERS DE PERMISOS DE USUARIO
+// ============================================================================
+
+/// Provider que indica si el usuario actual es administrador
+final isAdminProvider = Provider<bool>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.isAdmin ?? false,
+    orElse: () => false,
+  );
+});
+
+/// Provider que indica si el usuario puede escribir (crear, editar, eliminar)
+final canWriteProvider = Provider<bool>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.canWrite ?? false,
+    orElse: () => false,
+  );
+});
+
+/// Provider que indica si el usuario puede gestionar inventario
+final canManageInventoryProvider = Provider<bool>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.canManageInventory ?? false,
+    orElse: () => false,
+  );
+});
+
+/// Provider que indica si el usuario puede gestionar precios
+final canManagePricesProvider = Provider<bool>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.canManagePrices ?? false,
+    orElse: () => false,
+  );
+});
+
+/// Provider que devuelve el tipo de usuario actual
+final userTypeProvider = Provider<String?>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.maybeWhen(
+    data: (user) => user?.tipoUsuario,
+    orElse: () => null,
+  );
+});

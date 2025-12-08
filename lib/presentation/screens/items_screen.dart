@@ -39,7 +39,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   Widget build(BuildContext context) {
     final articulosAsync = ref.watch(articuloProvider);
     final isMobile = context.isMobile;
-    
+    final isAdmin = ref.watch(isAdminProvider);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -53,7 +54,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
           fontWeight: FontWeight.w600,
         ),
         actions: [
-          if (!isMobile)
+          // Solo admin puede agregar artículos
+          if (!isMobile && isAdmin)
             IconButton(
               icon: const Icon(Icons.add_rounded),
               onPressed: () => _showAddArticuloDialog(context),
@@ -67,30 +69,37 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         ],
       ),
       drawer: isMobile ? _buildBlurredDrawer() : null,
-      floatingActionButton: isMobile
-          ? FadeSlideAnimation(
-              delay: const Duration(milliseconds: 300),
-              child: FloatingActionButton.extended(
-                onPressed: () => _showAddArticuloDialog(context),
-                backgroundColor: AppTheme.accentCyan,
-                foregroundColor: Colors.white,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Nuevo', style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
-            )
-          : FloatingActionButton.extended(
-              onPressed: () => _showAddArticuloDialog(context),
-              backgroundColor: AppTheme.accentCyan,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Nuevo Artículo', style: TextStyle(fontWeight: FontWeight.w600)),
-            ),
+      // Solo admin puede ver el FAB para agregar artículos
+      floatingActionButton: isAdmin
+          ? (isMobile
+                ? FadeSlideAnimation(
+                    delay: const Duration(milliseconds: 300),
+                    child: FloatingActionButton.extended(
+                      onPressed: () => _showAddArticuloDialog(context),
+                      backgroundColor: AppTheme.accentCyan,
+                      foregroundColor: Colors.white,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text(
+                        'Nuevo',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  )
+                : FloatingActionButton.extended(
+                    onPressed: () => _showAddArticuloDialog(context),
+                    backgroundColor: AppTheme.accentCyan,
+                    foregroundColor: Colors.white,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text(
+                      'Nuevo Artículo',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ))
+          : null,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: Row(
           children: [
             if (!isMobile) _buildPermanentDrawer(),
@@ -128,8 +137,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -147,10 +156,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -172,7 +181,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -181,7 +190,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             'Cargando artículos...',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -200,7 +209,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.2),
+                color: AppTheme.errorColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -224,7 +233,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -235,7 +244,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppTheme.primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -250,14 +262,23 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   List<ArticuloEntity> _filterArticulos(List<ArticuloEntity> articulos) {
     if (_searchQuery.isEmpty) return articulos;
     return articulos.where((articulo) {
-      return articulo.descripcion.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          articulo.descripcion2.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (articulo.codArticulo?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase());
+      return articulo.descripcion.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          articulo.descripcion2.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          (articulo.codArticulo?.toLowerCase() ?? '').contains(
+            _searchQuery.toLowerCase(),
+          );
     }).toList();
   }
 
   /// Layout para móvil
-  Widget _buildMobileLayout(BuildContext context, List<ArticuloEntity> articulos) {
+  Widget _buildMobileLayout(
+    BuildContext context,
+    List<ArticuloEntity> articulos,
+  ) {
     return Column(
       children: [
         _buildSearchBar(context),
@@ -277,7 +298,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   }
 
   /// Layout para tablet
-  Widget _buildTabletLayout(BuildContext context, List<ArticuloEntity> articulos) {
+  Widget _buildTabletLayout(
+    BuildContext context,
+    List<ArticuloEntity> articulos,
+  ) {
     return Column(
       children: [
         _buildSearchBar(context),
@@ -303,7 +327,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   }
 
   /// Layout para desktop
-  Widget _buildDesktopLayout(BuildContext context, List<ArticuloEntity> articulos) {
+  Widget _buildDesktopLayout(
+    BuildContext context,
+    List<ArticuloEntity> articulos,
+  ) {
     return Column(
       children: [
         _buildSearchBar(context),
@@ -333,11 +360,9 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     return Container(
       padding: EdgeInsets.all(context.isMobile ? 16 : 24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withOpacity(0.15),
-          ),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
         ),
       ),
       child: Center(
@@ -353,11 +378,14 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             cursorColor: AppTheme.accentCyan,
             decoration: InputDecoration(
               hintText: 'Buscar artículos...',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
               prefixIcon: Icon(Icons.search, color: AppTheme.accentCyan),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                      icon: Icon(
+                        Icons.clear,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
                       onPressed: () {
                         setState(() {
                           _searchController.clear();
@@ -368,18 +396,22 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
               ),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.15),
+              fillColor: Colors.white.withValues(alpha: 0.15),
             ),
             onChanged: (value) {
               setState(() {
@@ -392,222 +424,369 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     );
   }
 
-  /// Card de artículo con diseño mejorado
-  Widget _buildItemCard(BuildContext context, ArticuloEntity articulo, int index) {
+  /// Card de artículo con diseño mejorado y control de permisos
+  Widget _buildItemCard(
+    BuildContext context,
+    ArticuloEntity articulo,
+    int index,
+  ) {
+    final isAdmin = ref.watch(isAdminProvider);
+    final stockActual = articulo.stockActual ?? 0;
+    final hasStock = stockActual > 0;
+    final isLowStock = stockActual > 0 && stockActual <= 10;
+
     return FadeSlideAnimation(
       delay: Duration(milliseconds: 50 * (index % 10)),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.15)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.12),
+              Colors.white.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: hasStock
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.red.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: InkWell(
-          onTap: () => _showItemDetails(context, articulo),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header con código, ícono y botones de precios/inventario
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentCyan.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.inventory_2,
-                        size: 20,
-                        color: AppTheme.accentCyan,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            articulo.codArticulo ?? "N/A",
-                            style: const TextStyle(
-                              color: AppTheme.accentCyan,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _showItemDetails(context, articulo),
+            borderRadius: BorderRadius.circular(20),
+            splashColor: AppTheme.accentCyan.withValues(alpha: 0.2),
+            highlightColor: AppTheme.accentCyan.withValues(alpha: 0.1),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header con código, ícono y botones de acción
+                  Row(
+                    children: [
+                      // Ícono principal con gradiente
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.accentCyan.withValues(alpha: 0.3),
+                              AppTheme.accentCyan.withValues(alpha: 0.1),
+                            ],
                           ),
-                          Text(
-                            articulo.linea ?? 'Sin línea',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 10,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.accentCyan.withValues(alpha: 0.3),
                           ),
+                        ),
+                        child: Icon(
+                          Icons.inventory_2_rounded,
+                          size: 22,
+                          color: AppTheme.accentCyan,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              articulo.codArticulo ?? "N/A",
+                              style: TextStyle(
+                                color: AppTheme.accentCyan,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                                fontSize: 15,
+                                shadows: [
+                                  Shadow(
+                                    color: AppTheme.accentCyan.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                articulo.linea ?? 'Sin línea',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Botones de acción - solo para admin
+                      if (isAdmin) ...[
+                        // Botón de entrada de inventario
+                        _buildActionButton(
+                          icon: Icons.warehouse_rounded,
+                          color: AppTheme.accentGreen,
+                          tooltip: 'Gestionar inventario',
+                          onPressed: () =>
+                              _showEntradaInventarioDialog(context, articulo),
+                        ),
+                        const SizedBox(width: 8),
+                        // Botón de precios
+                        _buildActionButton(
+                          icon: Icons.monetization_on_rounded,
+                          color: AppTheme.accentOrange,
+                          tooltip: 'Gestionar precios',
+                          onPressed: () =>
+                              _showPreciosDialog(context, articulo),
+                        ),
+                      ] else ...[
+                        // Para usuarios no admin, mostrar botón de ver precios (solo lectura)
+                        _buildActionButton(
+                          icon: Icons.visibility_rounded,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          tooltip: 'Ver detalles',
+                          onPressed: () => _showItemDetails(context, articulo),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Separador con gradiente
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: 0.2),
+                          Colors.transparent,
                         ],
                       ),
                     ),
-                    // Botón de entrada de inventario
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentGreen.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.warehouse,
-                          size: 20,
-                          color: AppTheme.accentGreen,
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
-                        onPressed: () => _showEntradaInventarioDialog(context, articulo),
-                        tooltip: 'Entrada de inventario',
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    // Botón de precios
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentOrange.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.attach_money,
-                          size: 20,
-                          color: AppTheme.accentOrange,
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
-                        onPressed: () => _showPreciosDialog(context, articulo),
-                        tooltip: 'Gestionar precios',
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Separador visual
-                Divider(
-                  color: Colors.white.withOpacity(0.1),
-                  height: 1,
-                  thickness: 1,
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Descripción
-                Text(
-                  articulo.descripcion,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                    fontSize: 14,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                if (articulo.descripcion2.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 14),
+
+                  // Descripción con mejor tipografía
                   Text(
-                    articulo.descripcion2,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 12,
+                    articulo.descripcion,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      fontSize: 15,
+                      letterSpacing: 0.2,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ],
-                
-                const SizedBox(height: 12),
-                
-                // Precio y Stock
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Precio
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppTheme.accentGreen, AppTheme.accentGreen.withOpacity(0.7)],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.accentGreen.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+
+                  if (articulo.descripcion2.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      articulo.descripcion2,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
                       ),
-                      child: Text(
-                        '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    // Stock
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: (articulo.stockActual ?? 0) > 0 
-                            ? AppTheme.accentCyan.withOpacity(0.2) 
-                            : Colors.red.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: (articulo.stockActual ?? 0) > 0 
-                              ? AppTheme.accentCyan.withOpacity(0.5) 
-                              : Colors.red.withOpacity(0.5),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            (articulo.stockActual ?? 0) > 0 
-                                ? Icons.inventory 
-                                : Icons.warning_amber_rounded,
-                            size: 16,
-                            color: (articulo.stockActual ?? 0) > 0 
-                                ? AppTheme.accentCyan 
-                                : Colors.red.shade300,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${articulo.stockActual ?? 0}',
-                            style: TextStyle(
-                              color: (articulo.stockActual ?? 0) > 0 
-                                  ? AppTheme.accentCyan 
-                                  : Colors.red.shade300,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ],
+
+                  const SizedBox(height: 14),
+
+                  // Precio y Stock con mejor diseño
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Precio con gradiente mejorado
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.accentGreen,
+                              AppTheme.accentGreen.withValues(alpha: 0.75),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.accentGreen.withValues(
+                                alpha: 0.4,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.attach_money_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              articulo.precioActual?.toStringAsFixed(2) ??
+                                  "0.00",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Stock con indicador visual mejorado
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: hasStock
+                              ? (isLowStock
+                                    ? Colors.orange.withValues(alpha: 0.2)
+                                    : AppTheme.accentCyan.withValues(
+                                        alpha: 0.15,
+                                      ))
+                              : Colors.red.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: hasStock
+                                ? (isLowStock
+                                      ? Colors.orange.withValues(alpha: 0.5)
+                                      : AppTheme.accentCyan.withValues(
+                                          alpha: 0.4,
+                                        ))
+                                : Colors.red.withValues(alpha: 0.5),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              hasStock
+                                  ? (isLowStock
+                                        ? Icons.warning_rounded
+                                        : Icons.inventory_rounded)
+                                  : Icons.error_outline_rounded,
+                              size: 18,
+                              color: hasStock
+                                  ? (isLowStock
+                                        ? Colors.orange
+                                        : AppTheme.accentCyan)
+                                  : Colors.red.shade300,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$stockActual',
+                              style: TextStyle(
+                                color: hasStock
+                                    ? (isLowStock
+                                          ? Colors.orange
+                                          : AppTheme.accentCyan)
+                                    : Colors.red.shade300,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'uds',
+                              style: TextStyle(
+                                color: hasStock
+                                    ? (isLowStock
+                                          ? Colors.orange.withValues(alpha: 0.7)
+                                          : AppTheme.accentCyan.withValues(
+                                              alpha: 0.7,
+                                            ))
+                                    : Colors.red.shade300.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Botón de acción circular para las cards
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(icon, size: 20, color: color),
           ),
         ),
       ),
@@ -616,33 +795,44 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
 
   /// Estado vacío
   Widget _buildEmptyState(BuildContext context) {
+    final isAdmin = ref.watch(isAdminProvider);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.inventory_2_outlined,
-            size: 100,
-            color: Colors.white.withOpacity(0.3),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.inventory_2_outlined,
+              size: 80,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             _searchQuery.isEmpty
                 ? 'No hay artículos disponibles'
                 : 'No se encontraron artículos',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 20,
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 22,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             _searchQuery.isEmpty
-                ? 'Agrega tu primer artículo'
+                ? (isAdmin
+                      ? 'Agrega tu primer artículo'
+                      : 'Aún no hay artículos registrados')
                 : 'Intenta con otra búsqueda',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
           ),
@@ -653,6 +843,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
 
   /// Muestra los detalles del artículo
   void _showItemDetails(BuildContext context, ArticuloEntity articulo) {
+    final isAdmin = ref.read(isAdminProvider);
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -664,109 +856,358 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 450),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.15),
+                    Colors.white.withValues(alpha: 0.08),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
+                  // Header mejorado
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.accentCyan.withValues(alpha: 0.2),
+                          AppTheme.accentCyan.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentCyan.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppTheme.accentCyan.withValues(alpha: 0.3),
+                                AppTheme.accentCyan.withValues(alpha: 0.15),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppTheme.accentCyan.withValues(alpha: 0.4),
+                            ),
                           ),
-                          child: Icon(Icons.inventory_2, color: AppTheme.accentCyan, size: 32),
+                          child: Icon(
+                            Icons.inventory_2_rounded,
+                            color: AppTheme.accentCyan,
+                            size: 32,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Text(
-                            articulo.descripcion,
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                articulo.descripcion,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accentCyan.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  articulo.codArticulo ?? 'N/A',
+                                  style: TextStyle(
+                                    color: AppTheme.accentCyan,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7)),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  // Content
+                  // Content mejorado
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildDetailRow('Código', articulo.codArticulo ?? 'N/A'),
+                        _buildDetailRow(
+                          'Código',
+                          articulo.codArticulo ?? 'N/A',
+                        ),
                         _buildDetailRow('Descripción', articulo.descripcion),
-                        _buildDetailRow('Descripción 2', articulo.descripcion2),
-                        _buildDetailRow('Línea', articulo.linea ?? 'Sin línea (ID: ${articulo.codLinea})'),
-                        Divider(color: Colors.white.withOpacity(0.1)),
-                        _buildDetailRow('Precio', '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}'),
-                        _buildDetailRow('Stock', '${articulo.stockActual ?? 0} unidades'),
+                        if (articulo.descripcion2.isNotEmpty)
+                          _buildDetailRow(
+                            'Descripción 2',
+                            articulo.descripcion2,
+                          ),
+                        _buildDetailRow(
+                          'Línea',
+                          articulo.linea ??
+                              'Sin línea (ID: ${articulo.codLinea})',
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 12),
+                          height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.2),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Precio y Stock destacados
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.accentGreen.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      AppTheme.accentGreen.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppTheme.accentGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.attach_money_rounded,
+                                      color: AppTheme.accentGreen,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '\$${articulo.precioActual?.toStringAsFixed(2) ?? "0.00"}',
+                                      style: TextStyle(
+                                        color: AppTheme.accentGreen,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Precio',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.accentCyan.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      AppTheme.accentCyan.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppTheme.accentCyan.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.inventory_rounded,
+                                      color: AppTheme.accentCyan,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '${articulo.stockActual ?? 0}',
+                                      style: TextStyle(
+                                        color: AppTheme.accentCyan,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Stock',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                  // Actions
+                  // Actions - Solo admin puede editar/eliminar
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                      color: Colors.black.withValues(alpha: 0.1),
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
                     ),
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       alignment: WrapAlignment.end,
                       children: [
-                        TextButton(
+                        TextButton.icon(
                           onPressed: () => Navigator.pop(context),
-                          child: Text('Cerrar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showEditArticuloDialog(context, articulo);
-                          },
-                          icon: const Icon(Icons.edit, size: 18),
-                          label: const Text('Editar'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentCyan,
-                            foregroundColor: Colors.white,
+                          icon: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                          label: Text(
+                            'Cerrar',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
                           ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            Navigator.pop(context);
-                            final confirmed = await _showDeleteConfirmation(context, articulo);
-                            if (confirmed == true && context.mounted) {
-                              try {
-                                final message = await ref.read(articuloProvider.notifier).deleteArticulo(articulo.codArticulo!);
-                                if (context.mounted) {
-                                  context.showSnackBar(message, isError: false);
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  context.showSnackBar(ErrorMessages.getFriendlyMessage(e), isError: true);
+                        // Solo admin puede editar
+                        if (isAdmin) ...[
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _showEditArticuloDialog(context, articulo);
+                            },
+                            icon: const Icon(Icons.edit_rounded, size: 16),
+                            label: const Text('Editar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.accentCyan,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              final confirmed = await _showDeleteConfirmation(
+                                context,
+                                articulo,
+                              );
+                              if (confirmed == true && context.mounted) {
+                                try {
+                                  final message = await ref
+                                      .read(articuloProvider.notifier)
+                                      .deleteArticulo(articulo.codArticulo!);
+                                  if (context.mounted) {
+                                    context.showSnackBar(
+                                      message,
+                                      isError: false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    context.showSnackBar(
+                                      ErrorMessages.getFriendlyMessage(e),
+                                      isError: true,
+                                    );
+                                  }
                                 }
                               }
-                            }
-                          },
-                          icon: const Icon(Icons.delete, size: 18),
-                          label: const Text('Eliminar'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade400,
-                            foregroundColor: Colors.white,
+                            },
+                            icon: const Icon(Icons.delete_rounded, size: 16),
+                            label: const Text('Eliminar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade400,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -779,7 +1220,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     );
   }
 
-  Future<bool?> _showDeleteConfirmation(BuildContext context, ArticuloEntity articulo) {
+  Future<bool?> _showDeleteConfirmation(
+    BuildContext context,
+    ArticuloEntity articulo,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -791,24 +1235,34 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 64, color: Colors.red.shade300),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 64,
+                    color: Colors.red.shade300,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Confirmar eliminación',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '¿Estás seguro de eliminar "${articulo.descripcion}"?',
-                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -817,12 +1271,22 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: Text('Cancelar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400),
-                        child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade400,
+                        ),
+                        child: const Text(
+                          'Eliminar',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -846,7 +1310,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             '$label:',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(width: 16),
@@ -871,13 +1335,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          return await ref.read(articuloProvider.notifier).createArticulo(
-            codArticulo: codArticulo,
-            codLinea: codLinea,
-            descripcion: descripcion,
-            descripcion2: descripcion2,
-            audUsuario: user?.codUsuario ?? 0,
-          );
+          return await ref
+              .read(articuloProvider.notifier)
+              .createArticulo(
+                codArticulo: codArticulo,
+                codLinea: codLinea,
+                descripcion: descripcion,
+                descripcion2: descripcion2,
+                audUsuario: user?.codUsuario ?? 0,
+              );
         },
       ),
     );
@@ -893,13 +1359,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          return await ref.read(articuloProvider.notifier).updateArticulo(
-            codArticulo: codArticulo,
-            codLinea: codLinea,
-            descripcion: descripcion,
-            descripcion2: descripcion2,
-            audUsuario: user?.codUsuario ?? 0,
-          );
+          return await ref
+              .read(articuloProvider.notifier)
+              .updateArticulo(
+                codArticulo: codArticulo,
+                codLinea: codLinea,
+                descripcion: descripcion,
+                descripcion2: descripcion2,
+                audUsuario: user?.codUsuario ?? 0,
+              );
         },
       ),
     );
@@ -915,7 +1383,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   }
 
   /// Diálogo para entrada de inventario
-  void _showEntradaInventarioDialog(BuildContext context, ArticuloEntity articulo) {
+  void _showEntradaInventarioDialog(
+    BuildContext context,
+    ArticuloEntity articulo,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -927,15 +1398,19 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
 /// Formulario de artículo (crear/editar)
 class _ArticuloFormDialog extends ConsumerStatefulWidget {
   final ArticuloEntity? articulo;
-  final Future<String> Function(String codArticulo, int codLinea, String descripcion, String descripcion2) onSubmit;
+  final Future<String> Function(
+    String codArticulo,
+    int codLinea,
+    String descripcion,
+    String descripcion2,
+  )
+  onSubmit;
 
-  const _ArticuloFormDialog({
-    this.articulo,
-    required this.onSubmit,
-  });
+  const _ArticuloFormDialog({this.articulo, required this.onSubmit});
 
   @override
-  ConsumerState<_ArticuloFormDialog> createState() => _ArticuloFormDialogState();
+  ConsumerState<_ArticuloFormDialog> createState() =>
+      _ArticuloFormDialogState();
 }
 
 class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
@@ -943,7 +1418,7 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
   late TextEditingController _codArticuloController;
   late TextEditingController _descripcionController;
   late TextEditingController _descripcion2Controller;
-  
+
   int? _selectedLineaId;
   bool _isLoading = false;
   bool _showLineaQuickAdd = false;
@@ -951,9 +1426,15 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
   @override
   void initState() {
     super.initState();
-    _codArticuloController = TextEditingController(text: widget.articulo?.codArticulo ?? '');
-    _descripcionController = TextEditingController(text: widget.articulo?.descripcion ?? '');
-    _descripcion2Controller = TextEditingController(text: widget.articulo?.descripcion2 ?? '');
+    _codArticuloController = TextEditingController(
+      text: widget.articulo?.codArticulo ?? '',
+    );
+    _descripcionController = TextEditingController(
+      text: widget.articulo?.descripcion ?? '',
+    );
+    _descripcion2Controller = TextEditingController(
+      text: widget.articulo?.descripcion2 ?? '',
+    );
     _selectedLineaId = widget.articulo?.codLinea;
   }
 
@@ -983,9 +1464,9 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
               maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -994,31 +1475,48 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentCyan.withOpacity(0.2),
+                          color: AppTheme.accentCyan.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          widget.articulo == null ? Icons.add_circle : Icons.edit,
+                          widget.articulo == null
+                              ? Icons.add_circle
+                              : Icons.edit,
                           color: AppTheme.accentCyan,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          widget.articulo == null ? 'Nuevo Artículo' : 'Editar Artículo',
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          widget.articulo == null
+                              ? 'Nuevo Artículo'
+                              : 'Editar Artículo',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       IconButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7)),
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
                       ),
                     ],
                   ),
@@ -1104,43 +1602,62 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
                                       const SizedBox(width: 8),
                                       Container(
                                         decoration: BoxDecoration(
-                                          color: AppTheme.accentCyan.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: AppTheme.accentCyan.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: IconButton(
                                           onPressed: () {
                                             setState(() {
-                                              _showLineaQuickAdd = !_showLineaQuickAdd;
+                                              _showLineaQuickAdd =
+                                                  !_showLineaQuickAdd;
                                             });
                                           },
                                           icon: Icon(
-                                            _showLineaQuickAdd ? Icons.close : Icons.add,
+                                            _showLineaQuickAdd
+                                                ? Icons.close
+                                                : Icons.add,
                                             color: AppTheme.accentCyan,
                                           ),
-                                          tooltip: _showLineaQuickAdd ? 'Cerrar' : 'Agregar línea rápida',
+                                          tooltip: _showLineaQuickAdd
+                                              ? 'Cerrar'
+                                              : 'Agregar línea rápida',
                                         ),
                                       ),
                                     ],
                                   ),
-                                  
+
                                   // Formulario rápido de línea
                                   if (_showLineaQuickAdd) ...[
                                     const SizedBox(height: 16),
                                     _QuickLineaForm(
                                       onLineaCreated: (nuevaLinea) {
                                         setState(() {
-                                          _selectedLineaId = nuevaLinea.codLinea;
+                                          _selectedLineaId =
+                                              nuevaLinea.codLinea;
                                           _showLineaQuickAdd = false;
                                         });
-                                        ref.read(lineaProvider.notifier).loadLineas();
+                                        ref
+                                            .read(lineaProvider.notifier)
+                                            .loadLineas();
                                       },
                                     ),
                                   ],
                                 ],
                               );
                             },
-                            loading: () => Center(child: CircularProgressIndicator(color: AppTheme.accentCyan)),
-                            error: (error, stack) => Text('Error: $error', style: TextStyle(color: Colors.red.shade300)),
+                            loading: () => Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.accentCyan,
+                              ),
+                            ),
+                            error: (error, stack) => Text(
+                              'Error: $error',
+                              style: TextStyle(color: Colors.red.shade300),
+                            ),
                           ),
                         ],
                       ),
@@ -1151,14 +1668,25 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        child: Text('Cancelar', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.pop(context),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
@@ -1167,10 +1695,15 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
                             ? SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.save),
-                        label: Text(widget.articulo == null ? 'Crear' : 'Actualizar'),
+                        label: Text(
+                          widget.articulo == null ? 'Crear' : 'Actualizar',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.accentGreen,
                           foregroundColor: Colors.white,
@@ -1198,7 +1731,7 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
       controller: controller,
       enabled: enabled,
       style: TextStyle(
-        color: enabled ? Colors.white : Colors.white.withOpacity(0.5),
+        color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.5),
         fontSize: 16,
         fontWeight: FontWeight.w500,
       ),
@@ -1218,11 +1751,11 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
         prefixIcon: Icon(icon, color: AppTheme.accentCyan),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -1230,14 +1763,14 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.red.shade300),
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
       ),
       validator: validator,
     );
@@ -1259,10 +1792,7 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.green,
-          ),
+          SnackBar(content: Text(message), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -1303,12 +1833,12 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
   @override
   Widget build(BuildContext context) {
     final familiasAsync = ref.watch(familiaProvider);
-    
+
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.accentCyan.withOpacity(0.1),
+        color: AppTheme.accentCyan.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.accentCyan.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.accentCyan.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1328,7 +1858,7 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Dropdown de Familias
           familiasAsync.when(
             data: (familias) {
@@ -1336,7 +1866,7 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
+                    color: Colors.orange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -1353,28 +1883,47 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
                   ),
                 );
               }
-              
+
               return DropdownButtonFormField<int>(
                 decoration: InputDecoration(
                   labelText: 'Familia',
-                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                  floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
-                  prefixIcon: Icon(Icons.folder_special, color: AppTheme.accentCyan),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  labelStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: AppTheme.accentCyan,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.folder_special,
+                    color: AppTheme.accentCyan,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+                    borderSide: BorderSide(
+                      color: AppTheme.accentCyan,
+                      width: 2,
+                    ),
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.15),
+                  fillColor: Colors.white.withValues(alpha: 0.15),
                 ),
                 dropdownColor: const Color(0xFF2A2A4A),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                value: _selectedFamiliaId,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+                initialValue: _selectedFamiliaId,
                 isExpanded: true,
                 items: familias.map((familia) {
                   return DropdownMenuItem<int>(
@@ -1385,11 +1934,13 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
                     ),
                   );
                 }).toList(),
-                onChanged: _isCreating ? null : (value) {
-                  setState(() {
-                    _selectedFamiliaId = value;
-                  });
-                },
+                onChanged: _isCreating
+                    ? null
+                    : (value) {
+                        setState(() {
+                          _selectedFamiliaId = value;
+                        });
+                      },
                 validator: (value) {
                   if (value == null) {
                     return 'La familia es obligatoria';
@@ -1407,7 +1958,7 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
             error: (error, stack) => Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -1417,26 +1968,39 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           TextField(
             controller: _lineaController,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
             cursorColor: AppTheme.accentCyan,
             decoration: InputDecoration(
               labelText: 'Nombre de la línea',
-              labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-              floatingLabelStyle: TextStyle(color: AppTheme.accentCyan, fontWeight: FontWeight.w600),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              labelStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              floatingLabelStyle: TextStyle(
+                color: AppTheme.accentCyan,
+                fontWeight: FontWeight.w600,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
               ),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.15),
+              fillColor: Colors.white.withValues(alpha: 0.15),
             ),
             enabled: !_isCreating,
           ),
@@ -1449,7 +2013,10 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.add),
               label: const Text('Crear Línea'),
@@ -1484,11 +2051,13 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
     try {
       final userAsync = ref.read(authProvider);
       final user = userAsync.value;
-      await ref.read(lineaProvider.notifier).createLinea(
-        codFamilia: _selectedFamiliaId!,
-        linea: _lineaController.text,
-        audUsuario: user?.codUsuario ?? 0, 
-      );
+      await ref
+          .read(lineaProvider.notifier)
+          .createLinea(
+            codFamilia: _selectedFamiliaId!,
+            linea: _lineaController.text,
+            audUsuario: user?.codUsuario ?? 0,
+          );
 
       // Recargar líneas y obtener la recién creada
       await ref.read(lineaProvider.notifier).loadLineas();
@@ -1534,7 +2103,8 @@ class _LineaSearchableDropdown extends StatefulWidget {
   });
 
   @override
-  State<_LineaSearchableDropdown> createState() => _LineaSearchableDropdownState();
+  State<_LineaSearchableDropdown> createState() =>
+      _LineaSearchableDropdownState();
 }
 
 class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
@@ -1601,8 +2171,10 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                     return Container(
                       constraints: const BoxConstraints(maxHeight: 300),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A4A).withOpacity(0.95),
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        color: const Color(0xFF2A2A4A).withValues(alpha: 0.95),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -1617,11 +2189,23 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 hintText: 'Buscar línea...',
-                                hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                prefixIcon: Icon(Icons.search, size: 20, color: AppTheme.accentCyan),
+                                hintStyle: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  size: 20,
+                                  color: AppTheme.accentCyan,
+                                ),
                                 suffixIcon: _searchQuery.isNotEmpty
                                     ? IconButton(
-                                        icon: Icon(Icons.clear, size: 20, color: Colors.white.withOpacity(0.7)),
+                                        icon: Icon(
+                                          Icons.clear,
+                                          size: 20,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                        ),
                                         onPressed: () {
                                           _searchController.clear();
                                           setOverlayState(() {
@@ -1632,20 +2216,30 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                                     : null,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: AppTheme.accentCyan, width: 2),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.accentCyan,
+                                    width: 2,
+                                  ),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                                 isDense: true,
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.15),
+                                fillColor: Colors.white.withValues(alpha: 0.15),
                               ),
                               onChanged: (value) {
                                 setOverlayState(() {
@@ -1654,8 +2248,11 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                               },
                             ),
                           ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.1)),
-                          
+                          Divider(
+                            height: 1,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+
                           // Lista de líneas filtradas
                           Flexible(
                             child: Builder(
@@ -1663,8 +2260,11 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                                 final filteredLineas = _searchQuery.isEmpty
                                     ? widget.lineas
                                     : widget.lineas.where((linea) {
-                                        return linea.linea.toLowerCase().contains(_searchQuery) ||
-                                            (linea.codLinea?.toString() ?? '').contains(_searchQuery);
+                                        return linea.linea
+                                                .toLowerCase()
+                                                .contains(_searchQuery) ||
+                                            (linea.codLinea?.toString() ?? '')
+                                                .contains(_searchQuery);
                                       }).toList();
 
                                 if (filteredLineas.isEmpty) {
@@ -1673,7 +2273,11 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                                     child: Center(
                                       child: Text(
                                         'No se encontraron líneas',
-                                        style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   );
@@ -1685,27 +2289,43 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                                   itemCount: filteredLineas.length,
                                   itemBuilder: (context, index) {
                                     final linea = filteredLineas[index];
-                                    final isSelected = linea.codLinea == widget.selectedLineaId;
+                                    final isSelected =
+                                        linea.codLinea ==
+                                        widget.selectedLineaId;
 
                                     return ListTile(
                                       dense: true,
                                       selected: isSelected,
-                                      selectedTileColor: AppTheme.accentCyan.withOpacity(0.2),
+                                      selectedTileColor: AppTheme.accentCyan
+                                          .withValues(alpha: 0.2),
                                       leading: Icon(
                                         Icons.category,
                                         size: 20,
-                                        color: isSelected ? AppTheme.accentCyan : Colors.white.withOpacity(0.5),
+                                        color: isSelected
+                                            ? AppTheme.accentCyan
+                                            : Colors.white.withValues(
+                                                alpha: 0.5,
+                                              ),
                                       ),
                                       title: Text(
                                         linea.linea,
                                         style: TextStyle(
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                          color: isSelected ? AppTheme.accentCyan : Colors.white,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: isSelected
+                                              ? AppTheme.accentCyan
+                                              : Colors.white,
                                         ),
                                       ),
                                       subtitle: Text(
                                         'Código: ${linea.codLinea}',
-                                        style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
                                       ),
                                       onTap: () {
                                         widget.onChanged(linea.codLinea);
@@ -1758,14 +2378,17 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                 onTap: _toggleDropdown,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: field.hasError 
-                          ? Colors.red.shade300 
-                          : Colors.white.withOpacity(0.3),
+                      color: field.hasError
+                          ? Colors.red.shade300
+                          : Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -1779,7 +2402,7 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                             Text(
                               'Línea',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 12,
                               ),
                             ),
@@ -1789,8 +2412,8 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                                   ? 'Seleccionar línea'
                                   : '${selectedLinea.codLinea} - ${selectedLinea.linea}',
                               style: TextStyle(
-                                color: selectedLinea == null 
-                                    ? Colors.white.withOpacity(0.5) 
+                                color: selectedLinea == null
+                                    ? Colors.white.withValues(alpha: 0.5)
                                     : Colors.white,
                               ),
                             ),
@@ -1799,7 +2422,7 @@ class _LineaSearchableDropdownState extends State<_LineaSearchableDropdown> {
                       ),
                       Icon(
                         _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ],
                   ),
@@ -1833,8 +2456,12 @@ class _PreciosFormDialog extends ConsumerStatefulWidget {
 
 class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _precioBaseController = TextEditingController(text: '');
-  final TextEditingController _porcentajeController = TextEditingController(text: '30'); // 30% por defecto
+  final TextEditingController _precioBaseController = TextEditingController(
+    text: '',
+  );
+  final TextEditingController _porcentajeController = TextEditingController(
+    text: '30',
+  ); // 30% por defecto
   bool _isLoading = false;
   bool _isLoadingPrecios = true;
   List<PrecioEntity> _preciosExistentes = [];
@@ -1860,10 +2487,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
     });
 
     try {
-      final precios = await ref.read(precioProvider.notifier).loadPreciosByArticulo(
-        widget.articulo.codArticulo!,
-      );
-      
+      final precios = await ref
+          .read(precioProvider.notifier)
+          .loadPreciosByArticulo(widget.articulo.codArticulo!);
+
       if (mounted) {
         setState(() {
           _preciosExistentes = precios;
@@ -1874,7 +2501,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
       // Log para debugging
       debugPrint('Error al cargar precios: $e');
       debugPrint('StackTrace: $stackTrace');
-      
+
       if (mounted) {
         setState(() {
           _errorPrecios = ErrorMessages.getFriendlyMessage(e);
@@ -1889,7 +2516,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
   double? _calcularPrecioVenta() {
     final precioBase = double.tryParse(_precioBaseController.text.trim());
     final porcentaje = double.tryParse(_porcentajeController.text.trim());
-    
+
     if (precioBase != null && porcentaje != null) {
       return precioBase * (1 + (porcentaje / 100));
     }
@@ -1903,14 +2530,14 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = ref.watch(isAdminProvider);
+
     return AlertDialog(
       title: Row(
         children: [
           Icon(Icons.attach_money, color: Colors.amber.shade700),
           const SizedBox(width: 8),
-          const Expanded(
-            child: Text('Gestionar Precios'),
-          ),
+          Expanded(child: Text(isAdmin ? 'Gestionar Precios' : 'Ver Precios')),
         ],
       ),
       content: ConstrainedBox(
@@ -1935,9 +2562,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.inventory_2, 
-                              size: 20, 
-                              color: Colors.blue.shade700
+                            Icon(
+                              Icons.inventory_2,
+                              size: 20,
+                              color: Colors.blue.shade700,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -2013,9 +2641,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.price_check, 
-                                size: 18, 
-                                color: Colors.green.shade700
+                              Icon(
+                                Icons.price_check,
+                                size: 18,
+                                color: Colors.green.shade700,
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -2036,7 +2665,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Lista: ${precio.listaPrecio}',
@@ -2058,7 +2688,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                   ),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Venta: \$${precio.precio.toStringAsFixed(2)}',
@@ -2082,7 +2713,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),
@@ -2094,9 +2725,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, 
-                            size: 18, 
-                            color: Colors.grey.shade600
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: Colors.grey.shade600,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -2113,267 +2745,292 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                     ),
                   ),
 
-                const SizedBox(height: 20),
+                // Solo admin puede agregar/actualizar precios
+                if (isAdmin) ...[
+                  const SizedBox(height: 20),
 
-                // Divider con texto
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey.shade400)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'AGREGAR/ACTUALIZAR PRECIO',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade600,
+                  // Divider con texto
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade400)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'AGREGAR/ACTUALIZAR PRECIO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ),
+                      Expanded(child: Divider(color: Colors.grey.shade400)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Precio Base
+                  TextFormField(
+                    controller: _precioBaseController,
+                    decoration: InputDecoration(
+                      labelText: 'Precio Base (Costo)',
+                      hintText: '0.00',
+                      prefixIcon: Icon(
+                        Icons.monetization_on,
+                        color: Colors.green.shade600,
+                      ),
+                      prefixText: '\$ ',
+                      border: const OutlineInputBorder(),
+                      helperText: 'Precio de costo o base del producto',
                     ),
-                    Expanded(child: Divider(color: Colors.grey.shade400)),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Precio Base
-                TextFormField(
-                  controller: _precioBaseController,
-                  decoration: InputDecoration(
-                    labelText: 'Precio Base (Costo)',
-                    hintText: '0.00',
-                    prefixIcon: Icon(Icons.monetization_on, color: Colors.green.shade600),
-                    prefixText: '\$ ',
-                    border: const OutlineInputBorder(),
-                    helperText: 'Precio de costo o base del producto',
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (value) => setState(() {}), // Recalcular precios
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'El precio base es requerido';
+                      }
+                      final precio = double.tryParse(value.trim());
+                      if (precio == null) {
+                        return 'Ingrese un precio válido';
+                      }
+                      if (precio <= 0) {
+                        return 'El precio debe ser mayor a 0';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: (value) => setState(() {}), // Recalcular precios
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El precio base es requerido';
-                    }
-                    final precio = double.tryParse(value.trim());
-                    if (precio == null) {
-                      return 'Ingrese un precio válido';
-                    }
-                    if (precio <= 0) {
-                      return 'El precio debe ser mayor a 0';
-                    }
-                    return null;
-                  },
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Porcentaje de Incremento
-                TextFormField(
-                  controller: _porcentajeController,
-                  decoration: InputDecoration(
-                    labelText: 'Porcentaje de Incremento',
-                    hintText: '0',
-                    prefixIcon: Icon(Icons.percent, color: Colors.purple.shade600),
-                    suffixText: '%',
-                    border: const OutlineInputBorder(),
-                    helperText: 'Porcentaje de ganancia sobre el precio base',
+                  // Porcentaje de Incremento
+                  TextFormField(
+                    controller: _porcentajeController,
+                    decoration: InputDecoration(
+                      labelText: 'Porcentaje de Incremento',
+                      hintText: '0',
+                      prefixIcon: Icon(
+                        Icons.percent,
+                        color: Colors.purple.shade600,
+                      ),
+                      suffixText: '%',
+                      border: const OutlineInputBorder(),
+                      helperText: 'Porcentaje de ganancia sobre el precio base',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (value) => setState(() {}), // Recalcular precios
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'El porcentaje es requerido';
+                      }
+                      final porcentaje = double.tryParse(value.trim());
+                      if (porcentaje == null) {
+                        return 'Ingrese un porcentaje válido';
+                      }
+                      if (porcentaje < 0) {
+                        return 'El porcentaje no puede ser negativo';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: (value) => setState(() {}), // Recalcular precios
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El porcentaje es requerido';
-                    }
-                    final porcentaje = double.tryParse(value.trim());
-                    if (porcentaje == null) {
-                      return 'Ingrese un porcentaje válido';
-                    }
-                    if (porcentaje < 0) {
-                      return 'El porcentaje no puede ser negativo';
-                    }
-                    return null;
-                  },
-                ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // Precios Calculados (solo lectura)
-                ValueListenableBuilder(
-                  valueListenable: _precioBaseController,
-                  builder: (context, baseValue, _) {
-                    return ValueListenableBuilder(
-                      valueListenable: _porcentajeController,
-                      builder: (context, porcentajeValue, _) {
-                        final precioVenta = _calcularPrecioVenta();
-                        final precioSinFactura = _calcularPrecioSinFactura();
-                        
-                        return Card(
-                          color: Colors.blue.shade50,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.calculate, 
-                                      size: 20, 
-                                      color: Colors.blue.shade700
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Precios Calculados',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                        color: Colors.blue.shade900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.sell, 
-                                          size: 16, 
-                                          color: Colors.blue.shade700
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          'Precio de Venta:',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      precioVenta != null 
-                                        ? '\$${precioVenta.toStringAsFixed(2)}'
-                                        : '\$0.00',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue.shade900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.money_off, 
-                                          size: 16, 
-                                          color: Colors.orange.shade700
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          'Precio Sin Factura:',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      precioSinFactura != null 
-                                        ? '\$${precioSinFactura.toStringAsFixed(2)}'
-                                        : '\$0.00',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange.shade900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                  // Precios Calculados (solo lectura)
+                  ValueListenableBuilder(
+                    valueListenable: _precioBaseController,
+                    builder: (context, baseValue, _) {
+                      return ValueListenableBuilder(
+                        valueListenable: _porcentajeController,
+                        builder: (context, porcentajeValue, _) {
+                          final precioVenta = _calcularPrecioVenta();
+                          final precioSinFactura = _calcularPrecioSinFactura();
 
-                const SizedBox(height: 16),
-
-                // Resumen de ganancia
-                ValueListenableBuilder(
-                  valueListenable: _precioBaseController,
-                  builder: (context, baseValue, _) {
-                    return ValueListenableBuilder(
-                      valueListenable: _porcentajeController,
-                      builder: (context, porcentajeValue, _) {
-                        final precioBase = double.tryParse(baseValue.text);
-                        final porcentaje = double.tryParse(porcentajeValue.text);
-                        
-                        double? ganancia;
-                        
-                        if (precioBase != null && porcentaje != null && precioBase > 0) {
-                          ganancia = precioBase * (porcentaje / 100);
-                        }
-                        
-                        return Card(
-                          color: Colors.green.shade50,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.trending_up, 
-                                      size: 18, 
-                                      color: Colors.green.shade900
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Resumen de Ganancia',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green.shade900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (ganancia != null) ...[
-                                  const SizedBox(height: 8),
+                          return Card(
+                            color: Colors.blue.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Text('Ganancia por unidad:', 
-                                        style: TextStyle(fontSize: 12)
+                                      Icon(
+                                        Icons.calculate,
+                                        size: 20,
+                                        color: Colors.blue.shade700,
                                       ),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        '\$${ganancia.toStringAsFixed(2)}',
+                                        'Precios Calculados',
                                         style: TextStyle(
-                                          fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green.shade700,
+                                          fontSize: 15,
+                                          color: Colors.blue.shade900,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const Divider(height: 12),
-                                ],
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Los precios serán calculados automáticamente y aplicados al artículo.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.green.shade900,
+                                  const Divider(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.sell,
+                                            size: 16,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Precio de Venta:',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        precioVenta != null
+                                            ? '\$${precioVenta.toStringAsFixed(2)}'
+                                            : '\$0.00',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade900,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.money_off,
+                                            size: 16,
+                                            color: Colors.orange.shade700,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Precio Sin Factura:',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        precioSinFactura != null
+                                            ? '\$${precioSinFactura.toStringAsFixed(2)}'
+                                            : '\$0.00',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Resumen de ganancia
+                  ValueListenableBuilder(
+                    valueListenable: _precioBaseController,
+                    builder: (context, baseValue, _) {
+                      return ValueListenableBuilder(
+                        valueListenable: _porcentajeController,
+                        builder: (context, porcentajeValue, _) {
+                          final precioBase = double.tryParse(baseValue.text);
+                          final porcentaje = double.tryParse(
+                            porcentajeValue.text,
+                          );
+
+                          double? ganancia;
+
+                          if (precioBase != null &&
+                              porcentaje != null &&
+                              precioBase > 0) {
+                            ganancia = precioBase * (porcentaje / 100);
+                          }
+
+                          return Card(
+                            color: Colors.green.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.trending_up,
+                                        size: 18,
+                                        color: Colors.green.shade900,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Resumen de Ganancia',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (ganancia != null) ...[
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Ganancia por unidad:',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        Text(
+                                          '\$${ganancia.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(height: 12),
+                                  ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Los precios serán calculados automáticamente y aplicados al artículo.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.green.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ], // Fin del if (isAdmin)
               ],
             ),
           ),
@@ -2382,19 +3039,21 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: Text(isAdmin ? 'Cancelar' : 'Cerrar'),
         ),
-        FilledButton.icon(
-          onPressed: _isLoading ? null : _handleSubmit,
-          icon: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.save),
-          label: const Text('Guardar Precios'),
-        ),
+        // Solo admin puede guardar precios
+        if (isAdmin)
+          FilledButton.icon(
+            onPressed: _isLoading ? null : _handleSubmit,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save),
+            label: const Text('Guardar Precios'),
+          ),
       ],
     );
   }
@@ -2416,14 +3075,16 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
 
       // Llamar al provider para crear el precio
       // codPrecio es auto-increment, no se envía desde el frontend
-      final message = await ref.read(precioProvider.notifier).createPrecio(
-        codArticulo: widget.articulo.codArticulo!,
-        precioBase: precioBase,
-        precio: precioVenta,
-        precioSinFactura: precioSinFactura,
-        audUsuario: userId,
-      );
-      
+      final message = await ref
+          .read(precioProvider.notifier)
+          .createPrecio(
+            codArticulo: widget.articulo.codArticulo!,
+            precioBase: precioBase,
+            precio: precioVenta,
+            precioSinFactura: precioSinFactura,
+            audUsuario: userId,
+          );
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2438,7 +3099,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
             duration: const Duration(seconds: 5),
           ),
         );
-        
+
         // Recargar los precios del artículo después de guardar
         _cargarPreciosExistentes();
       }
@@ -2468,14 +3129,16 @@ class _EntradaInventarioDialog extends ConsumerStatefulWidget {
   const _EntradaInventarioDialog({required this.articulo});
 
   @override
-  ConsumerState<_EntradaInventarioDialog> createState() => _EntradaInventarioDialogState();
+  ConsumerState<_EntradaInventarioDialog> createState() =>
+      _EntradaInventarioDialogState();
 }
 
-class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDialog> {
+class _EntradaInventarioDialogState
+    extends ConsumerState<_EntradaInventarioDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _cantidadController = TextEditingController();
   final TextEditingController _observacionController = TextEditingController();
-  
+
   bool _isLoading = false;
   String _tipoMovimiento = 'ENTRADA'; // Por defecto ENTRADA
 
@@ -2489,9 +3152,7 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         child: Column(
@@ -2501,7 +3162,9 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: _tipoMovimiento == 'ENTRADA' ? Colors.green.shade700 : Colors.red.shade700,
+                color: _tipoMovimiento == 'ENTRADA'
+                    ? Colors.green.shade700
+                    : Colors.red.shade700,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -2510,15 +3173,17 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
               child: Row(
                 children: [
                   Icon(
-                    _tipoMovimiento == 'ENTRADA' ? Icons.arrow_downward : Icons.arrow_upward,
+                    _tipoMovimiento == 'ENTRADA'
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
                     color: Colors.white,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _tipoMovimiento == 'ENTRADA' 
-                          ? 'Entrada de Inventario' 
+                      _tipoMovimiento == 'ENTRADA'
+                          ? 'Entrada de Inventario'
                           : 'Salida de Inventario',
                       style: const TextStyle(
                         color: Colors.white,
@@ -2528,7 +3193,11 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     onPressed: () => Navigator.pop(context),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -2547,199 +3216,238 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
                     Container(
                       padding: const EdgeInsets.all(12),
                       color: Colors.grey.shade100,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.inventory_2, size: 20, color: context.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.articulo.codArticulo ?? 'N/A',
-                        style: context.theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: context.colorScheme.primary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.inventory_2,
+                                size: 20,
+                                color: context.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.articulo.codArticulo ?? 'N/A',
+                                style: context.theme.textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: context.colorScheme.primary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.articulo.descripcion,
+                            style: context.theme.textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.articulo.descripcion,
-                        style: context.theme.textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
 
                     // Formulario
                     Padding(
                       padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                      // Selector de tipo de movimiento
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
+                      child: Form(
+                        key: _formKey,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              'Tipo de Movimiento *',
-                              style: context.theme.textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                            // Selector de tipo de movimiento
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tipo de Movimiento *',
+                                    style: context.theme.textTheme.labelSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () => setState(
+                                            () => _tipoMovimiento = 'ENTRADA',
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                              horizontal: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  _tipoMovimiento == 'ENTRADA'
+                                                  ? Colors.green.shade700
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color:
+                                                    _tipoMovimiento == 'ENTRADA'
+                                                    ? Colors.green.shade700
+                                                    : Colors.grey.shade300,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.arrow_downward,
+                                                  color:
+                                                      _tipoMovimiento ==
+                                                          'ENTRADA'
+                                                      ? Colors.white
+                                                      : Colors.green.shade700,
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'ENTRADA',
+                                                  style: TextStyle(
+                                                    color:
+                                                        _tipoMovimiento ==
+                                                            'ENTRADA'
+                                                        ? Colors.white
+                                                        : Colors.green.shade700,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () => setState(
+                                            () => _tipoMovimiento = 'SALIDA',
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                              horizontal: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _tipoMovimiento == 'SALIDA'
+                                                  ? Colors.red.shade700
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color:
+                                                    _tipoMovimiento == 'SALIDA'
+                                                    ? Colors.red.shade700
+                                                    : Colors.grey.shade300,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.arrow_upward,
+                                                  color:
+                                                      _tipoMovimiento ==
+                                                          'SALIDA'
+                                                      ? Colors.white
+                                                      : Colors.red.shade700,
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'SALIDA',
+                                                  style: TextStyle(
+                                                    color:
+                                                        _tipoMovimiento ==
+                                                            'SALIDA'
+                                                        ? Colors.white
+                                                        : Colors.red.shade700,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () => setState(() => _tipoMovimiento = 'ENTRADA'),
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                      decoration: BoxDecoration(
-                                      color: _tipoMovimiento == 'ENTRADA' 
-                                          ? Colors.green.shade700 
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: _tipoMovimiento == 'ENTRADA'
-                                            ? Colors.green.shade700
-                                            : Colors.grey.shade300,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.arrow_downward,
-                                          color: _tipoMovimiento == 'ENTRADA' 
-                                              ? Colors.white 
-                                              : Colors.green.shade700,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'ENTRADA',
-                                          style: TextStyle(
-                                            color: _tipoMovimiento == 'ENTRADA' 
-                                                ? Colors.white 
-                                                : Colors.green.shade700,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+
+                            const SizedBox(height: 12),
+
+                            // Cantidad
+                            TextFormField(
+                              controller: _cantidadController,
+                              decoration: InputDecoration(
+                                labelText: 'Cantidad *',
+                                hintText: _tipoMovimiento == 'ENTRADA'
+                                    ? 'Cantidad a recibir'
+                                    : 'Cantidad a retirar',
+                                prefixIcon: const Icon(Icons.pin),
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
                                 ),
                               ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () => setState(() => _tipoMovimiento = 'SALIDA'),
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                      decoration: BoxDecoration(
-                                      color: _tipoMovimiento == 'SALIDA' 
-                                          ? Colors.red.shade700 
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: _tipoMovimiento == 'SALIDA'
-                                            ? Colors.red.shade700
-                                            : Colors.grey.shade300,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.arrow_upward,
-                                          color: _tipoMovimiento == 'SALIDA' 
-                                              ? Colors.white 
-                                              : Colors.red.shade700,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'SALIDA',
-                                          style: TextStyle(
-                                            color: _tipoMovimiento == 'SALIDA' 
-                                                ? Colors.white 
-                                                : Colors.red.shade700,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'La cantidad es obligatoria';
+                                }
+                                final cantidad = int.tryParse(value);
+                                if (cantidad == null || cantidad <= 0) {
+                                  return 'Debe ser un número entero positivo';
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Observación
+                            TextFormField(
+                              controller: _observacionController,
+                              decoration: const InputDecoration(
+                                labelText: 'Observación (opcional)',
+                                hintText: 'Observación adicional',
+                                prefixIcon: Icon(Icons.note),
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
                                 ),
                               ),
-                              ],
+                              maxLines: 2,
                             ),
                           ],
                         ),
                       ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Cantidad
-                      TextFormField(
-                        controller: _cantidadController,
-                        decoration: InputDecoration(
-                          labelText: 'Cantidad *',
-                          hintText: _tipoMovimiento == 'ENTRADA' 
-                              ? 'Cantidad a recibir' 
-                              : 'Cantidad a retirar',
-                          prefixIcon: const Icon(Icons.pin),
-                          border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'La cantidad es obligatoria';
-                          }
-                          final cantidad = int.tryParse(value);
-                          if (cantidad == null || cantidad <= 0) {
-                            return 'Debe ser un número entero positivo';
-                          }
-                          return null;
-                        },
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Observación
-                      TextFormField(
-                        controller: _observacionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Observación (opcional)',
-                          hintText: 'Observación adicional',
-                          prefixIcon: Icon(Icons.note),
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        ),
-                        maxLines: 2,
-                      ),
-                  ],
-                ),
-              ),
-            ),
+                    ),
 
                     // Botones de acción
                     Padding(
@@ -2748,7 +3456,9 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: _isLoading ? null : () => Navigator.pop(context),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => Navigator.pop(context),
                               child: const Text('Cancelar'),
                             ),
                           ),
@@ -2756,7 +3466,9 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
                           Expanded(
                             flex: 2,
                             child: ElevatedButton.icon(
-                              onPressed: _isLoading ? null : _registrarMovimiento,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _registrarMovimiento,
                               icon: _isLoading
                                   ? const SizedBox(
                                       width: 16,
@@ -2766,16 +3478,24 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
                                         color: Colors.white,
                                       ),
                                     )
-                                  : Icon(_tipoMovimiento == 'ENTRADA' ? Icons.check : Icons.remove),
-                              label: Text(_isLoading 
-                                  ? 'Guardando...' 
-                                  : 'Registrar ${_tipoMovimiento == 'ENTRADA' ? 'Entrada' : 'Salida'}'),
+                                  : Icon(
+                                      _tipoMovimiento == 'ENTRADA'
+                                          ? Icons.check
+                                          : Icons.remove,
+                                    ),
+                              label: Text(
+                                _isLoading
+                                    ? 'Guardando...'
+                                    : 'Registrar ${_tipoMovimiento == 'ENTRADA' ? 'Entrada' : 'Salida'}',
+                              ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _tipoMovimiento == 'ENTRADA' 
-                                    ? Colors.green.shade700 
+                                backgroundColor: _tipoMovimiento == 'ENTRADA'
+                                    ? Colors.green.shade700
                                     : Colors.red.shade700,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -2794,24 +3514,26 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
 
   Future<void> _registrarMovimiento() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final cantidad = int.parse(_cantidadController.text);
       final observacion = _observacionController.text.trim();
-      
+
       // Usar el precio actual del artículo, o 1.0 si no tiene precio
       final precioUnitario = widget.articulo.precioActual ?? 1.0;
-      
-      final result = await ref.read(inventarioProvider.notifier).crearMovimiento(
-        codArticulo: widget.articulo.codArticulo!,
-        tipoMovimiento: _tipoMovimiento,
-        cantidad: cantidad,
-        precioUnitario: precioUnitario,
-        observacion: observacion.isEmpty ? null : observacion,
-      );
-      
+
+      final result = await ref
+          .read(inventarioProvider.notifier)
+          .crearMovimiento(
+            codArticulo: widget.articulo.codArticulo!,
+            tipoMovimiento: _tipoMovimiento,
+            cantidad: cantidad,
+            precioUnitario: precioUnitario,
+            observacion: observacion.isEmpty ? null : observacion,
+          );
+
       if (result != null && mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2821,11 +3543,13 @@ class _EntradaInventarioDialogState extends ConsumerState<_EntradaInventarioDial
               'Tipo: $_tipoMovimiento\n'
               'Cantidad: $cantidad unidades',
             ),
-            backgroundColor: _tipoMovimiento == 'ENTRADA' ? Colors.green : Colors.red,
+            backgroundColor: _tipoMovimiento == 'ENTRADA'
+                ? Colors.green
+                : Colors.red,
             duration: const Duration(seconds: 3),
           ),
         );
-        
+
         // Recargar la lista de artículos para actualizar el stock
         ref.read(articuloProvider.notifier).loadArticulos();
       }

@@ -21,7 +21,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Notas de entrega válidas obtenidas exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -34,7 +34,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Todas las notas de entrega obtenidas exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -47,7 +47,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Notas anuladas obtenidas exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -60,7 +60,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Nota de entrega encontrada',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -73,7 +73,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Notas del cliente obtenidas',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -92,7 +92,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Notas por fechas obtenidas',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -117,7 +117,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Nota de entrega creada exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -145,7 +145,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Nota de entrega actualizada',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -158,7 +158,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Nota de entrega anulada. Stock devuelto al inventario',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -171,7 +171,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'Nota de entrega eliminada',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -184,7 +184,7 @@ class NotaEntregaRepositoryImpl implements NotaEntregaRepository {
         message: 'PDF generado exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

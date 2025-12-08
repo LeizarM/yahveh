@@ -22,7 +22,7 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         message: 'Detalles obtenidos exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -35,7 +35,7 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         message: 'Detalle encontrado',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -66,7 +66,7 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         message: 'Detalle creado exitosamente',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -97,7 +97,7 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         message: 'Detalle actualizado',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -110,7 +110,7 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         message: 'Detalle eliminado',
       );
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 }

@@ -80,12 +80,12 @@ class AuthRepositoryImpl implements AuthRepository {
       // Log del tiempo restante (solo en debug)
       final timeLeft = JwtUtils.getTimeUntilExpiration(token);
       if (timeLeft != null) {
-        debugPrint('✅ Token válido - expira en ${timeLeft.inMinutes} minutos');
+        debugPrint('Token válido - expira en ${timeLeft.inMinutes} minutos');
       }
 
       return true;
     } catch (e) {
-      debugPrint('❌ Error verificando autenticación: $e');
+      debugPrint('Error verificando autenticación: $e');
       return false;
     }
   }

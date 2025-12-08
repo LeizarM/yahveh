@@ -1,6 +1,7 @@
 import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../models/usuario_model.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 
 class UsuarioRemoteDataSource {
   final DioClient _dioClient;
@@ -11,24 +12,24 @@ class UsuarioRemoteDataSource {
   /// GET /api/usuarios - Listar todos los usuarios
   Future<List<UsuarioModel>> listar() async {
     try {
-      print('📤 Solicitando lista de usuarios...');
+      console('📤 Solicitando lista de usuarios...');
 
       final response = await _dioClient.get('/usuarios');
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
         final List<dynamic> dataList = response.data['data'] ?? [];
         final usuarios =
             dataList.map((json) => UsuarioModel.fromJson(json)).toList();
-        print('✅ ${usuarios.length} usuarios obtenidos');
+        console('✅ ${usuarios.length} usuarios obtenidos');
         return usuarios;
       } else {
         throw ApiException(
             message: response.data['message'] ?? 'Error al listar usuarios');
       }
     } catch (e) {
-      print('❌ Error al listar usuarios: $e');
+      console('❌ Error al listar usuarios: $e');
       rethrow;
     }
   }
@@ -36,22 +37,22 @@ class UsuarioRemoteDataSource {
   /// GET /api/usuarios/{id} - Buscar usuario por código
   Future<UsuarioModel> buscarPorCodigo(int codUsuario) async {
     try {
-      print('📤 Buscando usuario con código: $codUsuario');
+      console('📤 Buscando usuario con código: $codUsuario');
 
       final response = await _dioClient.get('/usuarios/$codUsuario');
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
         final usuario = UsuarioModel.fromJson(response.data['data']);
-        print('✅ Usuario encontrado');
+        console('✅ Usuario encontrado');
         return usuario;
       } else {
         throw ApiException(
             message: response.data['message'] ?? 'Usuario no encontrado');
       }
     } catch (e) {
-      print('❌ Error al buscar usuario: $e');
+      console('❌ Error al buscar usuario: $e');
       rethrow;
     }
   }
@@ -65,7 +66,7 @@ class UsuarioRemoteDataSource {
     required String estado,
   }) async {
     try {
-      print('📤 Creando nuevo usuario...');
+      console('📤 Creando nuevo usuario...');
 
       final data = {
         "codEmpleado": codEmpleado,
@@ -75,25 +76,25 @@ class UsuarioRemoteDataSource {
         "estado": estado,
       };
 
-      print('📋 Datos: $data');
+      console('📋 Datos: $data');
 
       final response = await _dioClient.post(
         '/usuarios',
         data: data,
       );
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
         final nuevoId = response.data['data'] as int;
-        print('✅ Usuario creado: $nuevoId');
+        console('✅ Usuario creado: $nuevoId');
         return nuevoId;
       } else {
         throw ApiException(
             message: response.data['message'] ?? 'Error al crear usuario');
       }
     } catch (e) {
-      print('❌ Error al crear usuario: $e');
+      console('❌ Error al crear usuario: $e');
       rethrow;
     }
   }
@@ -108,7 +109,7 @@ class UsuarioRemoteDataSource {
     required String estado,
   }) async {
     try {
-      print('📤 Actualizando usuario: $codUsuario');
+      console('📤 Actualizando usuario: $codUsuario');
 
       final data = {
         "codEmpleado": codEmpleado,
@@ -126,16 +127,16 @@ class UsuarioRemoteDataSource {
         data: data,
       );
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
-        print('✅ Usuario actualizado');
+        console('✅ Usuario actualizado');
       } else {
         throw ApiException(
             message: response.data['message'] ?? 'Error al actualizar usuario');
       }
     } catch (e) {
-      print('❌ Error al actualizar usuario: $e');
+      console('❌ Error al actualizar usuario: $e');
       rethrow;
     }
   }
@@ -143,20 +144,20 @@ class UsuarioRemoteDataSource {
   /// DELETE /api/usuarios/{id} - Eliminar usuario
   Future<void> eliminar(int codUsuario) async {
     try {
-      print('📤 Eliminando usuario: $codUsuario');
+      console('📤 Eliminando usuario: $codUsuario');
 
       final response = await _dioClient.delete('/usuarios/$codUsuario');
 
-      print('📥 Respuesta recibida: ${response.statusCode}');
+      console('📥 Respuesta recibida: ${response.statusCode}');
 
       if (response.data['success'] == true) {
-        print('✅ Usuario eliminado');
+        console('✅ Usuario eliminado');
       } else {
         throw ApiException(
             message: response.data['message'] ?? 'Error al eliminar usuario');
       }
     } catch (e) {
-      print('❌ Error al eliminar usuario: $e');
+      console('❌ Error al eliminar usuario: $e');
       rethrow;
     }
   }

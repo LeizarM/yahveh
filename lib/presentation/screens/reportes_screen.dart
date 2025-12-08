@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -74,8 +74,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
           primary: AppTheme.accentCyan,
           surface: Color(0xFF2D3250),
           onSurface: Colors.white,
-        ),
-        dialogBackgroundColor: const Color(0xFF1A1D2E),
+        ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1A1D2E)),
       ),
       child: child!,
     );
@@ -300,8 +299,8 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withOpacity(0.95),
-                  const Color(0xFF2D3250).withOpacity(0.92),
+                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                  const Color(0xFF2D3250).withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -319,9 +318,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withOpacity(0.85),
+            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
             border: Border(
-              right: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+              right: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
             ),
           ),
           child: const AppDrawer(),
@@ -335,9 +334,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,14 +345,14 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             children: [
               Icon(
                 Icons.filter_alt_rounded,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 'Filtrar por Fecha',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -422,9 +421,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -441,7 +440,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -456,7 +455,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                 ],
               ),
             ),
-            Icon(Icons.arrow_drop_down, color: Colors.white.withOpacity(0.5)),
+            Icon(Icons.arrow_drop_down, color: Colors.white.withValues(alpha: 0.5)),
           ],
         ),
       ),
@@ -508,7 +507,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -517,7 +516,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             'Cargando reporte...',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -534,13 +533,13 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.insert_chart_outlined_rounded,
               size: 40,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 24),
@@ -549,7 +548,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 8),
@@ -557,7 +556,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             'Selecciona un rango de fechas y presiona Buscar',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -576,7 +575,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.2),
+                color: AppTheme.errorColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -600,7 +599,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -647,9 +646,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,7 +674,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentCyan.withOpacity(0.2),
+                  color: AppTheme.accentCyan.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -695,7 +694,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
           Text(
             venta.productoCompleto ?? 'Sin producto',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
@@ -729,7 +728,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                   Text(
                     'Precio Unit.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 11,
                     ),
                   ),
@@ -745,7 +744,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                   Text(
                     'Descuento',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 11,
                     ),
                   ),
@@ -764,7 +763,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                   Text(
                     'Total',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 11,
                     ),
                   ),
@@ -789,18 +788,18 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.white.withOpacity(0.6)),
+          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.6)),
           const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 12,
             ),
           ),
@@ -816,13 +815,13 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.accentCyan.withOpacity(0.3),
-            AppTheme.primaryColor.withOpacity(0.3),
+            AppTheme.accentCyan.withValues(alpha: 0.3),
+            AppTheme.primaryColor.withValues(alpha: 0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.accentCyan.withOpacity(0.5),
+          color: AppTheme.accentCyan.withValues(alpha: 0.5),
           width: 2,
         ),
       ),
@@ -834,7 +833,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -883,9 +882,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -896,11 +895,11 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
               child: SingleChildScrollView(
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.all(
-                    Colors.white.withOpacity(0.1),
+                    Colors.white.withValues(alpha: 0.1),
                   ),
                   dataRowColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.hovered)) {
-                      return Colors.white.withOpacity(0.05);
+                      return Colors.white.withValues(alpha: 0.05);
                     }
                     return Colors.transparent;
                   }),
