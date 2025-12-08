@@ -14,3 +14,4 @@ export 'delivery_notes_screen.dart';
 export 'usuarios_screen.dart';
 export 'profile_screen.dart';
 export 'persona_empleado_screen.dart';
+export 'reportes_screen.dart';

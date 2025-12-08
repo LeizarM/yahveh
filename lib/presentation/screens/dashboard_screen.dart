@@ -7,7 +7,7 @@ import '../../domain/entities/user_entity.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
 
-/// Pantalla del Dashboard con diseño moderno
+/// Pantalla del Dashboard con diseño moderno\
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 

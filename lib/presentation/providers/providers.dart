@@ -20,6 +20,7 @@ import '../../data/datasources/usuario_remote_datasource.dart';
 import '../../data/datasources/persona_remote_datasource.dart';
 import '../../data/datasources/empleado_remote_datasource.dart';
 import '../../data/datasources/telefono_cliente_remote_datasource.dart';
+import '../../data/datasources/reporte_ventas_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -37,6 +38,7 @@ import '../../data/repositories/usuario_repository_impl.dart';
 import '../../data/repositories/persona_repository_impl.dart';
 import '../../data/repositories/empleado_repository_impl.dart';
 import '../../data/repositories/telefono_cliente_repository_impl.dart';
+import '../../data/repositories/reporte_ventas_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -54,6 +56,7 @@ import '../../domain/repositories/usuario_repository.dart';
 import '../../domain/repositories/persona_repository.dart';
 import '../../domain/repositories/empleado_repository.dart';
 import '../../domain/repositories/telefono_cliente_repository.dart';
+import '../../domain/repositories/reporte_ventas_repository.dart';
 import '../../domain/entities/inventario_entity.dart';
 import '../../domain/entities/usuario_entity.dart';
 import '../../domain/entities/persona_entity.dart';
@@ -84,7 +87,7 @@ final loggerProvider = Provider<Logger>((ref) {
 final dioClientProvider = Provider<DioClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   final logger = ref.watch(loggerProvider);
-  
+
   return DioClient(
     storage: storage,
     logger: logger,
@@ -115,7 +118,7 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final remoteDataSource = ref.watch(authRemoteDataSourceProvider);
   final localDataSource = ref.watch(authLocalDataSourceProvider);
-  
+
   return AuthRepositoryImpl(
     remoteDataSource: remoteDataSource,
     localDataSource: localDataSource,
@@ -131,10 +134,8 @@ final vistaRemoteDataSourceProvider = Provider<VistaRemoteDataSource>((ref) {
 /// Provider para VistaRepository
 final vistaRepositoryProvider = Provider<VistaRepository>((ref) {
   final remoteDataSource = ref.watch(vistaRemoteDataSourceProvider);
-  
-  return VistaRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return VistaRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para LineaRemoteDataSource
@@ -146,14 +147,14 @@ final lineaRemoteDataSourceProvider = Provider<LineaRemoteDataSource>((ref) {
 /// Provider para LineaRepository
 final lineaRepositoryProvider = Provider<LineaRepository>((ref) {
   final remoteDataSource = ref.watch(lineaRemoteDataSourceProvider);
-  
-  return LineaRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return LineaRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para ArticuloRemoteDataSource
-final articuloRemoteDataSourceProvider = Provider<ArticuloRemoteDataSource>((ref) {
+final articuloRemoteDataSourceProvider = Provider<ArticuloRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return ArticuloRemoteDataSourceImpl(client);
 });
@@ -161,7 +162,7 @@ final articuloRemoteDataSourceProvider = Provider<ArticuloRemoteDataSource>((ref
 /// Provider para ArticuloRepository
 final articuloRepositoryProvider = Provider<ArticuloRepository>((ref) {
   final remoteDataSource = ref.watch(articuloRemoteDataSourceProvider);
-  
+
   return ArticuloRepositoryImpl(remoteDataSource);
 });
 
@@ -178,10 +179,8 @@ final paisRemoteDataSourceProvider = Provider<PaisRemoteDataSource>((ref) {
 /// Provider para PaisRepository
 final paisRepositoryProvider = Provider<PaisRepository>((ref) {
   final remoteDataSource = ref.watch(paisRemoteDataSourceProvider);
-  
-  return PaisRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return PaisRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 // ============================================================================
@@ -197,10 +196,8 @@ final ciudadRemoteDataSourceProvider = Provider<CiudadRemoteDataSource>((ref) {
 /// Provider para CiudadRepository
 final ciudadRepositoryProvider = Provider<CiudadRepository>((ref) {
   final remoteDataSource = ref.watch(ciudadRemoteDataSourceProvider);
-  
-  return CiudadRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return CiudadRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 // ============================================================================
@@ -216,10 +213,8 @@ final zonaRemoteDataSourceProvider = Provider<ZonaRemoteDataSource>((ref) {
 /// Provider para ZonaRepository
 final zonaRepositoryProvider = Provider<ZonaRepository>((ref) {
   final remoteDataSource = ref.watch(zonaRemoteDataSourceProvider);
-  
-  return ZonaRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return ZonaRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 // ============================================================================
@@ -227,7 +222,9 @@ final zonaRepositoryProvider = Provider<ZonaRepository>((ref) {
 // ============================================================================
 
 /// Provider para ClienteRemoteDataSource
-final clienteRemoteDataSourceProvider = Provider<ClienteRemoteDataSource>((ref) {
+final clienteRemoteDataSourceProvider = Provider<ClienteRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return ClienteRemoteDataSourceImpl(client);
 });
@@ -235,10 +232,8 @@ final clienteRemoteDataSourceProvider = Provider<ClienteRemoteDataSource>((ref) 
 /// Provider para ClienteRepository
 final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
   final remoteDataSource = ref.watch(clienteRemoteDataSourceProvider);
-  
-  return ClienteRepositoryImpl(
-    remoteDataSource: remoteDataSource,
-  );
+
+  return ClienteRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 // ============================================================================
@@ -246,7 +241,9 @@ final clienteRepositoryProvider = Provider<ClienteRepository>((ref) {
 // ============================================================================
 
 /// Provider para FamiliaRemoteDataSource
-final familiaRemoteDataSourceProvider = Provider<FamiliaRemoteDataSource>((ref) {
+final familiaRemoteDataSourceProvider = Provider<FamiliaRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return FamiliaRemoteDataSourceImpl(client);
 });
@@ -254,7 +251,7 @@ final familiaRemoteDataSourceProvider = Provider<FamiliaRemoteDataSource>((ref) 
 /// Provider para FamiliaRepository
 final familiaRepositoryProvider = Provider<FamiliaRepository>((ref) {
   final remoteDataSource = ref.watch(familiaRemoteDataSourceProvider);
-  
+
   return FamiliaRepositoryImpl(remoteDataSource);
 });
 
@@ -271,7 +268,7 @@ final precioRemoteDataSourceProvider = Provider<PrecioRemoteDataSource>((ref) {
 /// Provider para PrecioRepository
 final precioRepositoryProvider = Provider<PrecioRepository>((ref) {
   final remoteDataSource = ref.watch(precioRemoteDataSourceProvider);
-  
+
   return PrecioRepositoryImpl(remoteDataSource);
 });
 
@@ -280,73 +277,94 @@ final precioRepositoryProvider = Provider<PrecioRepository>((ref) {
 // ============================================================================
 
 /// Provider para InventarioRemoteDataSource
-final inventarioRemoteDataSourceProvider = Provider<InventarioRemoteDataSource>((ref) {
-  final client = ref.watch(dioClientProvider);
-  return InventarioRemoteDataSourceImpl(client);
-});
+final inventarioRemoteDataSourceProvider = Provider<InventarioRemoteDataSource>(
+  (ref) {
+    final client = ref.watch(dioClientProvider);
+    return InventarioRemoteDataSourceImpl(client);
+  },
+);
 
 /// Provider para InventarioRepository
 final inventarioRepositoryProvider = Provider<InventarioRepository>((ref) {
   final remoteDataSource = ref.watch(inventarioRemoteDataSourceProvider);
-  
+
   return InventarioRepositoryImpl(remoteDataSource);
 });
 
 /// Provider para InventarioNotifier
-final inventarioProvider = NotifierProvider<InventarioNotifier, AsyncValue<List<InventarioEntity>>>(() {
-  return InventarioNotifier();
-});
+final inventarioProvider =
+    NotifierProvider<InventarioNotifier, AsyncValue<List<InventarioEntity>>>(
+      () {
+        return InventarioNotifier();
+      },
+    );
 
 // ============================================================================
 // NOTA ENTREGA
 // ============================================================================
 
 /// Provider para NotaEntregaRemoteDataSource
-final notaEntregaRemoteDataSourceProvider = Provider<NotaEntregaRemoteDataSource>((ref) {
-  final client = ref.watch(dioClientProvider);
-  return NotaEntregaRemoteDataSource(dioClient: client);
-});
+final notaEntregaRemoteDataSourceProvider =
+    Provider<NotaEntregaRemoteDataSource>((ref) {
+      final client = ref.watch(dioClientProvider);
+      return NotaEntregaRemoteDataSource(dioClient: client);
+    });
 
 /// Provider para NotaEntregaRepository
 final notaEntregaRepositoryProvider = Provider<NotaEntregaRepository>((ref) {
   final remoteDataSource = ref.watch(notaEntregaRemoteDataSourceProvider);
-  
+
   return NotaEntregaRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para NotaEntregaNotifier
-final notaEntregaProvider = NotifierProvider<NotaEntregaNotifier, AsyncValue<List<NotaEntregaEntity>>>(() {
-  return NotaEntregaNotifier();
-});
+final notaEntregaProvider =
+    NotifierProvider<NotaEntregaNotifier, AsyncValue<List<NotaEntregaEntity>>>(
+      () {
+        return NotaEntregaNotifier();
+      },
+    );
 
 // ============================================================================
 // DETALLE NOTA ENTREGA
 // ============================================================================
 
 /// Provider para DetalleNotaEntregaRemoteDataSource
-final detalleNotaEntregaRemoteDataSourceProvider = Provider<DetalleNotaEntregaRemoteDataSource>((ref) {
-  final client = ref.watch(dioClientProvider);
-  return DetalleNotaEntregaRemoteDataSource(dioClient: client);
-});
+final detalleNotaEntregaRemoteDataSourceProvider =
+    Provider<DetalleNotaEntregaRemoteDataSource>((ref) {
+      final client = ref.watch(dioClientProvider);
+      return DetalleNotaEntregaRemoteDataSource(dioClient: client);
+    });
 
 /// Provider para DetalleNotaEntregaRepository
-final detalleNotaEntregaRepositoryProvider = Provider<DetalleNotaEntregaRepository>((ref) {
-  final remoteDataSource = ref.watch(detalleNotaEntregaRemoteDataSourceProvider);
-  
-  return DetalleNotaEntregaRepositoryImpl(remoteDataSource: remoteDataSource);
-});
+final detalleNotaEntregaRepositoryProvider =
+    Provider<DetalleNotaEntregaRepository>((ref) {
+      final remoteDataSource = ref.watch(
+        detalleNotaEntregaRemoteDataSourceProvider,
+      );
+
+      return DetalleNotaEntregaRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+      );
+    });
 
 /// Provider para DetalleNotaEntregaNotifier
-final detalleNotaEntregaProvider = NotifierProvider<DetalleNotaEntregaNotifier, AsyncValue<List<DetalleNotaEntregaEntity>>>(() {
-  return DetalleNotaEntregaNotifier();
-});
+final detalleNotaEntregaProvider =
+    NotifierProvider<
+      DetalleNotaEntregaNotifier,
+      AsyncValue<List<DetalleNotaEntregaEntity>>
+    >(() {
+      return DetalleNotaEntregaNotifier();
+    });
 
 // ============================================================================
 // USUARIO
 // ============================================================================
 
 /// Provider para UsuarioRemoteDataSource
-final usuarioRemoteDataSourceProvider = Provider<UsuarioRemoteDataSource>((ref) {
+final usuarioRemoteDataSourceProvider = Provider<UsuarioRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return UsuarioRemoteDataSource(dioClient: client);
 });
@@ -354,21 +372,24 @@ final usuarioRemoteDataSourceProvider = Provider<UsuarioRemoteDataSource>((ref) 
 /// Provider para UsuarioRepository
 final usuarioRepositoryProvider = Provider<UsuarioRepository>((ref) {
   final remoteDataSource = ref.watch(usuarioRemoteDataSourceProvider);
-  
+
   return UsuarioRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para UsuarioNotifier
-final usuarioProvider = NotifierProvider<UsuarioNotifier, AsyncValue<List<UsuarioEntity>>>(() {
-  return UsuarioNotifier();
-});
+final usuarioProvider =
+    NotifierProvider<UsuarioNotifier, AsyncValue<List<UsuarioEntity>>>(() {
+      return UsuarioNotifier();
+    });
 
 // ============================================================================
 // PERSONA
 // ============================================================================
 
 /// Provider para PersonaRemoteDataSource
-final personaRemoteDataSourceProvider = Provider<PersonaRemoteDataSource>((ref) {
+final personaRemoteDataSourceProvider = Provider<PersonaRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return PersonaRemoteDataSource(dioClient: client);
 });
@@ -376,21 +397,24 @@ final personaRemoteDataSourceProvider = Provider<PersonaRemoteDataSource>((ref) 
 /// Provider para PersonaRepository
 final personaRepositoryProvider = Provider<PersonaRepository>((ref) {
   final remoteDataSource = ref.watch(personaRemoteDataSourceProvider);
-  
+
   return PersonaRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para PersonaNotifier
-final personaProvider = NotifierProvider<PersonaNotifier, AsyncValue<List<PersonaEntity>>>(() {
-  return PersonaNotifier();
-});
+final personaProvider =
+    NotifierProvider<PersonaNotifier, AsyncValue<List<PersonaEntity>>>(() {
+      return PersonaNotifier();
+    });
 
 // ============================================================================
 // EMPLEADO
 // ============================================================================
 
 /// Provider para EmpleadoRemoteDataSource
-final empleadoRemoteDataSourceProvider = Provider<EmpleadoRemoteDataSource>((ref) {
+final empleadoRemoteDataSourceProvider = Provider<EmpleadoRemoteDataSource>((
+  ref,
+) {
   final client = ref.watch(dioClientProvider);
   return EmpleadoRemoteDataSource(dioClient: client);
 });
@@ -398,33 +422,61 @@ final empleadoRemoteDataSourceProvider = Provider<EmpleadoRemoteDataSource>((ref
 /// Provider para EmpleadoRepository
 final empleadoRepositoryProvider = Provider<EmpleadoRepository>((ref) {
   final remoteDataSource = ref.watch(empleadoRemoteDataSourceProvider);
-  
+
   return EmpleadoRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para EmpleadoNotifier
-final empleadoProvider = NotifierProvider<EmpleadoNotifier, AsyncValue<List<EmpleadoEntity>>>(() {
-  return EmpleadoNotifier();
-});
+final empleadoProvider =
+    NotifierProvider<EmpleadoNotifier, AsyncValue<List<EmpleadoEntity>>>(() {
+      return EmpleadoNotifier();
+    });
 
 // ============================================================================
 // TELÉFONO CLIENTE
 // ============================================================================
 
 /// Provider para TelefonoClienteRemoteDataSource
-final telefonoClienteRemoteDataSourceProvider = Provider<TelefonoClienteRemoteDataSource>((ref) {
-  final client = ref.watch(dioClientProvider);
-  return TelefonoClienteRemoteDataSource(dioClient: client);
-});
+final telefonoClienteRemoteDataSourceProvider =
+    Provider<TelefonoClienteRemoteDataSource>((ref) {
+      final client = ref.watch(dioClientProvider);
+      return TelefonoClienteRemoteDataSource(dioClient: client);
+    });
 
 /// Provider para TelefonoClienteRepository
-final telefonoClienteRepositoryProvider = Provider<TelefonoClienteRepository>((ref) {
+final telefonoClienteRepositoryProvider = Provider<TelefonoClienteRepository>((
+  ref,
+) {
   final remoteDataSource = ref.watch(telefonoClienteRemoteDataSourceProvider);
-  
+
   return TelefonoClienteRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
 /// Provider para TelefonoClienteNotifier
-final telefonoClienteProvider = NotifierProvider<TelefonoClienteNotifier, AsyncValue<List<TelefonoClienteEntity>>>(() {
-  return TelefonoClienteNotifier();
+final telefonoClienteProvider =
+    NotifierProvider<
+      TelefonoClienteNotifier,
+      AsyncValue<List<TelefonoClienteEntity>>
+    >(() {
+      return TelefonoClienteNotifier();
+    });
+
+// ============================================================================
+// REPORTE DE VENTAS
+// ============================================================================
+
+/// Provider para ReporteVentasRemoteDataSource
+final reporteVentasRemoteDataSourceProvider =
+    Provider<ReporteVentasRemoteDataSource>((ref) {
+      final client = ref.watch(dioClientProvider);
+      return ReporteVentasRemoteDataSource(dioClient: client);
+    });
+
+/// Provider para ReporteVentasRepository
+final reporteVentasRepositoryProvider = Provider<ReporteVentasRepository>((
+  ref,
+) {
+  final remoteDataSource = ref.watch(reporteVentasRemoteDataSourceProvider);
+
+  return ReporteVentasRepositoryImpl(remoteDataSource: remoteDataSource);
 });

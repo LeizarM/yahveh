@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/validators.dart';
@@ -51,17 +51,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       vsync: this,
     )..repeat();
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     // Iniciar animaciones
     _fadeController.forward();
@@ -80,10 +78,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).login(
-            _usernameController.text.trim(),
-            _passwordController.text,
-          );
+      ref
+          .read(authProvider.notifier)
+          .login(_usernameController.text.trim(), _passwordController.text);
     }
   }
 
@@ -91,67 +88,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Escuchar cambios en el estado de autenticación
+    // Escuchar cambios en el estado de autenticación para mostrar errores
+    // La navegación al dashboard se maneja automáticamente por el router
     ref.listen<AsyncValue>(authProvider, (previous, next) {
-      next.when(
-        data: (user) {
-          if (user != null) {
-            context.go('/dashboard');
-          }
-        },
-        loading: () {},
-        error: (error, _) {
-          final errorMessage = _parseErrorMessage(error.toString());
-          final errorIcon = _getErrorIcon(error.toString());
-          
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(errorIcon, color: Colors.white, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Error de autenticación',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+      debugPrint('🔔 Login listener - previous: $previous, next: $next');
+
+      if (next.hasError) {
+        final error = next.error;
+        debugPrint('❌ Error detectado en login: $error');
+
+        final errorMessage = _parseErrorMessage(error.toString());
+        final errorIcon = _getErrorIcon(error.toString());
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(errorIcon, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Error de autenticación',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          errorMessage,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(errorMessage, style: const TextStyle(fontSize: 13)),
+                    ],
                   ),
-                ],
-              ),
-              backgroundColor: AppTheme.errorColor,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.all(16),
-              action: SnackBarAction(
-                label: 'OK',
-                textColor: Colors.white,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                },
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      );
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      }
     });
 
     final isLoading = authState.isLoading;
@@ -160,9 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: Stack(
           children: [
             // Partículas de fondo animadas
@@ -201,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           children: [
                             // Logo con efecto glassmorphism
                             _buildLogo(),
-                            
+
                             const SizedBox(height: 48),
 
                             // Card de login con glassmorphism
@@ -237,10 +227,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 Colors.white.withOpacity(0.1),
               ],
             ),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.3),
-              width: 2,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -255,9 +242,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             color: Colors.white,
           ),
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         // Nombre de la app
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
@@ -273,9 +260,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         Text(
           'Sistema de Gestión',
           style: TextStyle(
@@ -294,10 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.25),
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -322,9 +306,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Ingresa tus credenciales para continuar',
               style: TextStyle(
@@ -333,7 +317,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 32),
 
             // Campo de usuario
@@ -342,10 +326,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               label: 'Usuario',
               icon: Icons.person_outline_rounded,
               enabled: !isLoading,
-              validator: (value) => 
+              validator: (value) =>
                   Validators.required(value, fieldName: 'Usuario'),
             ),
-            
+
             const SizedBox(height: 20),
 
             // Campo de contraseña
@@ -370,7 +354,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               validator: Validators.password,
             ),
-            
+
             const SizedBox(height: 32),
 
             // Botón de login
@@ -394,7 +378,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       controller: controller,
       obscureText: obscureText,
       enabled: enabled,
-      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
       cursorColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
@@ -538,7 +526,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ),
     );
   }
-  
+
   /// Parsea el mensaje de error para hacerlo más amigable
   String _parseErrorMessage(String error) {
     // Remover prefijos comunes de Exception
@@ -546,49 +534,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         .replaceAll('Exception: ', '')
         .replaceAll('Error: ', '')
         .trim();
-    
+
     // Si el mensaje está vacío o es muy genérico
     if (cleanError.isEmpty || cleanError == 'null') {
       return 'Ocurrió un error inesperado. Por favor, intenta de nuevo.';
     }
-    
+
     return cleanError;
   }
-  
+
   /// Obtiene el icono apropiado según el tipo de error
   IconData _getErrorIcon(String error) {
     final lowerError = error.toLowerCase();
-    
-    if (lowerError.contains('conexión') || 
+
+    if (lowerError.contains('conexión') ||
         lowerError.contains('internet') ||
         lowerError.contains('connection') ||
         lowerError.contains('timeout')) {
       return Icons.wifi_off_rounded;
     }
-    
+
     if (lowerError.contains('usuario') && lowerError.contains('no existe') ||
         lowerError.contains('user not found')) {
       return Icons.person_off_rounded;
     }
-    
-    if (lowerError.contains('contraseña') || 
+
+    if (lowerError.contains('contraseña') ||
         lowerError.contains('password') ||
-        lowerError.contains('credencial')) {
+        lowerError.contains('credencial') ||
+        lowerError.contains('inválidas') ||
+        lowerError.contains('invalidas')) {
       return Icons.lock_outline_rounded;
     }
-    
-    if (lowerError.contains('deshabilitad') || 
+
+    if (lowerError.contains('deshabilitad') ||
         lowerError.contains('disabled') ||
         lowerError.contains('bloqueado') ||
         lowerError.contains('locked')) {
       return Icons.block_rounded;
     }
-    
-    if (lowerError.contains('servidor') || 
-        lowerError.contains('server')) {
+
+    if (lowerError.contains('servidor') || lowerError.contains('server')) {
       return Icons.cloud_off_rounded;
     }
-    
+
     return Icons.error_outline_rounded;
   }
 }

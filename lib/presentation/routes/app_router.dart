@@ -4,39 +4,98 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../screens/screens.dart';
 
+/// Notifier que solo emite cuando el estado de autenticación cambia
+/// de forma relevante para la navegación (no para errores de login)
+class AuthChangeNotifier extends ChangeNotifier {
+  AuthChangeNotifier(this._ref) {
+    _ref.listen(authProvider, (previous, next) {
+      // Solo notificar si:
+      // 1. Cambió de loading a data (con usuario)
+      // 2. Cambió de data (con usuario) a data (sin usuario) - logout
+      // NO notificar si hay error (para que se quede en login y muestre el error)
+
+      final prevUser = previous?.hasValue == true ? previous?.value : null;
+      final nextUser = next.hasValue ? next.value : null;
+      final wasLoading = previous?.isLoading ?? true;
+      final isLoading = next.isLoading;
+      final hasError = next.hasError;
+
+      // Si hay error, no notificar (quedarse en login)
+      if (hasError) return;
+
+      // Si cambió el estado de loading o el usuario
+      if (wasLoading != isLoading ||
+          prevUser?.codUsuario != nextUser?.codUsuario) {
+        debugPrint('🔄 AuthChangeNotifier: notificando cambio de auth');
+        notifyListeners();
+      }
+    });
+  }
+
+  final Ref _ref;
+}
+
+final _authChangeNotifierProvider = Provider<AuthChangeNotifier>((ref) {
+  return AuthChangeNotifier(ref);
+});
+
 /// GoRouter con redirección basada en autenticación
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final authChangeNotifier = ref.watch(_authChangeNotifierProvider);
 
   return GoRouter(
     initialLocation: '/splash',
-    debugLogDiagnostics: true, // Activar logs para debug
+    debugLogDiagnostics: true,
+    refreshListenable: authChangeNotifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isLoading = authState.isLoading;
+      final hasError = authState.hasError;
       final isAuthenticated = authState.hasValue && authState.value != null;
       final isSplash = state.matchedLocation == '/splash';
       final isLoggingIn = state.matchedLocation == '/login';
 
-      // Si está cargando, mantener en splash
-      if (isLoading && !isSplash) {
+      debugPrint(
+        '🧭 Router redirect - loading: $isLoading, error: $hasError, auth: $isAuthenticated, path: ${state.matchedLocation}',
+      );
+
+      // Si hay error y está en login, quedarse en login (para mostrar el error)
+      if (hasError && isLoggingIn) {
+        debugPrint('🧭 → Quedarse en login (hay error)');
+        return null;
+      }
+
+      // Si está cargando y no está en splash ni login, ir a splash
+      if (isLoading && !isSplash && !isLoggingIn) {
+        debugPrint('🧭 → Ir a splash (cargando)');
         return '/splash';
       }
 
       // Si terminó de cargar y está en splash, redirigir según autenticación
-      if (!isLoading && isSplash) {
+      if (!isLoading && !hasError && isSplash) {
+        debugPrint(
+          '🧭 → Desde splash ir a ${isAuthenticated ? "dashboard" : "login"}',
+        );
         return isAuthenticated ? '/dashboard' : '/login';
       }
 
       // Si no está autenticado y no está en login ni splash, ir a login
-      if (!isAuthenticated && !isLoggingIn && !isSplash) {
+      if (!isAuthenticated &&
+          !isLoggingIn &&
+          !isSplash &&
+          !isLoading &&
+          !hasError) {
+        debugPrint('🧭 → Ir a login (no autenticado)');
         return '/login';
       }
-      
+
       // Si está autenticado y está en login, ir a dashboard
       if (isAuthenticated && isLoggingIn) {
+        debugPrint('🧭 → Ir a dashboard (autenticado)');
         return '/dashboard';
       }
-      
+
+      debugPrint('🧭 → Sin redirección');
       return null;
     },
     routes: [
@@ -56,12 +115,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const LoginScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
           );
         },
       ),
@@ -167,6 +224,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           debugPrint('🏗️ Construyendo PersonaEmpleadoScreen');
           return const PersonaEmpleadoScreen();
+        },
+      ),
+      GoRoute(
+        path: '/reportes',
+        name: 'reportes',
+        builder: (context, state) {
+          debugPrint('🏗️ Construyendo ReportesScreen');
+          return const ReportesScreen();
         },
       ),
     ],

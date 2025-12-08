@@ -15,7 +15,7 @@ class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
       debugPrint('🔐 Verificando autenticación...');
       final repository = ref.read(authRepositoryProvider);
       final isAuth = await repository.isAuthenticated();
-      
+
       if (isAuth) {
         debugPrint('✅ Usuario autenticado - cargando datos');
         final user = await repository.getCurrentUser();
@@ -35,11 +35,15 @@ class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
 
     try {
       final repository = ref.read(authRepositoryProvider);
-      final user = await repository.login(username: username, password: password);
-      debugPrint('✅ Login exitoso: ${user.nombreCompleto}');
+      final user = await repository.login(
+        username: username,
+        password: password,
+      );
+      debugPrint(' Login exitoso: ${user.nombreCompleto}');
       state = AsyncValue.data(user);
+      // El menú se recargará automáticamente por el listener en menu_provider
     } catch (e, stack) {
-      debugPrint('❌ Error en login: $e');
+      debugPrint('Error en login: $e');
       state = AsyncValue.error(e, stack);
     }
   }
@@ -51,6 +55,7 @@ class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
       await repository.logout();
       debugPrint('✅ Sesión cerrada');
       state = const AsyncValue.data(null);
+      // El menú se limpiará automáticamente por el listener en menu_provider
     } catch (e, stack) {
       debugPrint('❌ Error en logout: $e');
       state = AsyncValue.error(e, stack);
@@ -63,11 +68,13 @@ class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
     debugPrint('🔄 Refrescando estado de autenticación...');
     await _checkAuth();
   }
-  
+
   /// Verifica si el usuario está actualmente autenticado
   bool get isAuthenticated => state.hasValue && state.value != null;
 }
 
-final authProvider = NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(() {
-  return AuthNotifier();
-});
+final authProvider = NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(
+  () {
+    return AuthNotifier();
+  },
+);
