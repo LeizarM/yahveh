@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/animations.dart';
 import '../../domain/entities/user_entity.dart';
@@ -35,9 +36,9 @@ class AppDrawer extends ConsumerWidget {
             Expanded(
               child: menuState.when(
                 data: (menu) {
-                  debugPrint('📋 Menú del backend cargado: ${menu.length} items');
+                  console('📋 Menú del backend cargado: ${menu.length} items');
                   for (var vista in menu) {
-                    debugPrint('  - ${vista.titulo} -> ${vista.direccion}');
+                    console('  - ${vista.titulo} -> ${vista.direccion}');
                   }
 
                   if (menu.isEmpty) {
@@ -48,13 +49,13 @@ class AppDrawer extends ConsumerWidget {
                           Icon(
                             Icons.menu_open_rounded,
                             size: 48,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'No hay opciones disponibles',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 14,
                             ),
                           ),
@@ -106,8 +107,8 @@ class AppDrawer extends ConsumerWidget {
                   ),
                 ),
                 error: (error, stack) {
-                  debugPrint('❌ Error al cargar menú: $error');
-                  debugPrint('Stack: $stack');
+                  console('❌ Error al cargar menú: $error');
+                  console('Stack: $stack');
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -140,7 +141,7 @@ class AppDrawer extends ConsumerWidget {
                           const SizedBox(height: 16),
                           TextButton.icon(
                             onPressed: () {
-                              debugPrint('🔄 Recargando menú...');
+                              console('🔄 Recargando menú...');
                               ref.read(menuProvider.notifier).refreshMenu();
                             },
                             icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -182,7 +183,7 @@ class AppDrawer extends ConsumerWidget {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: Colors.white.withValues(alpha: 0.4),
+          color: Colors.white.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -357,7 +358,7 @@ class AppDrawer extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            debugPrint('🚀 Navegando desde menú backend: ${vista.direccion}');
+            console('🚀 Navegando desde menú backend: ${vista.direccion}');
             
             if (isMobile && Scaffold.of(context).hasDrawer) {
               Navigator.of(context).pop();
@@ -367,7 +368,7 @@ class AppDrawer extends ConsumerWidget {
                 ? vista.direccion 
                 : '/${vista.direccion}';
             
-            debugPrint('   Ruta final: $path');
+            console('   Ruta final: $path');
             context.go(path);
           },
           borderRadius: BorderRadius.circular(14),
@@ -384,13 +385,13 @@ class AppDrawer extends ConsumerWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -400,14 +401,14 @@ class AppDrawer extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ],
             ),

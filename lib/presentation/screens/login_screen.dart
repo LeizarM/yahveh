@@ -1,6 +1,7 @@
 ﻿
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/utils/validators.dart';
@@ -91,11 +92,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     // Escuchar cambios en el estado de autenticación para mostrar errores
     // La navegación al dashboard se maneja automáticamente por el router
     ref.listen<AsyncValue>(authProvider, (previous, next) {
-      debugPrint('🔔 Login listener - previous: $previous, next: $next');
+      console('🔔 Login listener - previous: $previous, next: $next');
 
       if (next.hasError) {
         final error = next.error;
-        debugPrint('❌ Error detectado en login: $error');
+        console('❌ Error detectado en login: $error');
 
         final errorMessage = _parseErrorMessage(error.toString());
         final errorIcon = _getErrorIcon(error.toString());

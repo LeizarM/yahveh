@@ -1,6 +1,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../domain/entities/venta_reporte_entity.dart';
 import 'providers.dart';
 
@@ -72,18 +73,18 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
       final fechaDesdeStr = _formatDate(fechaDesde);
       final fechaHastaStr = _formatDate(fechaHasta);
 
-      debugPrint('📊 Obteniendo reporte: $fechaDesdeStr - $fechaHastaStr');
+      console('📊 Obteniendo reporte: $fechaDesdeStr - $fechaHastaStr');
 
       final ventas = await repository.obtenerReporteVentas(
         fechaDesde: fechaDesdeStr,
         fechaHasta: fechaHastaStr,
       );
 
-      debugPrint('✅ Reporte obtenido: ${ventas.length} registros');
+      console('✅ Reporte obtenido: ${ventas.length} registros');
 
       state = state.copyWith(ventas: ventas, isLoading: false);
     } catch (e) {
-      debugPrint('❌ Error al obtener reporte: $e');
+      console('❌ Error al obtener reporte: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -91,7 +92,7 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
   /// Descarga el reporte en PDF
   Future<Uint8List?> descargarPdf() async {
     if (state.fechaDesde == null || state.fechaHasta == null) {
-      debugPrint('❌ No hay fechas seleccionadas para descargar PDF');
+      console('❌ No hay fechas seleccionadas para descargar PDF');
       return null;
     }
 
@@ -101,17 +102,17 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
       final fechaDesdeStr = _formatDate(state.fechaDesde!);
       final fechaHastaStr = _formatDate(state.fechaHasta!);
 
-      debugPrint('📥 Descargando PDF: $fechaDesdeStr - $fechaHastaStr');
+      console('📥 Descargando PDF: $fechaDesdeStr - $fechaHastaStr');
 
       final pdfBytes = await repository.descargarReportePdf(
         fechaDesde: fechaDesdeStr,
         fechaHasta: fechaHastaStr,
       );
 
-      debugPrint('✅ PDF descargado: ${pdfBytes.length} bytes');
+      console('✅ PDF descargado: ${pdfBytes.length} bytes');
       return pdfBytes;
     } catch (e) {
-      debugPrint('❌ Error al descargar PDF: $e');
+      console('❌ Error al descargar PDF: $e');
       state = state.copyWith(error: 'Error al descargar PDF: $e');
       return null;
     }

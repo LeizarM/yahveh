@@ -187,10 +187,18 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
           ],
         ),
         drawer: isMobile
-            ? ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                  child: const AppDrawer(),
+            ? Drawer(
+                backgroundColor: Colors.transparent,
+                child: ClipRRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryDark.withValues(alpha: 0.92),
+                      ),
+                      child: const AppDrawer(),
+                    ),
+                  ),
                 ),
               )
             : null,
@@ -209,14 +217,14 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                 if (!isMobile)
                   ClipRRect(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                       child: Container(
                         width: 280,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: AppTheme.secondaryDark.withValues(alpha: 0.55),
                           border: Border(
                             right: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: Colors.white.withValues(alpha: 0.12),
                             ),
                           ),
                         ),

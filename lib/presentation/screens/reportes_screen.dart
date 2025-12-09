@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../domain/entities/venta_reporte_entity.dart';
@@ -92,7 +93,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         await _mostrarOpcionesPDF(context, pdfBytes);
       }
     } catch (e) {
-      debugPrint('Error al descargar PDF: $e');
+      console('Error al descargar PDF: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

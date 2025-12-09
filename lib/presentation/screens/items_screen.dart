@@ -2499,8 +2499,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
       }
     } catch (e, stackTrace) {
       // Log para debugging
-      debugPrint('Error al cargar precios: $e');
-      debugPrint('StackTrace: $stackTrace');
+      console('Error al cargar precios: $e');
+      console('StackTrace: $stackTrace');
 
       if (mounted) {
         setState(() {
@@ -2554,44 +2554,76 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
               children: [
                 // Información del artículo
                 Card(
-                  color: Colors.blue.shade50,
+                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                  elevation: 0,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(
-                              Icons.inventory_2,
-                              size: 20,
-                              color: Colors.blue.shade700,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                widget.articulo.codArticulo ?? 'N/A',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade900,
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withValues(
+                                  alpha: 0.12,
                                 ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.inventory_2,
+                                size: 18,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.articulo.descripcion,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      color: AppTheme.secondaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    widget.articulo.codArticulo ?? 'N/A',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.primaryDark.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.articulo.descripcion,
-                          style: const TextStyle(fontSize: 13),
-                        ),
                         if (widget.articulo.linea != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Línea: ${widget.articulo.linea}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade700,
-                            ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.label_rounded,
+                                size: 16,
+                                color: AppTheme.secondaryLight,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Línea: ${widget.articulo.linea}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],
@@ -2611,19 +2643,23 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                   )
                 else if (_errorPrecios != null)
                   Card(
-                    color: Colors.orange.shade50,
+                    color: AppTheme.warningColor.withValues(alpha: 0.12),
+                    elevation: 0,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Icon(Icons.warning, color: Colors.orange.shade700),
+                          const Icon(
+                            Icons.warning_rounded,
+                            color: AppTheme.warningColor,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorPrecios!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
-                                color: Colors.orange.shade900,
+                                color: AppTheme.secondaryDark,
                               ),
                             ),
                           ),
@@ -2633,7 +2669,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                   )
                 else if (_preciosExistentes.isNotEmpty)
                   Card(
-                    color: Colors.green.shade50,
+                    color: AppTheme.accentGreen.withValues(alpha: 0.08),
+                    elevation: 0,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -2641,71 +2678,80 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                         children: [
                           Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.price_check,
                                 size: 18,
-                                color: Colors.green.shade700,
+                                color: AppTheme.accentGreen,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Precios Existentes (${_preciosExistentes.length})',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                'Precios registrados (${_preciosExistentes.length})',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 13,
-                                  color: Colors.green.shade900,
+                                  color: AppTheme.secondaryDark,
                                 ),
                               ),
                             ],
                           ),
-                          const Divider(height: 12),
+                          const Divider(height: 14),
                           ..._preciosExistentes.map((precio) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
                               child: Row(
                                 children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Lista: ${precio.listaPrecio}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Base: \$${precio.precioBase.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'Lista ${precio.listaPrecio}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.primaryDark,
+                                      ),
                                     ),
                                   ),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Venta: \$${precio.precio.toStringAsFixed(2)}',
-                                          style: TextStyle(
+                                          'Base (sin factura): \$${precio.precioBase.toStringAsFixed(2)}',
+                                          style: const TextStyle(
                                             fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue.shade700,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTheme.secondaryDark,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'S/Fact: \$${precio.precioSinFactura.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.orange.shade700,
-                                          ),
+                                        const SizedBox(height: 4),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          children: [
+                                            _buildPricePill(
+                                              label: 'Con factura',
+                                              value:
+                                                  '\$${precio.precio.toStringAsFixed(2)}',
+                                              color: AppTheme.primaryColor,
+                                            ),
+                                            _buildPricePill(
+                                              label: 'Sin factura',
+                                              value:
+                                                  '\$${precio.precioSinFactura.toStringAsFixed(2)}',
+                                              color: AppTheme.accentOrange,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -2721,6 +2767,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                 else
                   Card(
                     color: Colors.grey.shade100,
+                    elevation: 0,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
@@ -2731,12 +2778,12 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                             color: Colors.grey.shade600,
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'Este artículo no tiene precios registrados',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade700,
+                                color: AppTheme.secondaryDark,
                               ),
                             ),
                           ),
@@ -2774,7 +2821,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                   TextFormField(
                     controller: _precioBaseController,
                     decoration: InputDecoration(
-                      labelText: 'Precio Base (Costo)',
+                      labelText: 'Precio Base (Sin Factura)',
                       hintText: '0.00',
                       prefixIcon: Icon(
                         Icons.monetization_on,
@@ -2782,7 +2829,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       ),
                       prefixText: '\$ ',
                       border: const OutlineInputBorder(),
-                      helperText: 'Precio de costo o base del producto',
+                      helperText:
+                          'Precio sin factura (base) desde el cual se calculan ambos valores',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -2817,7 +2865,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       ),
                       suffixText: '%',
                       border: const OutlineInputBorder(),
-                      helperText: 'Porcentaje de ganancia sobre el precio base',
+                      helperText:
+                          'Incremento aplicado para obtener el precio con factura',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -2851,7 +2900,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                           final precioSinFactura = _calcularPrecioSinFactura();
 
                           return Card(
-                            color: Colors.blue.shade50,
+                            color: AppTheme.primaryColor.withValues(
+                              alpha: 0.08,
+                            ),
+                            elevation: 0,
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(
@@ -2859,18 +2911,28 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.calculate,
                                         size: 20,
-                                        color: Colors.blue.shade700,
+                                        color: AppTheme.primaryColor,
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        'Precios Calculados',
+                                      const Text(
+                                        'Precios calculados',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w700,
                                           fontSize: 15,
-                                          color: Colors.blue.shade900,
+                                          color: AppTheme.secondaryDark,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Tooltip(
+                                        message:
+                                            'Con factura = base × (1 + %).\nSin factura = base (sin incremento).',
+                                        child: Icon(
+                                          Icons.info_outline,
+                                          size: 18,
+                                          color: AppTheme.primaryDark,
                                         ),
                                       ),
                                     ],
@@ -2889,7 +2951,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
-                                            'Precio de Venta:',
+                                            'Precio con factura:',
                                             style: TextStyle(fontSize: 14),
                                           ),
                                         ],
@@ -2898,10 +2960,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         precioVenta != null
                                             ? '\$${precioVenta.toStringAsFixed(2)}'
                                             : '\$0.00',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.blue.shade900,
+                                          color: AppTheme.primaryDark,
                                         ),
                                       ),
                                     ],
@@ -2920,7 +2982,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
-                                            'Precio Sin Factura:',
+                                            'Precio sin factura (base):',
                                             style: TextStyle(fontSize: 14),
                                           ),
                                         ],
@@ -2929,10 +2991,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         precioSinFactura != null
                                             ? '\$${precioSinFactura.toStringAsFixed(2)}'
                                             : '\$0.00',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.orange.shade900,
+                                          color: AppTheme.accentOrange,
                                         ),
                                       ),
                                     ],
@@ -2969,25 +3031,26 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                           }
 
                           return Card(
-                            color: Colors.green.shade50,
+                            color: AppTheme.accentGreen.withValues(alpha: 0.08),
+                            elevation: 0,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    children: [
+                                    children: const [
                                       Icon(
                                         Icons.trending_up,
                                         size: 18,
-                                        color: Colors.green.shade900,
+                                        color: AppTheme.accentGreen,
                                       ),
-                                      const SizedBox(width: 8),
+                                      SizedBox(width: 8),
                                       Text(
-                                        'Resumen de Ganancia',
+                                        'Resumen de ganancia',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green.shade900,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.secondaryDark,
                                         ),
                                       ),
                                     ],
@@ -3004,10 +3067,10 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         ),
                                         Text(
                                           '\$${ganancia.toStringAsFixed(2)}',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.green.shade700,
+                                            color: AppTheme.accentGreen,
                                           ),
                                         ),
                                       ],
@@ -3055,6 +3118,45 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
             label: const Text('Guardar Precios'),
           ),
       ],
+    );
+  }
+
+  Widget _buildPricePill({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.label, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

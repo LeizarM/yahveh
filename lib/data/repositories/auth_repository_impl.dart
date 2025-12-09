@@ -1,4 +1,5 @@
-﻿import 'package:flutter/foundation.dart';
+﻿
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/utils/jwt_utils.dart';
 import '../../domain/entities/user_entity.dart';
@@ -64,13 +65,13 @@ class AuthRepositoryImpl implements AuthRepository {
       final token = await localDataSource.getToken();
       
       if (token == null || token.isEmpty) {
-        debugPrint('🔐 No hay token almacenado');
+        
         return false;
       }
 
       // Verificar si el token ha expirado
       if (JwtUtils.isTokenExpired(token)) {
-        debugPrint('⏰ Token expirado - limpiando sesión');
+       
         // Limpiar datos de sesión si el token expiró
         await localDataSource.deleteUser();
         await localDataSource.deleteToken();
@@ -80,12 +81,12 @@ class AuthRepositoryImpl implements AuthRepository {
       // Log del tiempo restante (solo en debug)
       final timeLeft = JwtUtils.getTimeUntilExpiration(token);
       if (timeLeft != null) {
-        debugPrint('Token válido - expira en ${timeLeft.inMinutes} minutos');
+        console('Token válido - expira en ${timeLeft.inMinutes} minutos');
       }
 
       return true;
     } catch (e) {
-      debugPrint('Error verificando autenticación: $e');
+      console('Error verificando autenticación: $e');
       return false;
     }
   }

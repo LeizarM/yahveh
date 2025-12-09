@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../providers/auth_provider.dart';
 import '../screens/screens.dart';
 
@@ -26,7 +27,7 @@ class AuthChangeNotifier extends ChangeNotifier {
       // Si cambió el estado de loading o el usuario
       if (wasLoading != isLoading ||
           prevUser?.codUsuario != nextUser?.codUsuario) {
-        debugPrint('🔄 AuthChangeNotifier: notificando cambio de auth');
+        console('🔄 AuthChangeNotifier: notificando cambio de auth');
         notifyListeners();
       }
     });
@@ -55,25 +56,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isSplash = state.matchedLocation == '/splash';
       final isLoggingIn = state.matchedLocation == '/login';
 
-      debugPrint(
+      console(
         '🧭 Router redirect - loading: $isLoading, error: $hasError, auth: $isAuthenticated, path: ${state.matchedLocation}',
       );
 
       // Si hay error y está en login, quedarse en login (para mostrar el error)
       if (hasError && isLoggingIn) {
-        debugPrint('🧭 → Quedarse en login (hay error)');
+        console('🧭 → Quedarse en login (hay error)');
         return null;
       }
 
       // Si está cargando y no está en splash ni login, ir a splash
       if (isLoading && !isSplash && !isLoggingIn) {
-        debugPrint('🧭 → Ir a splash (cargando)');
+        console('🧭 → Ir a splash (cargando)');
         return '/splash';
       }
 
       // Si terminó de cargar y está en splash, redirigir según autenticación
       if (!isLoading && !hasError && isSplash) {
-        debugPrint(
+        console(
           '🧭 → Desde splash ir a ${isAuthenticated ? "dashboard" : "login"}',
         );
         return isAuthenticated ? '/dashboard' : '/login';
@@ -85,17 +86,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           !isSplash &&
           !isLoading &&
           !hasError) {
-        debugPrint('🧭 → Ir a login (no autenticado)');
+        console('🧭 → Ir a login (no autenticado)');
         return '/login';
       }
 
       // Si está autenticado y está en login, ir a dashboard
       if (isAuthenticated && isLoggingIn) {
-        debugPrint('🧭 → Ir a dashboard (autenticado)');
+        console('🧭 → Ir a dashboard (autenticado)');
         return '/dashboard';
       }
 
-      debugPrint('🧭 → Sin redirección');
+      console('🧭 → Sin redirección');
       return null;
     },
     routes: [
@@ -103,7 +104,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         name: 'splash',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo SplashScreen');
+          console('🏗️ Construyendo SplashScreen');
           return const SplashScreen();
         },
       ),
@@ -111,7 +112,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         pageBuilder: (context, state) {
-          debugPrint('🏗️ Construyendo LoginScreen');
+          console('🏗️ Construyendo LoginScreen');
           return CustomTransitionPage(
             key: state.pageKey,
             child: const LoginScreen(),
@@ -126,7 +127,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         name: 'home',
         redirect: (context, state) {
-          debugPrint('🏠 Redirigiendo / a /dashboard');
+          console('🏠 Redirigiendo / a /dashboard');
           return '/dashboard';
         },
       ),
@@ -134,7 +135,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/dashboard',
         name: 'dashboard',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo DashboardScreen');
+          console('🏗️ Construyendo DashboardScreen');
           return const DashboardScreen();
         },
       ),
@@ -142,7 +143,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/items',
         name: 'items',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo ItemsScreen');
+          console('🏗️ Construyendo ItemsScreen');
           return const ItemsScreen();
         },
       ),
@@ -150,7 +151,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/linea',
         name: 'linea',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo LineasScreen');
+          console('🏗️ Construyendo LineasScreen');
           return const LineasScreen();
         },
       ),
@@ -158,7 +159,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/familia',
         name: 'familia',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo FamiliasScreen');
+          console('🏗️ Construyendo FamiliasScreen');
           return const FamiliasScreen();
         },
       ),
@@ -166,7 +167,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/clientes',
         name: 'clientes',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo ClientesScreen');
+          console('🏗️ Construyendo ClientesScreen');
           return const ClientesScreen();
         },
       ),
@@ -174,7 +175,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/zona',
         name: 'zona',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo ZonasScreen');
+          console('🏗️ Construyendo ZonasScreen');
           return const ZonasScreen();
         },
       ),
@@ -182,7 +183,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/ciudad',
         name: 'ciudad',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo CiudadesScreen');
+          console('🏗️ Construyendo CiudadesScreen');
           return const CiudadesScreen();
         },
       ),
@@ -190,7 +191,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/pais',
         name: 'pais',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo PaisesScreen');
+          console('🏗️ Construyendo PaisesScreen');
           return const PaisesScreen();
         },
       ),
@@ -198,7 +199,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/nota_entrega',
         name: 'delivery-notes',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo DeliveryNotesScreen');
+          console('🏗️ Construyendo DeliveryNotesScreen');
           return const DeliveryNotesScreen();
         },
       ),
@@ -206,7 +207,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/usuarios',
         name: 'usuarios',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo UsuariosScreen');
+          console('🏗️ Construyendo UsuariosScreen');
           return const UsuariosScreen();
         },
       ),
@@ -214,7 +215,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/perfil',
         name: 'perfil',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo ProfileScreen');
+          console('🏗️ Construyendo ProfileScreen');
           return const ProfileScreen();
         },
       ),
@@ -222,7 +223,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/persona-empleado',
         name: 'persona-empleado',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo PersonaEmpleadoScreen');
+          console('🏗️ Construyendo PersonaEmpleadoScreen');
           return const PersonaEmpleadoScreen();
         },
       ),
@@ -230,13 +231,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/reportes',
         name: 'reportes',
         builder: (context, state) {
-          debugPrint('🏗️ Construyendo ReportesScreen');
+          console('🏗️ Construyendo ReportesScreen');
           return const ReportesScreen();
         },
       ),
     ],
     errorBuilder: (context, state) {
-      debugPrint('❌ Error de ruta: ${state.error}');
+      console('❌ Error de ruta: ${state.error}');
       return Scaffold(
         body: Center(
           child: Column(

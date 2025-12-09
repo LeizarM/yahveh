@@ -6,8 +6,7 @@ import 'presentation/widgets/connectivity_wrapper.dart';
 // import 'presentation/routes/simple_router.dart'; // Descomentar para testing
 
 void main() {
-  // Habilitar logs de debug
-  debugPrint('🚀 Iniciando aplicación Yahveh');
+
 
   runApp(const ProviderScope(child: MyApp()));
 }

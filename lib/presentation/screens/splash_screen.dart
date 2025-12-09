@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../providers/auth_provider.dart';
 import 'dart:math' as math;
 
@@ -93,7 +94,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         },
         loading: () {},
         error: (error, _) {
-          debugPrint('Error en splash: $error');
+          console('Error en splash: $error');
         },
       );
     });

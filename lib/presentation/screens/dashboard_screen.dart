@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
@@ -46,7 +47,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(context),
-      drawer: context.isMobile ? const AppDrawer() : null,
+      drawer: context.isMobile ? _buildMobileDrawer() : null,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -57,17 +58,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           children: [
             // Drawer permanente en desktop/tablet
             if (!context.isMobile)
-              Container(
-                width: 280,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  border: Border(
-                    right: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1),
+              ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    width: 280,
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondaryDark.withValues(alpha: 0.55),
+                      border: Border(
+                        right: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
                     ),
+                    child: const AppDrawer(),
                   ),
                 ),
-                child: const AppDrawer(),
               ),
 
             // Contenido principal
@@ -107,6 +113,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       backgroundColor: Colors.transparent,
       elevation: 0,
       iconTheme: const IconThemeData(color: Colors.white),
+    );
+  }
+
+  /// Drawer con blur para móvil
+  Widget _buildMobileDrawer() {
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.secondaryDark.withValues(alpha: 0.92),
+            ),
+            child: const AppDrawer(),
+          ),
+        ),
+      ),
     );
   }
 

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/error/api_exception.dart';
 import '../../core/utils/operation_result.dart';
@@ -174,13 +174,7 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
     required int audUsuario,
   }) async {
 
-    debugPrint('=== UPDATE ARTICULO ===');
-    debugPrint('URL: /articulos/$codArticulo');
-    debugPrint('codArticulo: $codArticulo');
-    debugPrint('codLinea: $codLinea');
-    debugPrint('descripcion: $descripcion');
-    debugPrint('descripcion2: $descripcion2');
-    debugPrint('audUsuario: $audUsuario');
+   
 
     try {
       final requestData = {
@@ -191,15 +185,14 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
         'audUsuario': audUsuario,
       };
       
-      debugPrint('Request Data: $requestData');
+      
 
       final response = await _client.put(
         '/articulos/$codArticulo',
         data: requestData,
       );
 
-      debugPrint('Response Status: ${response.statusCode}');
-      debugPrint('Response Data: ${response.data}');
+     
 
       // Verificar si la respuesta fue exitosa
       if (response.data != null && response.data['success'] == true) {
@@ -224,13 +217,13 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
         throw ApiException.fromResponse(errorData, response.statusCode);
       }
     } catch (e) {
-      debugPrint('Error en updateArticulo: $e');
+      console('Error en updateArticulo: $e');
       if (e is ApiException) {
         rethrow;
       }
       // Si es un DioException, intentar extraer el mensaje del response
       if (e is DioException && e.response?.data != null) {
-        debugPrint('DioException Response Data: ${e.response?.data}');
+        console('DioException Response Data: ${e.response?.data}');
         final responseData = e.response!.data;
         if (responseData is Map<String, dynamic> && responseData['message'] != null) {
           throw ApiException(

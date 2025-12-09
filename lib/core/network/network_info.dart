@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
+
 
 /// Estados posibles de la conexión a internet
 enum ConnectionStatus {
@@ -105,7 +106,7 @@ class NetworkInfoImpl implements NetworkInfo {
         }
       },
       onError: (error) {
-        debugPrint('Error en connectivity stream: $error');
+        console('Error en connectivity stream: $error');
         _lastState = NetworkConnectionState.disconnected();
         _connectionController?.add(_lastState);
       },
@@ -124,7 +125,7 @@ class NetworkInfoImpl implements NetworkInfo {
       final results = await _connectivity.checkConnectivity();
       return await _checkConnectionQuality(results);
     } catch (e) {
-      debugPrint('Error al verificar conectividad: $e');
+      console('Error al verificar conectividad: $e');
       return NetworkConnectionState.disconnected();
     }
   }
@@ -186,7 +187,7 @@ class NetworkInfoImpl implements NetworkInfo {
       // Timeout = conexión muy débil o sin internet
       return NetworkConnectionState.weak(primaryConnection);
     } catch (e) {
-      debugPrint('Error al verificar calidad de conexión: $e');
+      console('Error al verificar calidad de conexión: $e');
       // En caso de error, asumimos que hay conexión pero posiblemente débil
       return NetworkConnectionState.weak(primaryConnection);
     }

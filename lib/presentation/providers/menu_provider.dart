@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yahveh/core/utils/error_messages.dart';
 import '../../domain/entities/vista_entity.dart';
 import '../../domain/repositories/vista_repository.dart';
 import 'auth_provider.dart';
@@ -30,17 +31,17 @@ class MenuNotifier extends Notifier<AsyncValue<List<VistaEntity>>> {
       final userChanged = previousUser?.codUsuario != currentUser?.codUsuario;
 
       if (userChanged) {
-        debugPrint(
+        console(
           '🔄 Usuario cambió: ${previousUser?.nombreCompleto ?? 'null'} → ${currentUser?.nombreCompleto ?? 'null'}',
         );
 
         if (currentUser != null) {
           // Nuevo usuario logueado - cargar su menú
-          debugPrint('📋 Recargando menú para nuevo usuario...');
+          console('📋 Recargando menú para nuevo usuario...');
           loadMenu();
         } else {
           // Usuario cerró sesión - limpiar menú
-          debugPrint('🧹 Limpiando menú (logout)');
+          console('🧹 Limpiando menú (logout)');
           state = const AsyncValue.data([]);
         }
       }
@@ -59,12 +60,12 @@ class MenuNotifier extends Notifier<AsyncValue<List<VistaEntity>>> {
   Future<void> loadMenu() async {
     state = const AsyncValue.loading();
     try {
-      debugPrint('📋 Cargando menú desde el backend...');
+      console('📋 Cargando menú desde el backend...');
       final menu = await _repository.getMenu();
-      debugPrint('✅ Menú cargado: ${menu.length} elementos');
+      console('✅ Menú cargado: ${menu.length} elementos');
       state = AsyncValue.data(menu);
     } catch (e, stackTrace) {
-      debugPrint('❌ Error cargando menú: $e');
+      console('❌ Error cargando menú: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }
