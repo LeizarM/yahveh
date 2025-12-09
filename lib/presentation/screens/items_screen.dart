@@ -2512,7 +2512,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
     }
   }
 
-  // Calcula el precio de venta basado en el precio base y el porcentaje
+  // Calcula el precio de venta: Precio Con Factura (base + incremento por porcentaje)
   double? _calcularPrecioVenta() {
     final precioBase = double.tryParse(_precioBaseController.text.trim());
     final porcentaje = double.tryParse(_porcentajeController.text.trim());
@@ -2523,9 +2523,9 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
     return null;
   }
 
-  // Calcula el precio sin factura (mismo que precio de venta por ahora)
+  // Devuelve el Precio Sin Factura (base, sin incremento)
   double? _calcularPrecioSinFactura() {
-    return _calcularPrecioVenta();
+    return double.tryParse(_precioBaseController.text.trim());
   }
 
   @override

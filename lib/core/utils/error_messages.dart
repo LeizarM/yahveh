@@ -93,7 +93,7 @@ class ErrorMessages {
 
 void console(Object? object) {
   if (kDebugMode) {
-    // ignore: avoid_print
-    print(object);
+
+    debugPrint(object.toString());
   }
 }
