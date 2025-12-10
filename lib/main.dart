@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/routes/app_router.dart';
 import 'presentation/widgets/connectivity_wrapper.dart';
-// import 'presentation/routes/simple_router.dart'; // Descomentar para testing
 
 void main() {
 
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp( ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

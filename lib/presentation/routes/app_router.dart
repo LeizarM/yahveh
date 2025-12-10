@@ -105,7 +105,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'splash',
         builder: (context, state) {
           console('🏗️ Construyendo SplashScreen');
-          return const SplashScreen();
+          return  SplashScreen(key: state.pageKey);
         },
       ),
       GoRoute(
@@ -115,7 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           console('🏗️ Construyendo LoginScreen');
           return CustomTransitionPage(
             key: state.pageKey,
-            child: const LoginScreen(),
+            child:  LoginScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);
@@ -136,7 +136,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'dashboard',
         builder: (context, state) {
           console('🏗️ Construyendo DashboardScreen');
-          return const DashboardScreen();
+          return  DashboardScreen();
         },
       ),
       GoRoute(
@@ -144,7 +144,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'items',
         builder: (context, state) {
           console('🏗️ Construyendo ItemsScreen');
-          return const ItemsScreen();
+          return  ItemsScreen();
         },
       ),
       GoRoute(
@@ -152,7 +152,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'linea',
         builder: (context, state) {
           console('🏗️ Construyendo LineasScreen');
-          return const LineasScreen();
+          return  LineasScreen();
         },
       ),
       GoRoute(
@@ -160,7 +160,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'familia',
         builder: (context, state) {
           console('🏗️ Construyendo FamiliasScreen');
-          return const FamiliasScreen();
+          return  FamiliasScreen();
         },
       ),
       GoRoute(
@@ -168,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'clientes',
         builder: (context, state) {
           console('🏗️ Construyendo ClientesScreen');
-          return const ClientesScreen();
+          return  ClientesScreen();
         },
       ),
       GoRoute(
@@ -176,7 +176,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'zona',
         builder: (context, state) {
           console('🏗️ Construyendo ZonasScreen');
-          return const ZonasScreen();
+          return  ZonasScreen();
         },
       ),
       GoRoute(
@@ -184,7 +184,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'ciudad',
         builder: (context, state) {
           console('🏗️ Construyendo CiudadesScreen');
-          return const CiudadesScreen();
+          return  CiudadesScreen();
         },
       ),
       GoRoute(
@@ -192,7 +192,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'pais',
         builder: (context, state) {
           console('🏗️ Construyendo PaisesScreen');
-          return const PaisesScreen();
+          return  PaisesScreen();
         },
       ),
       GoRoute(
@@ -200,7 +200,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'delivery-notes',
         builder: (context, state) {
           console('🏗️ Construyendo DeliveryNotesScreen');
-          return const DeliveryNotesScreen();
+          return  DeliveryNotesScreen();
         },
       ),
       GoRoute(
@@ -208,7 +208,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'usuarios',
         builder: (context, state) {
           console('🏗️ Construyendo UsuariosScreen');
-          return const UsuariosScreen();
+          return  UsuariosScreen();
         },
       ),
       GoRoute(
@@ -216,7 +216,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'perfil',
         builder: (context, state) {
           console('🏗️ Construyendo ProfileScreen');
-          return const ProfileScreen();
+          return  ProfileScreen();
         },
       ),
       GoRoute(
@@ -224,7 +224,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'persona-empleado',
         builder: (context, state) {
           console('🏗️ Construyendo PersonaEmpleadoScreen');
-          return const PersonaEmpleadoScreen();
+          return  PersonaEmpleadoScreen();
         },
       ),
       GoRoute(
@@ -232,12 +232,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'reportes',
         builder: (context, state) {
           console('🏗️ Construyendo ReportesScreen');
-          return const ReportesScreen();
+          return  ReportesScreen();
         },
       ),
     ],
     errorBuilder: (context, state) {
-      console('❌ Error de ruta: ${state.error}');
+      console(' Error de ruta: ${state.error}');
       return Scaffold(
         body: Center(
           child: Column(
