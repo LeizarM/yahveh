@@ -267,7 +267,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -276,7 +278,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                                     error.toString(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
@@ -333,7 +337,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Buscar por cliente, dirección o código...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
                 prefixIcon: Icon(
                   Icons.search,
                   color: Colors.white.withValues(alpha: 0.5),
@@ -887,7 +893,9 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       const SizedBox(width: 8),
                       Text(
                         nota.zona,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
                       ),
                     ],
                   ),
@@ -1246,7 +1254,8 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
   void _showCreateNotaDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const _CreateNotaDialog(),
+      builder: (context) =>
+          _CreateNotaDialog(scaffoldMessengerKey: _scaffoldMessengerKey),
     );
   }
 }
@@ -1737,7 +1746,9 @@ class _NotaDetailsDialog extends ConsumerWidget {
 
 /// Dialog para crear una nueva nota de entrega
 class _CreateNotaDialog extends ConsumerStatefulWidget {
-  const _CreateNotaDialog();
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+
+  const _CreateNotaDialog({required this.scaffoldMessengerKey});
 
   @override
   ConsumerState<_CreateNotaDialog> createState() => _CreateNotaDialogState();
@@ -1750,6 +1761,58 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
   final _direccionController = TextEditingController();
   final List<_DetalleItem> _detalles = [];
   bool _isLoading = false;
+
+  /// Muestra un SnackBar que aparece sobre cualquier diálogo o modal
+  void _showGlobalSnackBar(
+    String message, {
+    Color? backgroundColor,
+    IconData? icon,
+  }) {
+    widget.scaffoldMessengerKey.currentState?.clearSnackBars();
+    widget.scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+            ],
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: backgroundColor ?? Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Muestra un SnackBar de error
+  void _showErrorSnackBar(String message) {
+    _showGlobalSnackBar(
+      message,
+      backgroundColor: Colors.red[700],
+      icon: Icons.error_outline,
+    );
+  }
+
+  /// Muestra un SnackBar de éxito
+  void _showSuccessSnackBar(String message) {
+    _showGlobalSnackBar(
+      message,
+      backgroundColor: Colors.green[700],
+      icon: Icons.check_circle_outline,
+    );
+  }
+
+  /// Muestra un SnackBar de información
+  void _showInfoSnackBar(String message) {
+    _showGlobalSnackBar(
+      message,
+      backgroundColor: Colors.blue[700],
+      icon: Icons.info_outline,
+    );
+  }
 
   @override
   void initState() {
@@ -2111,6 +2174,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
   void _editCantidad(int index, _DetalleItem detalle) {
     final controller = TextEditingController(text: detalle.cantidad.toString());
+    final stockDisponible = detalle.articulo.stockActual ?? 0;
 
     showDialog(
       context: context,
@@ -2123,14 +2187,20 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
               detalle.articulo.descripcion,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Stock disponible: $stockDisponible',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Cantidad',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.numbers),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.numbers),
+                helperText: 'Máximo: $stockDisponible',
               ),
               keyboardType: TextInputType.number,
             ),
@@ -2144,22 +2214,25 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
           ElevatedButton(
             onPressed: () {
               final newCantidad = int.tryParse(controller.text) ?? 0;
-              if (newCantidad > 0) {
-                setState(() {
-                  _detalles[index] = _DetalleItem(
-                    articulo: detalle.articulo,
-                    cantidad: newCantidad,
-                    precioUnitario: detalle.precioUnitario,
-                  );
-                });
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('La cantidad debe ser mayor a 0'),
-                  ),
-                );
+              if (newCantidad <= 0) {
+                _showErrorSnackBar('La cantidad debe ser mayor a 0');
+                return;
               }
+              if (newCantidad > stockDisponible) {
+                _showErrorSnackBar(
+                  'Stock insuficiente. Disponible: $stockDisponible',
+                );
+                return;
+              }
+              setState(() {
+                _detalles[index] = _DetalleItem(
+                  articulo: detalle.articulo,
+                  cantidad: newCantidad,
+                  precioUnitario: detalle.precioUnitario,
+                );
+              });
+              Navigator.pop(context);
+              _showInfoSnackBar('Cantidad actualizada: $newCantidad');
             },
             child: const Text('Guardar'),
           ),
@@ -2366,23 +2439,64 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                             filteredArticulos[index];
                                         final isSelected =
                                             selectedArticulo == articulo;
+                                        final stockDisponible =
+                                            articulo.stockActual ?? 0;
+                                        final sinStock = stockDisponible <= 0;
                                         return ListTile(
                                           selected: isSelected,
                                           selectedTileColor: context
                                               .colorScheme
                                               .primaryContainer
                                               .withValues(alpha: 0.3),
-                                          title: Text(
-                                            articulo.descripcion,
-                                            style: TextStyle(
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            ),
+                                          title: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  articulo.descripcion,
+                                                  style: TextStyle(
+                                                    fontWeight: isSelected
+                                                        ? FontWeight.bold
+                                                        : FontWeight.normal,
+                                                    color: sinStock
+                                                        ? Colors.grey
+                                                        : null,
+                                                  ),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: sinStock
+                                                      ? Colors.red[100]
+                                                      : Colors.green[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  'Stock: $stockDisponible',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: sinStock
+                                                        ? Colors.red[700]
+                                                        : Colors.green[700],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           subtitle: Text(
                                             '${articulo.codArticulo} • Precio: Bs. ${articulo.precioActual!.toStringAsFixed(2)}',
-                                            style: TextStyle(fontSize: 12),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: sinStock
+                                                  ? Colors.grey
+                                                  : null,
+                                            ),
                                           ),
                                           trailing: isSelected
                                               ? Icon(
@@ -2448,26 +2562,36 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                       int.tryParse(cantidadController.text) ??
                                       1;
                                   if (cantidad <= 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'La cantidad debe ser mayor a 0',
-                                        ),
-                                      ),
+                                    _showErrorSnackBar(
+                                      'La cantidad debe ser mayor a 0',
                                     );
                                     return;
                                   }
 
-                                  // Guardar referencia al ScaffoldMessenger antes de cerrar
-                                  final scaffoldMessenger =
-                                      ScaffoldMessenger.of(context);
+                                  // Validar stock disponible
+                                  final stockDisponible =
+                                      selectedArticulo!.stockActual ?? 0;
 
-                                  // Verificar si el artículo ya existe
+                                  // Verificar si el artículo ya existe y calcular cantidad total
                                   final existingIndex = _detalles.indexWhere(
                                     (d) =>
                                         d.articulo.codArticulo ==
                                         selectedArticulo!.codArticulo,
                                   );
+
+                                  final cantidadExistente = existingIndex >= 0
+                                      ? _detalles[existingIndex].cantidad
+                                      : 0;
+                                  final cantidadTotal =
+                                      cantidadExistente + cantidad;
+
+                                  // Validar que la cantidad total no exceda el stock
+                                  if (cantidadTotal > stockDisponible) {
+                                    _showErrorSnackBar(
+                                      'Stock insuficiente. Disponible: $stockDisponible, Solicitado: $cantidadTotal',
+                                    );
+                                    return;
+                                  }
 
                                   String? mensajeActualizacion;
 
@@ -2477,14 +2601,12 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                       _detalles[existingIndex] = _DetalleItem(
                                         articulo:
                                             _detalles[existingIndex].articulo,
-                                        cantidad:
-                                            _detalles[existingIndex].cantidad +
-                                            cantidad,
+                                        cantidad: cantidadTotal,
                                         precioUnitario: _detalles[existingIndex]
                                             .precioUnitario,
                                       );
                                       mensajeActualizacion =
-                                          'Cantidad actualizada: ${_detalles[existingIndex].cantidad}';
+                                          'Cantidad actualizada: $cantidadTotal';
                                     } else {
                                       // Si no existe, agregar nuevo
                                       _detalles.add(
@@ -2502,12 +2624,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
                                   // Mostrar SnackBar después de cerrar el diálogo
                                   if (mensajeActualizacion != null) {
-                                    scaffoldMessenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(mensajeActualizacion!),
-                                        backgroundColor: Colors.blue,
-                                      ),
-                                    );
+                                    _showInfoSnackBar(mensajeActualizacion!);
                                   }
                                 },
                           icon: const Icon(Icons.add),
@@ -2531,9 +2648,25 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
     }
 
     if (_detalles.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Agrega al menos un artículo')),
-      );
+      _showErrorSnackBar('Agrega al menos un artículo');
+      return;
+    }
+
+    // Validar stock de todos los artículos antes de continuar
+    final articulosSinStock = <String>[];
+    for (var detalle in _detalles) {
+      final stockDisponible = detalle.articulo.stockActual ?? 0;
+      if (detalle.cantidad > stockDisponible) {
+        articulosSinStock.add(
+          '${detalle.articulo.descripcion} (Solicitado: ${detalle.cantidad}, Disponible: $stockDisponible)',
+        );
+      }
+    }
+
+    if (articulosSinStock.isNotEmpty) {
+      _showErrorSnackBar('Stock insuficiente: ${articulosSinStock.first}');
+      // Mostrar diálogo con todos los artículos sin stock
+      await _mostrarArticulosSinStock(articulosSinStock);
       return;
     }
 
@@ -2543,8 +2676,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
       return;
     }
 
-    // Guardar referencia al ScaffoldMessenger ANTES de cerrar el diálogo
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    // Guardar referencia al Navigator ANTES de cerrar el diálogo
     final navigator = Navigator.of(context);
 
     setState(() => _isLoading = true);
@@ -2566,7 +2698,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
           .crear(nota);
 
       if (resultNota != null) {
-        // Crear detalles
+        // Crear todos los detalles
         for (var detalle in _detalles) {
           final detalleEntity = DetalleNotaEntregaEntity(
             codDetalle: 0,
@@ -2591,13 +2723,8 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
         // Cerrar el diálogo primero
         navigator.pop();
 
-        // Mostrar SnackBar usando la referencia guardada
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Nota de entrega creada exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // Mostrar resultado exitoso
+        _showSuccessSnackBar('Nota de entrega creada exitosamente');
 
         // Preguntar si desea generar el PDF
         await _preguntarGenerarPDF(
@@ -2606,14 +2733,69 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
         );
       }
     } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      _showErrorSnackBar('Error: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// Mostrar diálogo con artículos sin stock suficiente
+  Future<void> _mostrarArticulosSinStock(List<String> articulos) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.warning_amber_rounded,
+          size: 48,
+          color: Colors.orange[700],
+        ),
+        title: const Text('Stock Insuficiente'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Los siguientes artículos no tienen stock suficiente:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: articulos.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.cancel, color: Colors.red[400], size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            articulos[index],
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Preguntar al usuario si desea generar el PDF de la nota de entrega
