@@ -22,6 +22,7 @@ abstract class InventarioRemoteDataSource {
     required int cantidad,
     required double precioUnitario,
     String? observacion,
+    String? codImportacion,
   });
   Future<OperationResult<InventarioModel>> modificar({
     required int codInventario,
@@ -168,6 +169,7 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
     required int cantidad,
     required double precioUnitario,
     String? observacion,
+    String? codImportacion,
   }) async {
     try {
       console('📤 Enviando movimiento de inventario:');
@@ -185,6 +187,7 @@ class InventarioRemoteDataSourceImpl implements InventarioRemoteDataSource {
           'cantidad': cantidad,
           'precioUnitario': precioUnitario,
           if (observacion != null && observacion.isNotEmpty) 'observacion': observacion,
+          if (codImportacion != null && codImportacion.isNotEmpty) 'codImportacion': codImportacion,
         },
       );
 

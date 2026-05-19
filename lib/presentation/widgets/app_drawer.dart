@@ -544,10 +544,18 @@ class AppDrawer extends ConsumerWidget {
                titulo.contains('nota') ||
                titulo.contains('entrega')) {
       return Icons.description_rounded;
-    } else if (direccion.contains('persona-empleado') || 
-               direccion.contains('empleado') || 
+    } else if (direccion.contains('persona-empleado') ||
+               direccion.contains('empleado') ||
                titulo.contains('empleado')) {
       return Icons.badge_rounded;
+    } else if (direccion.contains('regla-descuento') ||
+               titulo.contains('descuento') ||
+               titulo.contains('regla')) {
+      return Icons.discount_rounded;
+    } else if (direccion.contains('inventario') || titulo.contains('inventario')) {
+      return Icons.warehouse_rounded;
+    } else if (direccion.contains('catalogo') || titulo.contains('catálogo') || titulo.contains('catalogo')) {
+      return Icons.storefront_rounded;
     }
 
     return Icons.circle_outlined;

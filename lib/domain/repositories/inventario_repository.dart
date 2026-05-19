@@ -28,6 +28,7 @@ abstract class InventarioRepository {
     required int cantidad,
     required double precioUnitario,
     String? observacion,
+    String? codImportacion,
   });
 
   /// Modificar un movimiento (solo observación)

@@ -14,4 +14,14 @@ abstract class ReporteVentasRepository {
     required String fechaDesde,
     required String fechaHasta,
   });
+
+  Future<Uint8List> descargarVendedoresPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  });
+
+  Future<Uint8List> descargarInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  });
 }

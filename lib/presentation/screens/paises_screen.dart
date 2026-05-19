@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/animations.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/pais_entity.dart';
@@ -538,27 +539,14 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
-                          // Guardar referencia antes de cerrar el diálogo
-                          final scaffoldMessenger = ScaffoldMessenger.of(this.context);
                           Navigator.of(context).pop();
                           try {
                             final message = await ref
                                 .read(paisProvider.notifier)
                                 .deletePais(pais.codPais);
-                            scaffoldMessenger.showSnackBar(
-                              SnackBar(
-                                content: Text(message),
-                                backgroundColor: AppTheme.accentGreen,
-                              ),
-                            );
+                            if (mounted) AppOverlay.showMessage(context, message, isSuccess: true);
                           } catch (e) {
-                            scaffoldMessenger.showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text(ErrorMessages.getFriendlyMessage(e)),
-                                backgroundColor: AppTheme.errorColor,
-                              ),
-                            );
+                            if (mounted) AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
                           }
                         },
                         style: ElevatedButton.styleFrom(

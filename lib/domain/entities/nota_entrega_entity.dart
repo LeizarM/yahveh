@@ -9,6 +9,7 @@ class NotaEntregaEntity {
   final int estado;
   final String estadoTexto;
   final int audUsuario;
+  final String nombreEmpleado;
 
   NotaEntregaEntity({
     required this.codNotaEntrega,
@@ -20,12 +21,10 @@ class NotaEntregaEntity {
     this.estado = 1,
     this.estadoTexto = 'Válido',
     required this.audUsuario,
+    this.nombreEmpleado = '',
   });
 
-  /// Verifica si la nota está anulada
   bool get isAnulada => estado == 0;
-
-  /// Verifica si la nota está válida
   bool get isValida => estado == 1;
 
   NotaEntregaEntity copyWith({
@@ -38,6 +37,7 @@ class NotaEntregaEntity {
     int? estado,
     String? estadoTexto,
     int? audUsuario,
+    String? nombreEmpleado,
   }) {
     return NotaEntregaEntity(
       codNotaEntrega: codNotaEntrega ?? this.codNotaEntrega,
@@ -49,6 +49,7 @@ class NotaEntregaEntity {
       estado: estado ?? this.estado,
       estadoTexto: estadoTexto ?? this.estadoTexto,
       audUsuario: audUsuario ?? this.audUsuario,
+      nombreEmpleado: nombreEmpleado ?? this.nombreEmpleado,
     );
   }
 }

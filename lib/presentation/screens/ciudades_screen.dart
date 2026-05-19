@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/animations.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/ciudad_entity.dart';
@@ -504,21 +505,11 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                                 .read(ciudadProvider.notifier)
                                 .deleteCiudad(ciudad.codCiudad);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(message),
-                                  backgroundColor: AppTheme.successColor,
-                                ),
-                              );
+                              AppOverlay.showMessage(context, message, isSuccess: true);
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(ErrorMessages.getFriendlyMessage(e)),
-                                  backgroundColor: AppTheme.errorColor,
-                                ),
-                              );
+                              AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
                             }
                           }
                         },
@@ -834,22 +825,12 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        AppOverlay.showMessage(context, message, isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     }
   }

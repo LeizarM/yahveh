@@ -18,6 +18,7 @@ class ArticuloModel extends ArticuloEntity {
         required super.descripcion2,
         super.stockActual,
         super.precioActual,
+        super.precioSinFactura,
         required super.audUsuario,
         super.audFecha,
     });
@@ -30,6 +31,7 @@ class ArticuloModel extends ArticuloEntity {
         descripcion2: json["descripcion2"],
         stockActual: json["stockActual"],
         precioActual: json["precioActual"]?.toDouble(),
+        precioSinFactura: json["precioSinFactura"]?.toDouble(),
         audUsuario: json["audUsuario"],
         audFecha: json["audFecha"] != null ? DateTime.parse(json["audFecha"]) : null,
     );
@@ -42,6 +44,7 @@ class ArticuloModel extends ArticuloEntity {
         "descripcion2": descripcion2,
         "stockActual": stockActual,
         "precioActual": precioActual,
+        "precioSinFactura": precioSinFactura,
         "audUsuario": audUsuario,
         "audFecha": audFecha?.toIso8601String(),
     };

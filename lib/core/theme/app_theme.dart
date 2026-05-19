@@ -19,6 +19,7 @@ class AppTheme {
   // Colores de acento
   static const Color accentPink = Color(0xFFfb7185);        // Rosa coral
   static const Color accentCyan = Color(0xFF06b6d4);        // Cian vibrante
+  static const Color accentBlue = Color(0xFF3b82f6);        // Azul permisos/seguridad
   static const Color accentGreen = Color(0xFF22c55e);       // Verde esmeralda
   static const Color accentOrange = Color(0xFFf97316);      // Naranja cálido
   

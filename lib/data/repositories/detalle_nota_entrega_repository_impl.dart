@@ -57,9 +57,10 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         precioUnitario: detalle.precioUnitario,
         precioTotal: detalle.precioTotal,
         precioSinFactura: detalle.precioSinFactura,
+        descuento: detalle.descuento,
         audUsuario: detalle.audUsuario,
       );
-      
+
       final nuevoDetalle = await _remoteDataSource.crear(codNotaEntrega, model);
       return OperationResult(
         data: nuevoDetalle.toEntity(),
@@ -88,9 +89,10 @@ class DetalleNotaEntregaRepositoryImpl implements DetalleNotaEntregaRepository {
         precioUnitario: detalle.precioUnitario,
         precioTotal: detalle.precioTotal,
         precioSinFactura: detalle.precioSinFactura,
+        descuento: detalle.descuento,
         audUsuario: detalle.audUsuario,
       );
-      
+
       final detalleActualizado = await _remoteDataSource.actualizar(codDetalle, model);
       return OperationResult(
         data: detalleActualizado.toEntity(),

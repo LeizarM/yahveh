@@ -7,16 +7,22 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/animations.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import '../../domain/entities/cliente_entity.dart';
 import '../../domain/entities/articulo_entity.dart';
+import '../../domain/entities/zona_entity.dart';
+import '../../domain/entities/regla_descuento_entity.dart';
+import '../../data/models/zona_model.dart';
 import '../providers/providers.dart';
+import '../providers/auth_provider.dart';
 import '../providers/cliente_provider.dart';
 import '../providers/articulo_provider.dart';
 import '../providers/nota_entrega_provider.dart';
+import '../providers/zona_provider.dart';
 import '../widgets/app_drawer.dart';
 
 /// Pantalla de Notas de Entrega
@@ -47,9 +53,21 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar notas al iniciar
     Future.microtask(() {
-      ref.read(notaEntregaProvider.notifier).cargarNotas();
+      final esVendedor = ref.read(userTypeProvider) == 'lim';
+      if (esVendedor) {
+        final hoy = DateTime.now();
+        setState(() {
+          _fechaDesde = hoy;
+          _fechaHasta = hoy;
+        });
+        ref.read(notaEntregaProvider.notifier).cargarNotasPorFechas(
+          fechaInicio: hoy,
+          fechaFin: hoy,
+        );
+      } else {
+        ref.read(notaEntregaProvider.notifier).cargarNotas();
+      }
     });
   }
 
@@ -179,8 +197,23 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: () {
-                _limpiarFiltros();
-                ref.read(notaEntregaProvider.notifier).cargarNotas();
+                final esVendedor = ref.read(userTypeProvider) == 'lim';
+                if (esVendedor) {
+                  final hoy = DateTime.now();
+                  setState(() {
+                    _fechaDesde = hoy;
+                    _fechaHasta = hoy;
+                    _searchQuery = '';
+                    _searchController.clear();
+                  });
+                  ref.read(notaEntregaProvider.notifier).cargarNotasPorFechas(
+                    fechaInicio: hoy,
+                    fechaFin: hoy,
+                  );
+                } else {
+                  _limpiarFiltros();
+                  ref.read(notaEntregaProvider.notifier).cargarNotas();
+                }
               },
               tooltip: 'Actualizar',
             ),
@@ -886,15 +919,36 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                   Row(
                     children: [
                       Icon(
-                        Icons.map,
+                        Icons.location_city,
                         size: 18,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppTheme.accentCyan.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         nota.zona,
                         style: TextStyle(
+                          color: AppTheme.accentCyan.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (nota.nombreEmpleado.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.badge_rounded,
+                        size: 18,
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        nota.nombreEmpleado,
+                        style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -1255,7 +1309,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
     showDialog(
       context: context,
       builder: (context) =>
-          _CreateNotaDialog(scaffoldMessengerKey: _scaffoldMessengerKey),
+          const _CreateNotaDialog(),
     );
   }
 }
@@ -1435,17 +1489,17 @@ class _NotaDetailsDialog extends ConsumerWidget {
                     title: const Text('Cliente'),
                     subtitle: Text(nota.nombreCliente),
                   ),
+                  if (nota.zona.isNotEmpty)
+                    ListTile(
+                      leading: const Icon(Icons.location_city),
+                      title: const Text('Zona'),
+                      subtitle: Text(nota.zona),
+                    ),
                   if (nota.direccion.isNotEmpty)
                     ListTile(
                       leading: const Icon(Icons.location_on),
                       title: const Text('Dirección'),
                       subtitle: Text(nota.direccion),
-                    ),
-                  if (nota.zona.isNotEmpty)
-                    ListTile(
-                      leading: const Icon(Icons.map),
-                      title: const Text('Zona'),
-                      subtitle: Text(nota.zona),
                     ),
                 ],
               ),
@@ -1486,32 +1540,37 @@ class _NotaDetailsDialog extends ConsumerWidget {
                           itemCount: detalles.length,
                           itemBuilder: (context, index) {
                             final detalle = detalles[index];
+                            final tieneDescuento = detalle.descuento > 0;
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
                                 title: Text(detalle.descripcionArticulo),
-                                subtitle: Text(
-                                  '${detalle.codArticulo} • ${detalle.lineaArticulo}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${detalle.codArticulo} • ${detalle.lineaArticulo}',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    ),
+                                    if (tieneDescuento)
+                                      Text(
+                                        'Descuento: ${detalle.descuento.toStringAsFixed(1)}%',
+                                        style: TextStyle(fontSize: 11, color: Colors.orange[700], fontWeight: FontWeight.w500),
+                                      ),
+                                  ],
                                 ),
+                                isThreeLine: tieneDescuento,
                                 trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
                                       'Cant: ${detalle.cantidad}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       'Bs. ${detalle.precioTotal.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: Colors.green[700],
-                                      ),
+                                      style: TextStyle(color: Colors.green[700]),
                                     ),
                                   ],
                                 ),
@@ -1746,9 +1805,7 @@ class _NotaDetailsDialog extends ConsumerWidget {
 
 /// Dialog para crear una nueva nota de entrega
 class _CreateNotaDialog extends ConsumerStatefulWidget {
-  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
-
-  const _CreateNotaDialog({required this.scaffoldMessengerKey});
+  const _CreateNotaDialog();
 
   @override
   ConsumerState<_CreateNotaDialog> createState() => _CreateNotaDialogState();
@@ -1757,61 +1814,25 @@ class _CreateNotaDialog extends ConsumerStatefulWidget {
 class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
   final _formKey = GlobalKey<FormState>();
   ClienteEntity? _selectedCliente;
+  ZonaEntity? _selectedZona;
   DateTime _selectedDate = DateTime.now();
   final _direccionController = TextEditingController();
   final List<_DetalleItem> _detalles = [];
   bool _isLoading = false;
 
-  /// Muestra un SnackBar que aparece sobre cualquier diálogo o modal
-  void _showGlobalSnackBar(
-    String message, {
-    Color? backgroundColor,
-    IconData? icon,
-  }) {
-    widget.scaffoldMessengerKey.currentState?.clearSnackBars();
-    widget.scaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-            ],
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: backgroundColor ?? Colors.red,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  /// Muestra un SnackBar de error
   void _showErrorSnackBar(String message) {
-    _showGlobalSnackBar(
-      message,
-      backgroundColor: Colors.red[700],
-      icon: Icons.error_outline,
-    );
+    if (!mounted) return;
+    AppOverlay.showMessage(context, message, isError: true);
   }
 
-  /// Muestra un SnackBar de éxito
   void _showSuccessSnackBar(String message) {
-    _showGlobalSnackBar(
-      message,
-      backgroundColor: Colors.green[700],
-      icon: Icons.check_circle_outline,
-    );
+    if (!mounted) return;
+    AppOverlay.showMessage(context, message, isSuccess: true);
   }
 
-  /// Muestra un SnackBar de información
   void _showInfoSnackBar(String message) {
-    _showGlobalSnackBar(
-      message,
-      backgroundColor: Colors.blue[700],
-      icon: Icons.info_outline,
-    );
+    if (!mounted) return;
+    AppOverlay.showMessage(context, message);
   }
 
   @override
@@ -1962,11 +1983,53 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
                       const SizedBox(height: 16),
 
+                      // Zona (con ciudad)
+                      ref.watch(zonaProvider).when(
+                        data: (zonas) {
+                          if (zonas.isEmpty) {
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange.shade200),
+                              ),
+                              child: const Text('No hay zonas registradas. Crea zonas primero.'),
+                            );
+                          }
+                          return DropdownButtonFormField<ZonaEntity>(
+                            value: _selectedZona,
+                            decoration: const InputDecoration(
+                              labelText: 'Zona *',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.map),
+                            ),
+                            items: zonas.map((zona) {
+                              final zonaModel = zona is ZonaModel ? zona : null;
+                              final ciudadLabel = zonaModel?.ciudadNombre?.isNotEmpty == true
+                                  ? '${zonaModel!.ciudadNombre} — '
+                                  : '';
+                              return DropdownMenuItem<ZonaEntity>(
+                                value: zona,
+                                child: Text('$ciudadLabel${zona.zona}'),
+                              );
+                            }).toList(),
+                            onChanged: (zona) => setState(() => _selectedZona = zona),
+                            validator: (value) =>
+                                value == null ? 'Selecciona una zona' : null,
+                          );
+                        },
+                        loading: () => const LinearProgressIndicator(),
+                        error: (_, __) => const Text('Error al cargar zonas'),
+                      ),
+
+                      const SizedBox(height: 16),
+
                       // Dirección
                       TextFormField(
                         controller: _direccionController,
                         decoration: const InputDecoration(
-                          labelText: 'Dirección de Entrega *',
+                          labelText: 'Dirección *',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.location_on),
                         ),
@@ -2126,22 +2189,33 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
   }
 
   Widget _buildDetalleCard(_DetalleItem detalle, int index) {
+    final tieneDescuento = detalle.descuento > 0;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(detalle.articulo.descripcion),
-        subtitle: Text(
-          '${detalle.articulo.codArticulo} • Precio: Bs. ${detalle.precioUnitario.toStringAsFixed(2)}',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${detalle.articulo.codArticulo} • Bs. ${detalle.precioUnitario.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            if (tieneDescuento)
+              Text(
+                'Descuento: ${detalle.descuento.toStringAsFixed(1)}%',
+                style: TextStyle(fontSize: 11, color: Colors.orange[700], fontWeight: FontWeight.w500),
+              ),
+          ],
         ),
+        isThreeLine: tieneDescuento,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Edit quantity button
             IconButton(
               icon: const Icon(Icons.edit, size: 20),
-              onPressed: () => _editCantidad(index, detalle),
-              tooltip: 'Editar cantidad',
+              onPressed: () => _editDetalle(index, detalle),
+              tooltip: 'Editar',
             ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -2151,10 +2225,16 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                   'Cant: ${detalle.cantidad}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  'Bs. ${(detalle.cantidad * detalle.precioUnitario).toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.green[700]),
-                ),
+                if (tieneDescuento)
+                  Text(
+                    'Bs. ${detalle.totalConDescuento.toStringAsFixed(2)}',
+                    style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.bold),
+                  )
+                else
+                  Text(
+                    'Bs. ${(detalle.cantidad * detalle.precioUnitario).toStringAsFixed(2)}',
+                    style: TextStyle(color: Colors.green[700]),
+                  ),
               ],
             ),
             const SizedBox(width: 8),
@@ -2172,14 +2252,15 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
     );
   }
 
-  void _editCantidad(int index, _DetalleItem detalle) {
-    final controller = TextEditingController(text: detalle.cantidad.toString());
+  void _editDetalle(int index, _DetalleItem detalle) {
+    final cantidadCtrl = TextEditingController(text: detalle.cantidad.toString());
+    final descuentoCtrl = TextEditingController(text: detalle.descuento.toStringAsFixed(1));
     final stockDisponible = detalle.articulo.stockActual ?? 0;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Editar Cantidad'),
+        title: const Text('Editar Artículo'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2194,7 +2275,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: controller,
+              controller: cantidadCtrl,
               autofocus: true,
               decoration: InputDecoration(
                 labelText: 'Cantidad',
@@ -2203,6 +2284,17 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                 helperText: 'Máximo: $stockDisponible',
               ),
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: descuentoCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Descuento (%)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.discount),
+                suffixText: '%',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
         ),
@@ -2213,7 +2305,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
           ),
           ElevatedButton(
             onPressed: () {
-              final newCantidad = int.tryParse(controller.text) ?? 0;
+              final newCantidad = int.tryParse(cantidadCtrl.text) ?? 0;
               if (newCantidad <= 0) {
                 _showErrorSnackBar('La cantidad debe ser mayor a 0');
                 return;
@@ -2224,11 +2316,15 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                 );
                 return;
               }
+              final newDescuento = double.tryParse(
+                    descuentoCtrl.text.replaceAll(',', '.'),
+                  )?.clamp(0.0, 100.0) ?? 0.0;
               setState(() {
                 _detalles[index] = _DetalleItem(
                   articulo: detalle.articulo,
                   cantidad: newCantidad,
                   precioUnitario: detalle.precioUnitario,
+                  descuento: newDescuento,
                 );
               });
               Navigator.pop(context);
@@ -2242,10 +2338,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
   }
 
   double _calculateTotal() {
-    return _detalles.fold(
-      0,
-      (sum, item) => sum + (item.cantidad * item.precioUnitario),
-    );
+    return _detalles.fold(0.0, (sum, item) => sum + item.totalConDescuento);
   }
 
   void _showClienteSearchDialog(List<ClienteEntity> clientes) {
@@ -2328,19 +2421,26 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
           .toList();
 
       if (articulosConPrecio.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No hay artículos con precios válidos'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        AppOverlay.showMessage(context, 'No hay artículos con precios válidos', isWarning: true);
         return;
       }
 
       final searchController = TextEditingController();
       List<ArticuloEntity> filteredArticulos = articulosConPrecio;
       ArticuloEntity? selectedArticulo;
+      ReglaDescuentoEntity? reglaActual;
       final cantidadController = TextEditingController(text: '1');
+      final descuentoController = TextEditingController(text: '0');
+
+      void aplicarRegla(String cantidadStr, StateSetter setDs) {
+        final cantidad = int.tryParse(cantidadStr) ?? 0;
+        if (reglaActual != null && cantidad >= reglaActual!.cantidadMinima) {
+          descuentoController.text = reglaActual!.descuento.toStringAsFixed(1);
+        } else {
+          descuentoController.text = '0';
+        }
+        setDs(() {});
+      }
 
       showDialog(
         context: context,
@@ -2506,9 +2606,23 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                                       .primary,
                                                 )
                                               : null,
-                                          onTap: () {
+                                          onTap: () async {
                                             setDialogState(() {
                                               selectedArticulo = articulo;
+                                              reglaActual = null;
+                                              descuentoController.text = '0';
+                                            });
+                                            final regla = await ref.read(
+                                              reglaDescuentoPorArticuloProvider(
+                                                      articulo.codArticulo!)
+                                                  .future,
+                                            );
+                                            aplicarRegla(cantidadController.text,
+                                                setDialogState);
+                                            setDialogState(() {
+                                              reglaActual = regla;
+                                              aplicarRegla(cantidadController.text,
+                                                  setDialogState);
                                             });
                                           },
                                         );
@@ -2522,12 +2636,38 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                           // Cantidad field
                           TextFormField(
                             controller: cantidadController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Cantidad *',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.numbers),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.numbers),
+                              helperText: reglaActual != null
+                                  ? 'Mínimo ${reglaActual!.cantidadMinima} unidades para ${reglaActual!.descuento.toStringAsFixed(1)}% desc.'
+                                  : null,
+                              helperStyle: const TextStyle(
+                                  color: Colors.green, fontWeight: FontWeight.w500),
                             ),
                             keyboardType: TextInputType.number,
+                            onChanged: (v) =>
+                                aplicarRegla(v, setDialogState),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Descuento field (read-only, controlado por regla)
+                          TextFormField(
+                            controller: descuentoController,
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              labelText: 'Descuento (%)',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.discount),
+                              suffixText: '%',
+                              filled: reglaActual != null,
+                              fillColor: Colors.green.withValues(alpha: 0.07),
+                              helperText: reglaActual == null
+                                  ? 'Sin regla de descuento para este artículo'
+                                  : null,
+                            ),
                           ),
                         ],
                       ),
@@ -2595,6 +2735,10 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
                                   String? mensajeActualizacion;
 
+                                  final descuento = double.tryParse(
+                                        descuentoController.text.replaceAll(',', '.'),
+                                      )?.clamp(0.0, 100.0) ?? 0.0;
+
                                   setState(() {
                                     if (existingIndex >= 0) {
                                       // Si existe, sumar la cantidad
@@ -2604,6 +2748,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                         cantidad: cantidadTotal,
                                         precioUnitario: _detalles[existingIndex]
                                             .precioUnitario,
+                                        descuento: descuento,
                                       );
                                       mensajeActualizacion =
                                           'Cantidad actualizada: $cantidadTotal';
@@ -2615,6 +2760,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                           cantidad: cantidad,
                                           precioUnitario:
                                               selectedArticulo!.precioActual!,
+                                          descuento: descuento,
                                         ),
                                       );
                                     }
@@ -2689,7 +2835,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
         nombreCliente: _selectedCliente!.nombreCliente,
         fecha: _selectedDate,
         direccion: _direccionController.text,
-        zona: '', // Zona se puede obtener desde el backend
+        zona: _selectedZona?.zona ?? '',
         audUsuario: 0,
       );
 
@@ -2710,8 +2856,9 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
             codLinea: detalle.articulo.codLinea,
             cantidad: detalle.cantidad,
             precioUnitario: detalle.precioUnitario,
-            precioTotal: detalle.cantidad * detalle.precioUnitario,
-            precioSinFactura: 0,
+            precioTotal: detalle.totalConDescuento,
+            precioSinFactura: detalle.precioSinFacturaConDescuento,
+            descuento: detalle.descuento,
             audUsuario: 0,
           );
 
@@ -3086,26 +3233,28 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                 children: [
                                   Icon(
                                     Icons.person,
-                                    color: Colors.blue[700],
+                                    color: Colors.blue[300],
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Text(
+                                  Text(
                                     'CLIENTE',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 11,
                                       letterSpacing: 1.0,
+                                      color: Colors.white.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
                               ),
-                              const Divider(height: 12),
+                              Divider(height: 12, color: Colors.white.withValues(alpha: 0.15)),
                               Text(
                                 _selectedCliente!.nombreCliente,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -3116,14 +3265,14 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                   Icon(
                                     Icons.calendar_today,
                                     size: 14,
-                                    color: Colors.grey[600],
+                                    color: Colors.white.withValues(alpha: 0.5),
                                   ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       dateFormat.format(_selectedDate),
                                       style: TextStyle(
-                                        color: Colors.grey[700],
+                                        color: Colors.white.withValues(alpha: 0.65),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -3137,14 +3286,14 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                   Icon(
                                     Icons.location_on,
                                     size: 14,
-                                    color: Colors.grey[600],
+                                    color: Colors.white.withValues(alpha: 0.5),
                                   ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       _direccionController.text,
                                       style: TextStyle(
-                                        color: Colors.grey[700],
+                                        color: Colors.white.withValues(alpha: 0.65),
                                         fontSize: 12,
                                       ),
                                       maxLines: 2,
@@ -3165,16 +3314,17 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                         children: [
                           Icon(
                             Icons.shopping_cart,
-                            color: Colors.blue[700],
+                            color: Colors.blue[300],
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'ARTÍCULOS',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 11,
                               letterSpacing: 1.0,
+                              color: Colors.white.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -3225,14 +3375,14 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                         detalle.articulo.codArticulo ?? '',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.grey[600],
+                                          color: Colors.white.withValues(alpha: 0.55),
                                         ),
                                       ),
                                       Text(
                                         'Bs. ${detalle.precioUnitario.toStringAsFixed(2)} × ${detalle.cantidad}',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.grey[600],
+                                          color: Colors.white.withValues(alpha: 0.55),
                                         ),
                                       ),
                                     ],
@@ -3250,8 +3400,8 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                     ),
                                     Text(
                                       'Bs. ${(detalle.cantidad * detalle.precioUnitario).toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: Colors.green[700],
+                                      style: const TextStyle(
+                                        color: AppTheme.accentGreen,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -3269,7 +3419,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                       // Total
                       Card(
                         elevation: 4,
-                        color: Colors.green[50],
+                        color: AppTheme.accentGreen.withValues(alpha: 0.15),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Row(
@@ -3277,9 +3427,9 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.monetization_on,
-                                    color: Colors.green,
+                                    color: AppTheme.accentGreen,
                                     size: 22,
                                   ),
                                   const SizedBox(width: 8),
@@ -3288,6 +3438,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ],
@@ -3295,10 +3446,10 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                               Flexible(
                                 child: Text(
                                   'Bs. ${total.toStringAsFixed(2)}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.green[700],
+                                    color: AppTheme.accentGreen,
                                   ),
                                   textAlign: TextAlign.right,
                                 ),
@@ -3316,8 +3467,8 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  border: Border(top: BorderSide(color: Colors.grey[300]!)),
+                  color: Colors.white.withValues(alpha: 0.05),
+                  border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.12))),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -3368,10 +3519,17 @@ class _DetalleItem {
   final ArticuloEntity articulo;
   final int cantidad;
   final double precioUnitario;
+  final double descuento;
 
   _DetalleItem({
     required this.articulo,
     required this.cantidad,
     required this.precioUnitario,
+    this.descuento = 0,
   });
+
+  double get precioConDescuento => precioUnitario * (1 - descuento / 100);
+  double get totalConDescuento => cantidad * precioConDescuento;
+  double get precioSinFacturaConDescuento =>
+      (articulo.precioSinFactura ?? precioUnitario) * (1 - descuento / 100);
 }

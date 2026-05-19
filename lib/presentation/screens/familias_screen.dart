@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/animations.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/familia_entity.dart';
@@ -511,26 +512,12 @@ class _FamiliasScreenState extends ConsumerState<FamiliasScreen> {
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: () async {
-                        // Guardar referencia al ScaffoldMessenger antes de cerrar
-                        final scaffoldMessenger = ScaffoldMessenger.of(context);
                         Navigator.pop(context);
                         try {
                           final message = await ref.read(familiaProvider.notifier).deleteFamilia(familia.codFamilia);
-                          scaffoldMessenger.showSnackBar(
-                            SnackBar(
-                              content: Text(message),
-                              backgroundColor: AppTheme.successColor,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          if (mounted) AppOverlay.showMessage(context, message, isSuccess: true);
                         } catch (e) {
-                          scaffoldMessenger.showSnackBar(
-                            SnackBar(
-                              content: Text(ErrorMessages.getFriendlyMessage(e)),
-                              backgroundColor: AppTheme.errorColor,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          if (mounted) AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -767,26 +754,12 @@ class _FamiliaFormDialogState extends ConsumerState<_FamiliaFormDialog> {
       final message = await widget.onSubmit(_familiaController.text.trim());
 
       if (mounted) {
-        // Guardar referencia al ScaffoldMessenger antes de cerrar
-        final scaffoldMessenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppTheme.successColor,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppOverlay.showMessage(context, message, isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

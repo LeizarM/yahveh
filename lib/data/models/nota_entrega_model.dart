@@ -18,20 +18,22 @@ class NotaEntregaModel extends NotaEntregaEntity {
     super.estado = 1,
     super.estadoTexto = 'Válido',
     required super.audUsuario,
+    super.nombreEmpleado = '',
   });
 
   factory NotaEntregaModel.fromJson(Map<String, dynamic> json) => NotaEntregaModel(
         codNotaEntrega: json["codNotaEntrega"] ?? 0,
         codCliente: json["codCliente"] ?? 0,
         nombreCliente: json["nombreCliente"] ?? '',
-        fecha: json["fecha"] != null 
-            ? DateTime.parse(json["fecha"]) 
+        fecha: json["fecha"] != null
+            ? DateTime.parse(json["fecha"])
             : DateTime.now(),
         direccion: json["direccion"] ?? '',
         zona: json["zona"] ?? '',
         estado: json["estado"] ?? 1,
         estadoTexto: json["estadoTexto"] ?? 'Válido',
         audUsuario: json["audUsuario"] ?? 0,
+        nombreEmpleado: json["nombreEmpleado"] ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -44,13 +46,12 @@ class NotaEntregaModel extends NotaEntregaEntity {
         "estado": estado,
         "estadoTexto": estadoTexto,
         "audUsuario": audUsuario,
+        "nombreEmpleado": nombreEmpleado,
       };
 
-  /// JSON para crear una nueva nota de entrega
   Map<String, dynamic> toCreateJson() => {
         "codCliente": codCliente,
         "direccion": direccion,
-        // audUsuario se obtiene del JWT en el backend
       };
 
   NotaEntregaEntity toEntity() => NotaEntregaEntity(
@@ -63,5 +64,6 @@ class NotaEntregaModel extends NotaEntregaEntity {
         estado: estado,
         estadoTexto: estadoTexto,
         audUsuario: audUsuario,
+        nombreEmpleado: nombreEmpleado,
       );
 }

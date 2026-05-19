@@ -7,6 +7,8 @@ class ApiConstants {
   static const String refreshToken = '/auth/refresh';
   static const String profile = '/user/profile';
   static const String menu = '/vistas/menu';
+  static const String vistasAdminTodas = '/vistas/admin/todas';
+  static String vistasAdminUsuario(int codUsuario) => '/vistas/admin/usuario/$codUsuario';
   
   // Headers
   static const String contentType = 'Content-Type';

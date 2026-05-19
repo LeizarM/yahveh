@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/error/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../domain/entities/persona_entity.dart';
 import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
@@ -1085,23 +1086,13 @@ class _PersonaEmpleadoScreenState extends ConsumerState<PersonaEmpleadoScreen> {
 
             if (!mounted) return;
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Datos actualizados exitosamente'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            AppOverlay.showMessage(context, 'Datos actualizados exitosamente', isSuccess: true);
 
             // Recargar lista
             ref.read(empleadoProvider.notifier).cargarEmpleados();
           } on ApiException catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(e.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppOverlay.showMessage(context, e.message, isError: true);
           }
         },
       ),

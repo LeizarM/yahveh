@@ -11,6 +11,7 @@ class DetalleNotaEntregaEntity {
   final double precioUnitario;
   final double precioTotal;
   final double precioSinFactura;
+  final double descuento;
   final int audUsuario;
 
   DetalleNotaEntregaEntity({
@@ -25,6 +26,7 @@ class DetalleNotaEntregaEntity {
     required this.precioUnitario,
     required this.precioTotal,
     required this.precioSinFactura,
+    this.descuento = 0,
     required this.audUsuario,
   });
 
@@ -40,6 +42,7 @@ class DetalleNotaEntregaEntity {
     double? precioUnitario,
     double? precioTotal,
     double? precioSinFactura,
+    double? descuento,
     int? audUsuario,
   }) {
     return DetalleNotaEntregaEntity(
@@ -54,6 +57,7 @@ class DetalleNotaEntregaEntity {
       precioUnitario: precioUnitario ?? this.precioUnitario,
       precioTotal: precioTotal ?? this.precioTotal,
       precioSinFactura: precioSinFactura ?? this.precioSinFactura,
+      descuento: descuento ?? this.descuento,
       audUsuario: audUsuario ?? this.audUsuario,
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/animations.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../domain/entities/cliente_entity.dart';
@@ -599,8 +600,6 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context, ClienteEntity cliente) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     showDialog(
       context: context,
       builder: (dialogContext) => _GlassDialog(
@@ -621,19 +620,9 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 final message = await ref
                     .read(clienteProvider.notifier)
                     .deleteCliente(cliente.codCliente);
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text(message),
-                    backgroundColor: AppTheme.successColor,
-                  ),
-                );
+                if (context.mounted) AppOverlay.showMessage(context, message, isSuccess: true);
               } catch (e) {
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text(ErrorMessages.getFriendlyMessage(e)),
-                    backgroundColor: AppTheme.errorColor,
-                  ),
-                );
+                if (context.mounted) AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1319,27 +1308,11 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        // Usar ScaffoldMessenger del contexto principal para que se muestre sobre todo
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppTheme.successColor,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppOverlay.showMessage(context, message, isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
-        // Mostrar error en el ScaffoldMessenger local del diálogo
-        _scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -1531,12 +1504,7 @@ class _TelefonosClienteDialogState
         .toList();
 
     if (telefonosToAdd.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ingrese al menos un número de teléfono'),
-          backgroundColor: AppTheme.warningColor,
-        ),
-      );
+      AppOverlay.showMessage(context, 'Ingrese al menos un número de teléfono', isWarning: true);
       return;
     }
 
@@ -1557,23 +1525,15 @@ class _TelefonosClienteDialogState
         _newTelefonoControllers.clear();
         await _loadTelefonos();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${telefonosToAdd.length} teléfono(s) agregado(s) exitosamente',
-            ),
-            backgroundColor: AppTheme.successColor,
-          ),
+        AppOverlay.showMessage(
+          context,
+          '${telefonosToAdd.length} teléfono(s) agregado(s) exitosamente',
+          isSuccess: true,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -1615,21 +1575,11 @@ class _TelefonosClienteDialogState
       await _loadTelefonos();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Teléfono eliminado exitosamente'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        AppOverlay.showMessage(context, 'Teléfono eliminado exitosamente', isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     }
   }

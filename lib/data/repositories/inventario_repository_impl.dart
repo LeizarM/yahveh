@@ -52,6 +52,7 @@ class InventarioRepositoryImpl implements InventarioRepository {
     required int cantidad,
     required double precioUnitario,
     String? observacion,
+    String? codImportacion,
   }) async {
     final result = await _remoteDataSource.crear(
       codArticulo: codArticulo,
@@ -59,6 +60,7 @@ class InventarioRepositoryImpl implements InventarioRepository {
       cantidad: cantidad,
       precioUnitario: precioUnitario,
       observacion: observacion,
+      codImportacion: codImportacion,
     );
     
     return OperationResult(

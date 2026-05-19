@@ -20,10 +20,11 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
     required super.precioUnitario,
     required super.precioTotal,
     required super.precioSinFactura,
+    super.descuento = 0,
     required super.audUsuario,
   });
 
-  factory DetalleNotaEntregaModel.fromJson(Map<String, dynamic> json) => 
+  factory DetalleNotaEntregaModel.fromJson(Map<String, dynamic> json) =>
       DetalleNotaEntregaModel(
         codDetalle: json["codDetalle"] ?? 0,
         codNotaEntrega: json["codNotaEntrega"] ?? 0,
@@ -36,6 +37,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         precioUnitario: json["precioUnitario"]?.toDouble() ?? 0.0,
         precioTotal: json["precioTotal"]?.toDouble() ?? 0.0,
         precioSinFactura: json["precioSinFactura"]?.toDouble() ?? 0.0,
+        descuento: json["descuento"]?.toDouble() ?? 0.0,
         audUsuario: json["audUsuario"] ?? 0,
       );
 
@@ -51,16 +53,16 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         "precioUnitario": precioUnitario,
         "precioTotal": precioTotal,
         "precioSinFactura": precioSinFactura,
+        "descuento": descuento,
         "audUsuario": audUsuario,
       };
 
-  /// JSON para crear un nuevo detalle
   Map<String, dynamic> toCreateJson() => {
         "codArticulo": codArticulo,
         "cantidad": cantidad,
         "precioUnitario": precioUnitario,
         "precioSinFactura": precioSinFactura,
-        // audUsuario se obtiene del JWT en el backend
+        "descuento": descuento,
       };
 
   DetalleNotaEntregaEntity toEntity() => DetalleNotaEntregaEntity(
@@ -75,6 +77,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         precioUnitario: precioUnitario,
         precioTotal: precioTotal,
         precioSinFactura: precioSinFactura,
+        descuento: descuento,
         audUsuario: audUsuario,
       );
 }

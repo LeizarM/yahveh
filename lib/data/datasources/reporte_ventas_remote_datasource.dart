@@ -91,4 +91,56 @@ class ReporteVentasRemoteDataSource {
       rethrow;
     }
   }
+
+  /// GET /api/reportes/vendedores/pdf/{fechaDesde}/{fechaHasta}
+  Future<Uint8List> descargarVendedoresPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/reportes/vendedores/pdf/$fechaDesde/$fechaHasta',
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+      if (response.statusCode == 200) {
+        return Uint8List.fromList(response.data);
+      }
+      throw ApiException(message: 'Error al descargar reporte de vendedores');
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.response?.statusCode == 404
+            ? 'No hay datos para el período seleccionado'
+            : 'Error de conexión',
+      );
+    }
+  }
+
+  /// GET /api/reportes/inventario/pdf/{fechaDesde}/{fechaHasta}
+  Future<Uint8List> descargarInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/reportes/inventario/pdf/$fechaDesde/$fechaHasta',
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+      if (response.statusCode == 200) {
+        return Uint8List.fromList(response.data);
+      }
+      throw ApiException(message: 'Error al descargar reporte de inventario');
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.response?.statusCode == 404
+            ? 'No hay datos para el período seleccionado'
+            : 'Error de conexión',
+      );
+    }
+  }
 }

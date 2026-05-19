@@ -33,4 +33,26 @@ class ReporteVentasRepositoryImpl implements ReporteVentasRepository {
       fechaHasta: fechaHasta,
     );
   }
+
+  @override
+  Future<Uint8List> descargarVendedoresPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  }) async {
+    return await _remoteDataSource.descargarVendedoresPdf(
+      fechaDesde: fechaDesde,
+      fechaHasta: fechaHasta,
+    );
+  }
+
+  @override
+  Future<Uint8List> descargarInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+  }) async {
+    return await _remoteDataSource.descargarInventarioPdf(
+      fechaDesde: fechaDesde,
+      fechaHasta: fechaHasta,
+    );
+  }
 }

@@ -32,6 +32,7 @@ class InventarioNotifier extends Notifier<AsyncValue<List<InventarioEntity>>> {
     required int cantidad,
     required double precioUnitario,
     String? observacion,
+    String? codImportacion,
   }) async {
     try {
       final repository = ref.read(inventarioRepositoryProvider);
@@ -41,6 +42,7 @@ class InventarioNotifier extends Notifier<AsyncValue<List<InventarioEntity>>> {
         cantidad: cantidad,
         precioUnitario: precioUnitario,
         observacion: observacion,
+        codImportacion: codImportacion,
       );
       
       // Recargar movimientos del artículo

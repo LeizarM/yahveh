@@ -235,6 +235,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return  ReportesScreen();
         },
       ),
+      GoRoute(
+        path: '/catalogo',
+        name: 'catalogo',
+        builder: (context, state) {
+          console('🏗️ Construyendo CatalogoScreen');
+          return  CatalogoScreen();
+        },
+      ),
+      GoRoute(
+        path: '/regla-descuento',
+        name: 'regla-descuento',
+        builder: (context, state) {
+          console('🏗️ Construyendo ReglaDescuentoScreen');
+          return  ReglaDescuentoScreen();
+        },
+      ),
     ],
     errorBuilder: (context, state) {
       console(' Error de ruta: ${state.error}');

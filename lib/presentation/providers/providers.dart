@@ -21,6 +21,7 @@ import '../../data/datasources/persona_remote_datasource.dart';
 import '../../data/datasources/empleado_remote_datasource.dart';
 import '../../data/datasources/telefono_cliente_remote_datasource.dart';
 import '../../data/datasources/reporte_ventas_remote_datasource.dart';
+import '../../data/datasources/regla_descuento_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/vista_repository_impl.dart';
 import '../../data/repositories/linea_repository_impl.dart';
@@ -39,6 +40,7 @@ import '../../data/repositories/persona_repository_impl.dart';
 import '../../data/repositories/empleado_repository_impl.dart';
 import '../../data/repositories/telefono_cliente_repository_impl.dart';
 import '../../data/repositories/reporte_ventas_repository_impl.dart';
+import '../../data/repositories/regla_descuento_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/vista_repository.dart';
 import '../../domain/repositories/linea_repository.dart';
@@ -57,7 +59,9 @@ import '../../domain/repositories/persona_repository.dart';
 import '../../domain/repositories/empleado_repository.dart';
 import '../../domain/repositories/telefono_cliente_repository.dart';
 import '../../domain/repositories/reporte_ventas_repository.dart';
+import '../../domain/repositories/regla_descuento_repository.dart';
 import '../../domain/entities/inventario_entity.dart';
+import '../../domain/entities/regla_descuento_entity.dart';
 import '../../domain/entities/usuario_entity.dart';
 import '../../domain/entities/persona_entity.dart';
 import '../../domain/entities/empleado_entity.dart';
@@ -65,6 +69,7 @@ import '../../domain/entities/telefono_cliente_entity.dart';
 import '../../domain/entities/nota_entrega_entity.dart';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 import 'auth_provider.dart';
+import 'permisos_provider.dart';
 import 'inventario_provider.dart';
 import 'nota_entrega_provider.dart';
 import 'detalle_nota_entrega_provider.dart';
@@ -72,6 +77,7 @@ import 'usuario_provider.dart';
 import 'persona_provider.dart';
 import 'empleado_provider.dart';
 import 'telefono_cliente_provider.dart';
+import 'regla_descuento_provider.dart';
 
 /// Provider para FlutterSecureStorage
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -479,4 +485,31 @@ final reporteVentasRepositoryProvider = Provider<ReporteVentasRepository>((
   final remoteDataSource = ref.watch(reporteVentasRemoteDataSourceProvider);
 
   return ReporteVentasRepositoryImpl(remoteDataSource: remoteDataSource);
+});
+
+// ============================================================================
+// REGLA DESCUENTO
+// ============================================================================
+
+final reglaDescuentoRemoteDataSourceProvider =
+    Provider<ReglaDescuentoRemoteDataSource>((ref) {
+  final client = ref.watch(dioClientProvider);
+  return ReglaDescuentoRemoteDataSourceImpl(client);
+});
+
+final reglaDescuentoRepositoryProvider = Provider<ReglaDescuentoRepository>((ref) {
+  final remote = ref.watch(reglaDescuentoRemoteDataSourceProvider);
+  return ReglaDescuentoRepositoryImpl(remote);
+});
+
+final reglaDescuentoProvider =
+    NotifierProvider<ReglaDescuentoNotifier, AsyncValue<List<ReglaDescuentoEntity>>>(
+  () => ReglaDescuentoNotifier(),
+);
+
+/// FutureProvider.family para obtener la regla de un artículo puntual
+final reglaDescuentoPorArticuloProvider =
+    FutureProvider.family<ReglaDescuentoEntity?, String>((ref, codArticulo) async {
+  final repo = ref.read(reglaDescuentoRepositoryProvider);
+  return await repo.buscarPorArticulo(codArticulo);
 });

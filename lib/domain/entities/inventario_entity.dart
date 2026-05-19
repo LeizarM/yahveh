@@ -13,6 +13,7 @@ class InventarioEntity {
   double valorTotal;
   DateTime fecha;
   String? observacion;
+  String? codImportacion;
   int audUsuario;
 
   InventarioEntity({
@@ -29,6 +30,7 @@ class InventarioEntity {
     required this.valorTotal,
     required this.fecha,
     this.observacion,
+    this.codImportacion,
     required this.audUsuario,
   });
 
@@ -47,6 +49,7 @@ class InventarioEntity {
     double? valorTotal,
     DateTime? fecha,
     String? observacion,
+    String? codImportacion,
     int? audUsuario,
   }) {
     return InventarioEntity(
@@ -63,6 +66,7 @@ class InventarioEntity {
       valorTotal: valorTotal ?? this.valorTotal,
       fecha: fecha ?? this.fecha,
       observacion: observacion ?? this.observacion,
+      codImportacion: codImportacion ?? this.codImportacion,
       audUsuario: audUsuario ?? this.audUsuario,
     );
   }

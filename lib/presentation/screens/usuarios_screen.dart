@@ -2,11 +2,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/usuario_entity.dart';
+import '../../domain/entities/vista_entity.dart';
 import '../../core/error/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/animations.dart';
 import '../providers/providers.dart';
+import '../providers/permisos_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class UsuariosScreen extends ConsumerStatefulWidget {
@@ -248,6 +251,15 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                   children: [
                     IconButton(
                       icon: Icon(
+                        Icons.security_rounded,
+                        color: AppTheme.accentBlue.withValues(alpha: 0.85),
+                        size: 20,
+                      ),
+                      onPressed: () => _showPermisosDialog(usuario),
+                      tooltip: 'Gestionar Permisos',
+                    ),
+                    IconButton(
+                      icon: Icon(
                         Icons.edit_rounded,
                         color: Colors.white.withValues(alpha: 0.7),
                         size: 20,
@@ -402,6 +414,18 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
 
 
 
+  /// Mostrar diálogo de gestión de permisos
+  void _showPermisosDialog(UsuarioEntity usuario) {
+    // Limpiar estado previo y cargar datos frescos
+    ref.read(permisosProvider.notifier).limpiar();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _PermisosDialog(usuario: usuario),
+    );
+  }
+
   /// Mostrar diálogo para editar usuario
   void _showEditDialog(UsuarioEntity usuario) {
     showDialog(
@@ -422,14 +446,10 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
 
             if (!mounted) return;
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              _buildSnackBar('Usuario actualizado exitosamente'),
-            );
+            AppOverlay.showMessage(context, 'Usuario actualizado exitosamente', isSuccess: true);
           } on ApiException catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              _buildSnackBar('Error: ${e.message}', isError: true),
-            );
+            AppOverlay.showMessage(context, 'Error: ${e.message}', isError: true);
           }
         },
       ),
@@ -453,14 +473,10 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
 
             if (!mounted) return;
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              _buildSnackBar('Usuario creado exitosamente'),
-            );
+            AppOverlay.showMessage(context, 'Usuario creado exitosamente', isSuccess: true);
           } on ApiException catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              _buildSnackBar(e.message, isError: true),
-            );
+            AppOverlay.showMessage(context, e.message, isError: true);
           }
         },
       ),
@@ -563,14 +579,10 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                         try {
                           await ref.read(usuarioProvider.notifier).eliminar(usuario.codUsuario);
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            _buildSnackBar('Usuario eliminado'),
-                          );
+                          AppOverlay.showMessage(context, 'Usuario eliminado', isSuccess: true);
                         } on ApiException catch (e) {
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            _buildSnackBar('Error: ${e.message}', isError: true),
-                          );
+                          AppOverlay.showMessage(context, 'Error: ${e.message}', isError: true);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -605,6 +617,378 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.all(16),
     );
+  }
+}
+
+// =============================================================================
+// Diálogo de gestión de permisos por usuario
+// =============================================================================
+
+class _PermisosDialog extends ConsumerStatefulWidget {
+  final UsuarioEntity usuario;
+
+  const _PermisosDialog({required this.usuario});
+
+  @override
+  ConsumerState<_PermisosDialog> createState() => _PermisosDialogState();
+}
+
+class _PermisosDialogState extends ConsumerState<_PermisosDialog> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        ref.read(permisosProvider.notifier).cargarPermisos(widget.usuario.codUsuario));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(permisosProvider);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF2D3250).withValues(alpha: 0.97),
+              const Color(0xFF1A1D2E).withValues(alpha: 0.99),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 50,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(state),
+            if (state.error != null) _buildError(state.error!),
+            Flexible(child: _buildBody(state)),
+            _buildFooter(state),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
+  Widget _buildHeader(PermisosState state) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 16, 16),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.accentBlue.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.security_rounded,
+                color: AppTheme.accentBlue, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Gestionar Permisos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  widget.usuario.login,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.accentBlue.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close_rounded,
+                color: Colors.white.withValues(alpha: 0.5)),
+            onPressed:
+                state.isSaving ? null : () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Error banner
+  // ---------------------------------------------------------------------------
+  Widget _buildError(String error) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.errorColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded,
+              color: AppTheme.errorColor, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              error,
+              style: TextStyle(color: AppTheme.errorColor, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Body — lista de vistas con checkboxes
+  // ---------------------------------------------------------------------------
+  Widget _buildBody(PermisosState state) {
+    if (state.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(48),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
+          ),
+        ),
+      );
+    }
+
+    if (state.todasLasVistas.isEmpty && !state.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            'No hay pantallas configuradas en el sistema.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shrinkWrap: true,
+      itemCount: state.todasLasVistas.length,
+      separatorBuilder: (_, __) => Divider(
+        color: Colors.white.withValues(alpha: 0.06),
+        height: 1,
+      ),
+      itemBuilder: (context, index) {
+        final vista = state.todasLasVistas[index];
+        final isChecked = state.vistasAsignadas.contains(vista.codVista);
+        return _buildVistaItem(vista, isChecked, state.isSaving);
+      },
+    );
+  }
+
+  Widget _buildVistaItem(VistaEntity vista, bool isChecked, bool isSaving) {
+    return InkWell(
+      onTap: isSaving
+          ? null
+          : () => ref.read(permisosProvider.notifier).toggleVista(vista.codVista),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isChecked
+                    ? AppTheme.accentBlue
+                    : Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isChecked
+                      ? AppTheme.accentBlue
+                      : Colors.white.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+              ),
+              child: isChecked
+                  ? const Icon(Icons.check_rounded,
+                      color: Colors.white, size: 16)
+                  : null,
+            ),
+            const SizedBox(width: 14),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: (isChecked ? AppTheme.accentBlue : Colors.white)
+                    .withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(
+                _iconForVista(vista.direccion),
+                size: 18,
+                color: isChecked
+                    ? AppTheme.accentBlue
+                    : Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vista.titulo,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isChecked
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  Text(
+                    vista.direccion,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Footer — botones Cancelar / Guardar
+  // ---------------------------------------------------------------------------
+  Widget _buildFooter(PermisosState state) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: state.isSaving || state.isLoading
+                  ? null
+                  : () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+              ),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: state.isSaving || state.isLoading
+                  ? null
+                  : () => _guardarPermisos(state),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: state.isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white)),
+                    )
+                  : const Icon(Icons.save_rounded, size: 18),
+              label: Text(
+                state.isSaving ? 'Guardando...' : 'Guardar',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Acción guardar
+  // ---------------------------------------------------------------------------
+  Future<void> _guardarPermisos(PermisosState state) async {
+    try {
+      await ref
+          .read(permisosProvider.notifier)
+          .guardarPermisos(widget.usuario.codUsuario);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppOverlay.showMessage(
+        context,
+        'Permisos de "${widget.usuario.login}" actualizados',
+        isSuccess: true,
+      );
+    } catch (_) {
+      // El error ya se muestra en el estado (banner rojo)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ícono inferido por dirección de ruta
+  // ---------------------------------------------------------------------------
+  IconData _iconForVista(String direccion) {
+    final d = direccion.toLowerCase();
+    if (d.contains('dashboard')) return Icons.dashboard_rounded;
+    if (d.contains('item') || d.contains('articulo')) return Icons.inventory_2_rounded;
+    if (d.contains('linea')) return Icons.category_rounded;
+    if (d.contains('familia')) return Icons.account_tree_rounded;
+    if (d.contains('catalogo')) return Icons.menu_book_rounded;
+    if (d.contains('cliente')) return Icons.people_rounded;
+    if (d.contains('ciudad')) return Icons.location_city_rounded;
+    if (d.contains('zona')) return Icons.map_rounded;
+    if (d.contains('pais')) return Icons.public_rounded;
+    if (d.contains('descuento') || d.contains('regla')) return Icons.percent_rounded;
+    if (d.contains('empleado') || d.contains('persona')) return Icons.badge_rounded;
+    if (d.contains('reporte')) return Icons.bar_chart_rounded;
+    if (d.contains('delivery') || d.contains('entrega')) return Icons.local_shipping_rounded;
+    if (d.contains('usuario')) return Icons.manage_accounts_rounded;
+    return Icons.web_rounded;
   }
 }
 
@@ -1264,12 +1648,7 @@ class _CreateUsuarioFromEmpleadoDialogState
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedEmpleadoId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Seleccione un empleado'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppOverlay.showMessage(context, 'Seleccione un empleado', isWarning: true);
       return;
     }
 

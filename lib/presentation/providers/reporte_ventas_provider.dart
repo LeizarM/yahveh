@@ -118,6 +118,40 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
     }
   }
 
+  /// Descarga el reporte de notas por vendedor en PDF
+  Future<Uint8List?> descargarVendedoresPdf({
+    required DateTime fechaDesde,
+    required DateTime fechaHasta,
+  }) async {
+    try {
+      final repository = ref.read(reporteVentasRepositoryProvider);
+      return await repository.descargarVendedoresPdf(
+        fechaDesde: _formatDate(fechaDesde),
+        fechaHasta: _formatDate(fechaHasta),
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Error al descargar reporte de vendedores: $e');
+      return null;
+    }
+  }
+
+  /// Descarga el reporte de inventario en PDF
+  Future<Uint8List?> descargarInventarioPdf({
+    required DateTime fechaDesde,
+    required DateTime fechaHasta,
+  }) async {
+    try {
+      final repository = ref.read(reporteVentasRepositoryProvider);
+      return await repository.descargarInventarioPdf(
+        fechaDesde: _formatDate(fechaDesde),
+        fechaHasta: _formatDate(fechaHasta),
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Error al descargar reporte de inventario: $e');
+      return null;
+    }
+  }
+
   /// Limpia el reporte
   void limpiar() {
     state = const ReporteVentasState();

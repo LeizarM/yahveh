@@ -15,3 +15,5 @@ export 'usuarios_screen.dart';
 export 'profile_screen.dart';
 export 'persona_empleado_screen.dart';
 export 'reportes_screen.dart';
+export 'catalogo_screen.dart';
+export 'regla_descuento_screen.dart';

@@ -20,6 +20,7 @@ class InventarioModel extends InventarioEntity {
     required super.valorTotal,
     required super.fecha,
     super.observacion,
+    super.codImportacion,
     required super.audUsuario,
   });
 
@@ -37,6 +38,7 @@ class InventarioModel extends InventarioEntity {
         valorTotal: json["valorTotal"]?.toDouble() ?? 0.0,
         fecha: json["fecha"] != null ? DateTime.parse(json["fecha"]) : DateTime.now(),
         observacion: json["observacion"],
+        codImportacion: json["codImportacion"],
         audUsuario: json["audUsuario"] ?? 0,
       );
 
@@ -54,6 +56,7 @@ class InventarioModel extends InventarioEntity {
         "valorTotal": valorTotal,
         "fecha": "${fecha.year.toString().padLeft(4, '0')}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}",
         "observacion": observacion,
+        "codImportacion": codImportacion,
         "audUsuario": audUsuario,
       };
 
@@ -64,6 +67,7 @@ class InventarioModel extends InventarioEntity {
         "cantidad": cantidad,
         "precioUnitario": precioUnitario,
         "observacion": observacion,
+        if (codImportacion != null && codImportacion!.isNotEmpty) "codImportacion": codImportacion,
         // audUsuario se obtiene del JWT en el backend
       };
 
@@ -82,6 +86,7 @@ class InventarioModel extends InventarioEntity {
         valorTotal: valorTotal,
         fecha: fecha,
         observacion: observacion,
+        codImportacion: codImportacion,
         audUsuario: audUsuario,
       );
 }

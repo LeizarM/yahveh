@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/error_messages.dart';
 import '../../core/utils/animations.dart';
@@ -314,7 +315,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     crossAxisCount: 3,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    mainAxisExtent: 240,
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
@@ -343,7 +344,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     crossAxisCount: 4,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    mainAxisExtent: 240,
                   ),
                   itemCount: articulos.length,
                   itemBuilder: (context, index) {
@@ -444,15 +445,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withValues(alpha: 0.12),
-              Colors.white.withValues(alpha: 0.05),
+              Colors.white.withValues(alpha: 0.16),
+              Colors.white.withValues(alpha: 0.07),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: hasStock
-                ? Colors.white.withValues(alpha: 0.18)
-                : Colors.red.withValues(alpha: 0.3),
+                ? Colors.white.withValues(alpha: 0.28)
+                : Colors.red.withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: [
@@ -533,15 +534,15 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 articulo.linea ?? 'Sin línea',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -618,7 +619,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                     Text(
                       articulo.descripcion2,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.55),
+                        color: Colors.white.withValues(alpha: 0.78),
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
                       ),
@@ -1791,19 +1792,12 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.green),
-        );
+        AppOverlay.showMessage(context, message, isSuccess: true);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     }
   }
@@ -2033,16 +2027,12 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
 
   Future<void> _createLinea() async {
     if (_lineaController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre de la línea es obligatorio')),
-      );
+      AppOverlay.showMessage(context, 'El nombre de la línea es obligatorio', isWarning: true);
       return;
     }
 
     if (_selectedFamiliaId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes seleccionar una familia')),
-      );
+      AppOverlay.showMessage(context, 'Debes seleccionar una familia', isWarning: true);
       return;
     }
 
@@ -2069,20 +2059,13 @@ class _QuickLineaFormState extends ConsumerState<_QuickLineaForm> {
 
       if (mounted) {
         widget.onLineaCreated(nuevaLinea);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Línea creada correctamente')),
-        );
+        AppOverlay.showMessage(context, 'Línea creada correctamente', isSuccess: true);
         _lineaController.clear();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isCreating = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getCrudErrorMessage('create', e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getCrudErrorMessage('create', e), isError: true);
       }
     }
   }
@@ -2587,7 +2570,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 14,
-                                      color: AppTheme.secondaryColor,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -2595,8 +2578,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                     widget.articulo.codArticulo ?? 'N/A',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.primaryDark.withValues(
-                                        alpha: 0.8,
+                                      color: AppTheme.primaryLight.withValues(
+                                        alpha: 0.9,
                                       ),
                                       letterSpacing: 0.3,
                                     ),
@@ -2620,7 +2603,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                 'Línea: ${widget.articulo.linea}',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade700,
+                                  color: Colors.white.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -2659,7 +2642,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                               _errorPrecios!,
                               style: const TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.secondaryDark,
+                                color: Colors.white70,
                               ),
                             ),
                           ),
@@ -2689,7 +2672,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
-                                  color: AppTheme.secondaryDark,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
@@ -2716,7 +2699,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
-                                        color: AppTheme.primaryDark,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
@@ -2731,7 +2714,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: AppTheme.secondaryDark,
+                                            color: Colors.white,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -2766,7 +2749,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                   )
                 else
                   Card(
-                    color: Colors.grey.shade100,
+                    color: Colors.white.withValues(alpha: 0.06),
                     elevation: 0,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -2775,7 +2758,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                           Icon(
                             Icons.info_outline,
                             size: 18,
-                            color: Colors.grey.shade600,
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 8),
                           const Expanded(
@@ -2783,7 +2766,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                               'Este artículo no tiene precios registrados',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.secondaryDark,
+                                color: Colors.white70,
                               ),
                             ),
                           ),
@@ -2799,7 +2782,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                   // Divider con texto
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.grey.shade400)),
+                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
@@ -2807,11 +2790,11 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey.shade400)),
+                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
                     ],
                   ),
 
@@ -2922,7 +2905,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 15,
-                                          color: AppTheme.secondaryDark,
+                                          color: Colors.white,
                                         ),
                                       ),
                                       const Spacer(),
@@ -2932,7 +2915,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         child: Icon(
                                           Icons.info_outline,
                                           size: 18,
-                                          color: AppTheme.primaryDark,
+                                          color: AppTheme.primaryLight,
                                         ),
                                       ),
                                     ],
@@ -2947,7 +2930,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           Icon(
                                             Icons.sell,
                                             size: 16,
-                                            color: Colors.blue.shade700,
+                                            color: Colors.blue.shade300,
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
@@ -2963,7 +2946,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: AppTheme.primaryDark,
+                                          color: AppTheme.primaryLight,
                                         ),
                                       ),
                                     ],
@@ -2978,7 +2961,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           Icon(
                                             Icons.money_off,
                                             size: 16,
-                                            color: Colors.orange.shade700,
+                                            color: Colors.orange.shade300,
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
@@ -3050,7 +3033,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                         'Resumen de ganancia',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
-                                          color: AppTheme.secondaryDark,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ],
@@ -3082,7 +3065,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                     'Los precios serán calculados automáticamente y aplicados al artículo.',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.green.shade900,
+                                      color: Colors.green.shade300,
                                     ),
                                   ),
                                 ],
@@ -3189,17 +3172,13 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '$message\n'
-              'Base: \$${precioBase.toStringAsFixed(2)} + ${porcentaje.toStringAsFixed(0)}%\n'
-              'Venta: \$${precioVenta.toStringAsFixed(2)} | '
-              'Sin Factura: \$${precioSinFactura.toStringAsFixed(2)}',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 5),
-          ),
+        AppOverlay.showMessage(
+          context,
+          '$message\n'
+          'Base: \$${precioBase.toStringAsFixed(2)} + ${porcentaje.toStringAsFixed(0)}%\n'
+          'Venta: \$${precioVenta.toStringAsFixed(2)} | '
+          'Sin Factura: \$${precioSinFactura.toStringAsFixed(2)}',
+          isSuccess: true,
         );
 
         // Recargar los precios del artículo después de guardar
@@ -3207,12 +3186,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -3240,6 +3214,7 @@ class _EntradaInventarioDialogState
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _cantidadController = TextEditingController();
   final TextEditingController _observacionController = TextEditingController();
+  final TextEditingController _codImportacionController = TextEditingController();
 
   bool _isLoading = false;
   String _tipoMovimiento = 'ENTRADA'; // Por defecto ENTRADA
@@ -3248,6 +3223,7 @@ class _EntradaInventarioDialogState
   void dispose() {
     _cantidadController.dispose();
     _observacionController.dispose();
+    _codImportacionController.dispose();
     super.dispose();
   }
 
@@ -3317,7 +3293,7 @@ class _EntradaInventarioDialogState
                     // Información del artículo
                     Container(
                       padding: const EdgeInsets.all(12),
-                      color: Colors.grey.shade100,
+                      color: Colors.white.withValues(alpha: 0.08),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -3362,9 +3338,9 @@ class _EntradaInventarioDialogState
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
+                                color: Colors.white.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade300),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3394,14 +3370,14 @@ class _EntradaInventarioDialogState
                                               color:
                                                   _tipoMovimiento == 'ENTRADA'
                                                   ? Colors.green.shade700
-                                                  : Colors.white,
+                                                  : Colors.white.withValues(alpha: 0.08),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               border: Border.all(
                                                 color:
                                                     _tipoMovimiento == 'ENTRADA'
                                                     ? Colors.green.shade700
-                                                    : Colors.grey.shade300,
+                                                    : Colors.white.withValues(alpha: 0.25),
                                                 width: 2,
                                               ),
                                             ),
@@ -3452,14 +3428,14 @@ class _EntradaInventarioDialogState
                                             decoration: BoxDecoration(
                                               color: _tipoMovimiento == 'SALIDA'
                                                   ? Colors.red.shade700
-                                                  : Colors.white,
+                                                  : Colors.white.withValues(alpha: 0.08),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               border: Border.all(
                                                 color:
                                                     _tipoMovimiento == 'SALIDA'
                                                     ? Colors.red.shade700
-                                                    : Colors.grey.shade300,
+                                                    : Colors.white.withValues(alpha: 0.25),
                                                 width: 2,
                                               ),
                                             ),
@@ -3546,6 +3522,32 @@ class _EntradaInventarioDialogState
                               ),
                               maxLines: 2,
                             ),
+
+                            // Código de Importación (solo ENTRADA)
+                            if (_tipoMovimiento == 'ENTRADA') ...[
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _codImportacionController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Cód. Importación (opcional)',
+                                  hintText: 'Hasta 12 caracteres',
+                                  prefixIcon: Icon(Icons.qr_code),
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                maxLength: 12,
+                                textCapitalization: TextCapitalization.characters,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty && value.length > 12) {
+                                    return 'Máximo 12 caracteres';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -3622,6 +3624,7 @@ class _EntradaInventarioDialogState
     try {
       final cantidad = int.parse(_cantidadController.text);
       final observacion = _observacionController.text.trim();
+      final codImportacion = _codImportacionController.text.trim();
 
       // Usar el precio actual del artículo, o 1.0 si no tiene precio
       final precioUnitario = widget.articulo.precioActual ?? 1.0;
@@ -3634,22 +3637,16 @@ class _EntradaInventarioDialogState
             cantidad: cantidad,
             precioUnitario: precioUnitario,
             observacion: observacion.isEmpty ? null : observacion,
+            codImportacion: codImportacion.isEmpty ? null : codImportacion,
           );
 
       if (result != null && mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${result.message}\n'
-              'Tipo: $_tipoMovimiento\n'
-              'Cantidad: $cantidad unidades',
-            ),
-            backgroundColor: _tipoMovimiento == 'ENTRADA'
-                ? Colors.green
-                : Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        AppOverlay.showMessage(
+          context,
+          '${result.message}\nTipo: $_tipoMovimiento | Cantidad: $cantidad unidades',
+          isSuccess: _tipoMovimiento == 'ENTRADA',
+          isError: _tipoMovimiento != 'ENTRADA',
         );
 
         // Recargar la lista de artículos para actualizar el stock
@@ -3657,13 +3654,7 @@ class _EntradaInventarioDialogState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorMessages.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppOverlay.showMessage(context, ErrorMessages.getFriendlyMessage(e), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

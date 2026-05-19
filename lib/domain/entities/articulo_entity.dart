@@ -6,6 +6,7 @@ class ArticuloEntity {
     String descripcion2;
     int? stockActual;
     double? precioActual;
+    double? precioSinFactura;
     int audUsuario;
     DateTime? audFecha;
 
@@ -17,6 +18,7 @@ class ArticuloEntity {
         required this.descripcion2,
         this.stockActual,
         this.precioActual,
+        this.precioSinFactura,
         required this.audUsuario,
         this.audFecha,
     });

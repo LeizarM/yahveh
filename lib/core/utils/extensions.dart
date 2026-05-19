@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_overlay.dart';
 
 /// Extensiones útiles para String
 extension StringExtensions on String {
@@ -78,14 +79,9 @@ extension BuildContextExtensions on BuildContext {
   /// Obtiene el color scheme
   ColorScheme get colorScheme => theme.colorScheme;
 
-  /// Muestra un SnackBar
-  void showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : null,
-      ),
-    );
+  /// Muestra un mensaje flotante siempre visible (por encima de diálogos).
+  void showSnackBar(String message, {bool isError = false, bool isWarning = false, bool isSuccess = false}) {
+    AppOverlay.showMessage(this, message, isError: isError, isWarning: isWarning, isSuccess: isSuccess);
   }
 
   /// Oculta el teclado

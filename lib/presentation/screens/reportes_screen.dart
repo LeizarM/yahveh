@@ -7,13 +7,14 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:yahveh/core/utils/error_messages.dart';
+import '../../core/utils/app_overlay.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../domain/entities/venta_reporte_entity.dart';
+import '../providers/auth_provider.dart';
 import '../providers/reporte_ventas_provider.dart';
 import '../widgets/app_drawer.dart';
 
-/// Pantalla de Reportes de Ventas
 class ReportesScreen extends ConsumerStatefulWidget {
   const ReportesScreen({super.key});
 
@@ -22,146 +23,182 @@ class ReportesScreen extends ConsumerStatefulWidget {
 }
 
 class _ReportesScreenState extends ConsumerState<ReportesScreen> {
-  DateTime _fechaDesde = DateTime.now().subtract(const Duration(days: 30));
+  DateTime _fechaDesde = DateTime.now().subtract(const Duration(days: 365));
   DateTime _fechaHasta = DateTime.now();
   final _dateFormat = DateFormat('dd/MM/yyyy');
   bool _isDownloadingPdf = false;
 
+  DateTime _vendDesde = DateTime.now().subtract(const Duration(days: 365));
+  DateTime _vendHasta = DateTime.now();
+  bool _isDownloadingVend = false;
+
+  DateTime _invDesde = DateTime.now().subtract(const Duration(days: 365));
+  DateTime _invHasta = DateTime.now();
+  bool _isDownloadingInv = false;
+
   @override
   void initState() {
     super.initState();
-    // Cargar reporte inicial con el último mes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _buscarReporte();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _buscarReporte());
   }
 
   void _buscarReporte() {
-    ref
-        .read(reporteVentasProvider.notifier)
+    ref.read(reporteVentasProvider.notifier)
         .obtenerReporte(fechaDesde: _fechaDesde, fechaHasta: _fechaHasta);
   }
 
-  Future<void> _selectFechaDesde() async {
-    final picked = await showDatePicker(
+  Future<DateTime?> _pickDate(BuildContext context, DateTime initial,
+      {DateTime? firstDate}) async {
+    return showDatePicker(
       context: context,
-      initialDate: _fechaDesde,
-      firstDate: DateTime(2020),
+      initialDate: initial,
+      firstDate: firstDate ?? DateTime(2020),
       lastDate: DateTime.now(),
-      builder: (context, child) => _buildDatePickerTheme(child),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: AppTheme.accentCyan,
+            surface: Color(0xFF2D3250),
+            onSurface: Colors.white,
+          ),
+          dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF1A1D2E)),
+        ),
+        child: child!,
+      ),
     );
-    if (picked != null) {
-      setState(() => _fechaDesde = picked);
-    }
+  }
+
+  Future<void> _selectFechaDesde() async {
+    final p = await _pickDate(context, _fechaDesde);
+    if (p != null) setState(() => _fechaDesde = p);
   }
 
   Future<void> _selectFechaHasta() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _fechaHasta,
-      firstDate: _fechaDesde,
-      lastDate: DateTime.now(),
-      builder: (context, child) => _buildDatePickerTheme(child),
-    );
-    if (picked != null) {
-      setState(() => _fechaHasta = picked);
-    }
+    final p = await _pickDate(context, _fechaHasta, firstDate: _fechaDesde);
+    if (p != null) setState(() => _fechaHasta = p);
   }
 
-  Widget _buildDatePickerTheme(Widget? child) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: const ColorScheme.dark(
-          primary: AppTheme.accentCyan,
-          surface: Color(0xFF2D3250),
-          onSurface: Colors.white,
-        ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1A1D2E)),
-      ),
-      child: child!,
+  void _showPdfResult(dynamic e, {bool isNoData = false}) {
+    if (!mounted) return;
+    final msg = e?.toString().toLowerCase() ?? '';
+    final noData = isNoData ||
+        msg.contains('no hay datos') ||
+        msg.contains('no hay artículos') ||
+        msg.contains('no hay resultados') ||
+        msg.contains('no hay información') ||
+        msg.contains('período seleccionado');
+
+    AppOverlay.showMessage(
+      context,
+      noData ? 'No hay resultados para el período seleccionado' : 'Error al generar el PDF',
+      isWarning: noData,
+      isError: !noData,
     );
   }
 
   Future<void> _descargarPdf() async {
     setState(() => _isDownloadingPdf = true);
-
     try {
-      final pdfBytes = await ref
-          .read(reporteVentasProvider.notifier)
-          .descargarPdf();
-
-      if (pdfBytes != null && mounted) {
-        await _mostrarOpcionesPDF(context, pdfBytes);
-      }
+      final pdfBytes = await ref.read(reporteVentasProvider.notifier).descargarPdf();
+      if (pdfBytes != null && mounted) await _mostrarOpcionesPDF(context, pdfBytes);
     } catch (e) {
-      console('Error al descargar PDF: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Error al descargar: $e')),
-              ],
-            ),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      console('Error PDF ventas: $e');
+      _showPdfResult(e);
     } finally {
-      if (mounted) {
-        setState(() => _isDownloadingPdf = false);
-      }
+      if (mounted) setState(() => _isDownloadingPdf = false);
     }
   }
 
-  /// Generar nombre de archivo formateado
+  Future<void> _descargarVendedoresPdf() async {
+    setState(() => _isDownloadingVend = true);
+    try {
+      final pdfBytes = await ref
+          .read(reporteVentasProvider.notifier)
+          .descargarVendedoresPdf(fechaDesde: _vendDesde, fechaHasta: _vendHasta);
+      if (pdfBytes != null && mounted) {
+        await _mostrarOpcionesPDF(
+          context,
+          pdfBytes,
+          'reporte_vendedores_${DateFormat('yyyyMMdd').format(_vendDesde)}_${DateFormat('yyyyMMdd').format(_vendHasta)}',
+        );
+      }
+    } catch (e) {
+      _showPdfResult(e);
+    } finally {
+      if (mounted) setState(() => _isDownloadingVend = false);
+    }
+  }
+
+  Future<void> _descargarInventarioPdf() async {
+    setState(() => _isDownloadingInv = true);
+    try {
+      final pdfBytes = await ref
+          .read(reporteVentasProvider.notifier)
+          .descargarInventarioPdf(fechaDesde: _invDesde, fechaHasta: _invHasta);
+      if (pdfBytes != null && mounted) {
+        await _mostrarOpcionesPDF(
+          context,
+          pdfBytes,
+          'reporte_inventario_${DateFormat('yyyyMMdd').format(_invDesde)}_${DateFormat('yyyyMMdd').format(_invHasta)}',
+        );
+      }
+    } catch (e) {
+      _showPdfResult(e);
+    } finally {
+      if (mounted) setState(() => _isDownloadingInv = false);
+    }
+  }
+
   String _generarNombreArchivo() {
     final desde = DateFormat('yyyyMMdd').format(_fechaDesde);
     final hasta = DateFormat('yyyyMMdd').format(_fechaHasta);
     return 'reporte_ventas_${desde}_$hasta';
   }
 
-  /// Mostrar opciones de PDF (vista previa y compartir)
   Future<void> _mostrarOpcionesPDF(
     BuildContext context,
-    Uint8List pdfBytes,
-  ) async {
-    final nombreArchivo = _generarNombreArchivo();
-
+    Uint8List pdfBytes, [
+    String? nombreArchivo,
+  ]) async {
+    nombreArchivo ??= _generarNombreArchivo();
     final opcion = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        icon: Icon(Icons.picture_as_pdf, size: 48, color: Colors.red[700]),
-        title: const Text('PDF Generado'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '$nombreArchivo.pdf',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
-            ),
-            const SizedBox(height: 8),
-            const Text('¿Qué deseas hacer con el PDF?'),
-          ],
+        backgroundColor: const Color(0xFF1E2235),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red[700]!.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.picture_as_pdf_rounded, size: 40, color: Colors.red[400]),
         ),
+        title: const Text('PDF generado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('$nombreArchivo.pdf',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+          const SizedBox(height: 8),
+          Text('¿Qué deseas hacer?',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.8))),
+        ]),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
           ),
           OutlinedButton.icon(
             onPressed: () => Navigator.pop(context, 'compartir'),
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share_rounded, size: 16),
             label: const Text('Compartir'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.accentCyan,
+              side: BorderSide(color: AppTheme.accentCyan.withValues(alpha: 0.5)),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, 'vista_previa'),
-            icon: const Icon(Icons.visibility),
+            icon: const Icon(Icons.visibility_rounded, size: 16),
             label: const Text('Ver PDF'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[700],
@@ -171,19 +208,11 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         ],
       ),
     );
-
-    if (opcion == 'vista_previa') {
-      await _mostrarVistaPrevia(pdfBytes, nombreArchivo);
-    } else if (opcion == 'compartir') {
-      await _compartirPDF(pdfBytes, nombreArchivo);
-    }
+    if (opcion == 'vista_previa') await _mostrarVistaPrevia(pdfBytes, nombreArchivo);
+    else if (opcion == 'compartir') await _compartirPDF(pdfBytes, nombreArchivo);
   }
 
-  /// Mostrar vista previa del PDF
-  Future<void> _mostrarVistaPrevia(
-    Uint8List pdfBytes,
-    String nombreArchivo,
-  ) async {
+  Future<void> _mostrarVistaPrevia(Uint8List pdfBytes, String nombreArchivo) async {
     try {
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
@@ -191,30 +220,15 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         format: PdfPageFormat.letter,
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al mostrar PDF: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showPdfResult(e);
     }
   }
 
-  /// Compartir PDF (WhatsApp, correo, etc.)
   Future<void> _compartirPDF(Uint8List pdfBytes, String nombreArchivo) async {
     try {
       await Printing.sharePdf(bytes: pdfBytes, filename: '$nombreArchivo.pdf');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al compartir PDF: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showPdfResult(e);
     }
   }
 
@@ -222,38 +236,16 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
   Widget build(BuildContext context) {
     final reporteState = ref.watch(reporteVentasProvider);
     final isMobile = context.isMobile;
+    final isAdmin = ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Reporte de Ventas'),
+        title: const Text('Reportes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
         actions: [
-          if (reporteState.hasData && !_isDownloadingPdf)
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf_rounded),
-              onPressed: _descargarPdf,
-              tooltip: 'Descargar PDF',
-            ),
-          if (_isDownloadingPdf)
-            const Padding(
-              padding: EdgeInsets.all(12),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _buscarReporte,
@@ -271,14 +263,25 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             if (!isMobile) _buildPermanentDrawer(),
             Expanded(
               child: SafeArea(
-                child: Column(
-                  children: [
-                    // Filtros de fecha
-                    _buildFilters(context),
-
-                    // Contenido del reporte
-                    Expanded(child: _buildContent(context, reporteState)),
-                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildVentasCard(context, reporteState, isMobile),
+                          if (isAdmin) ...[
+                            const SizedBox(height: 12),
+                            _buildAdminCards(context, isMobile),
+                          ],
+                          const SizedBox(height: 16),
+                          _buildContent(context, reporteState),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -287,6 +290,247 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       ),
     );
   }
+
+  // ─── VENTAS SECTION ────────────────────────────────────────────────────────
+
+  Widget _buildVentasCard(BuildContext context, ReporteVentasState reporteState, bool isMobile) {
+    return _buildSectionCard(
+      color: AppTheme.accentCyan,
+      icon: Icons.bar_chart_rounded,
+      title: 'Reporte de Ventas',
+      subtitle: 'Detalle de ventas por artículo y cliente',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (isMobile) ...[
+          _buildDateButton(label: 'Desde', date: _fechaDesde, onTap: _selectFechaDesde),
+          const SizedBox(height: 8),
+          _buildDateButton(label: 'Hasta', date: _fechaHasta, onTap: _selectFechaHasta),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: _buildActionButton(
+                label: 'Buscar',
+                icon: Icons.search_rounded,
+                color: AppTheme.accentCyan,
+                onTap: _buscarReporte,
+              ),
+            ),
+            if (reporteState.hasData) ...[
+              const SizedBox(width: 8),
+              _buildActionButton(
+                label: _isDownloadingPdf ? '...' : 'PDF',
+                icon: Icons.picture_as_pdf_rounded,
+                color: Colors.red[600]!,
+                onTap: _isDownloadingPdf ? null : _descargarPdf,
+                isLoading: _isDownloadingPdf,
+                compact: true,
+              ),
+            ],
+          ]),
+        ] else Row(children: [
+          Expanded(child: _buildDateButton(label: 'Desde', date: _fechaDesde, onTap: _selectFechaDesde)),
+          const SizedBox(width: 10),
+          Expanded(child: _buildDateButton(label: 'Hasta', date: _fechaHasta, onTap: _selectFechaHasta)),
+          const SizedBox(width: 10),
+          _buildActionButton(label: 'Buscar', icon: Icons.search_rounded, color: AppTheme.accentCyan, onTap: _buscarReporte),
+          if (reporteState.hasData) ...[
+            const SizedBox(width: 8),
+            _buildActionButton(
+              label: _isDownloadingPdf ? 'Generando...' : 'PDF',
+              icon: Icons.picture_as_pdf_rounded,
+              color: Colors.red[600]!,
+              onTap: _isDownloadingPdf ? null : _descargarPdf,
+              isLoading: _isDownloadingPdf,
+            ),
+          ],
+        ]),
+      ]),
+    );
+  }
+
+  // ─── ADMIN CARDS ────────────────────────────────────────────────────────────
+
+  Widget _buildAdminCards(BuildContext context, bool isMobile) {
+    final vendCard = _buildSectionCard(
+      color: AppTheme.accentCyan,
+      icon: Icons.people_alt_rounded,
+      title: 'Por Vendedor',
+      subtitle: 'Resumen y detalle por vendedor',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(child: _buildDateButton(label: 'Desde', date: _vendDesde, onTap: () async {
+            final p = await _pickDate(context, _vendDesde);
+            if (p != null) setState(() => _vendDesde = p);
+          })),
+          const SizedBox(width: 8),
+          Expanded(child: _buildDateButton(label: 'Hasta', date: _vendHasta, onTap: () async {
+            final p = await _pickDate(context, _vendHasta, firstDate: _vendDesde);
+            if (p != null) setState(() => _vendHasta = p);
+          })),
+        ]),
+        const SizedBox(height: 10),
+        _buildActionButton(
+          label: _isDownloadingVend ? 'Generando...' : 'Descargar PDF',
+          icon: Icons.picture_as_pdf_rounded,
+          color: AppTheme.accentCyan,
+          onTap: _isDownloadingVend ? null : _descargarVendedoresPdf,
+          isLoading: _isDownloadingVend,
+          fullWidth: true,
+        ),
+      ]),
+    );
+
+    final invCard = _buildSectionCard(
+      color: AppTheme.accentGreen,
+      icon: Icons.inventory_2_rounded,
+      title: 'Inventario',
+      subtitle: 'Artículos con entradas, salidas y stock',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(child: _buildDateButton(label: 'Desde', date: _invDesde, onTap: () async {
+            final p = await _pickDate(context, _invDesde);
+            if (p != null) setState(() => _invDesde = p);
+          })),
+          const SizedBox(width: 8),
+          Expanded(child: _buildDateButton(label: 'Hasta', date: _invHasta, onTap: () async {
+            final p = await _pickDate(context, _invHasta, firstDate: _invDesde);
+            if (p != null) setState(() => _invHasta = p);
+          })),
+        ]),
+        const SizedBox(height: 10),
+        _buildActionButton(
+          label: _isDownloadingInv ? 'Generando...' : 'Descargar PDF',
+          icon: Icons.picture_as_pdf_rounded,
+          color: AppTheme.accentGreen,
+          onTap: _isDownloadingInv ? null : _descargarInventarioPdf,
+          isLoading: _isDownloadingInv,
+          fullWidth: true,
+        ),
+      ]),
+    );
+
+    if (isMobile) {
+      return Column(children: [vendCard, const SizedBox(height: 12), invCard]);
+    }
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(child: vendCard),
+      const SizedBox(width: 12),
+      Expanded(child: invCard),
+    ]);
+  }
+
+  // ─── SHARED UI COMPONENTS ───────────────────────────────────────────────────
+
+  Widget _buildSectionCard({
+    required Color color,
+    required IconData icon,
+    required String title,
+    required Widget child,
+    String? subtitle,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            border: Border(bottom: BorderSide(color: color.withValues(alpha: 0.15))),
+          ),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 16),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                if (subtitle != null)
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11)),
+              ]),
+            ),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: child,
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildDateButton({
+    required String label,
+    required DateTime date,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        child: Row(children: [
+          Icon(Icons.calendar_today_rounded, color: AppTheme.accentCyan, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10)),
+              Text(_dateFormat.format(date), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+            ]),
+          ),
+          Icon(Icons.expand_more_rounded, color: Colors.white.withValues(alpha: 0.4), size: 18),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onTap,
+    bool isLoading = false,
+    bool fullWidth = false,
+    bool compact = false,
+  }) {
+    final btn = ElevatedButton.icon(
+      onPressed: onTap,
+      icon: isLoading
+          ? SizedBox(
+              width: 14, height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white.withValues(alpha: 0.8)),
+            )
+          : Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: onTap == null ? color.withValues(alpha: 0.4) : color,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 14 : 18,
+          vertical: 12,
+        ),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    return fullWidth ? SizedBox(width: double.infinity, child: btn) : btn;
+  }
+
+  // ─── DRAWERS ────────────────────────────────────────────────────────────────
 
   Widget _buildBlurredDrawer() {
     return Drawer(
@@ -330,166 +574,12 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
     );
   }
 
-  Widget _buildFilters(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.filter_alt_rounded,
-                color: Colors.white.withValues(alpha: 0.8),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Filtrar por Fecha',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ResponsiveLayout(
-            mobile: Column(
-              children: [
-                _buildDateButton(
-                  label: 'Desde',
-                  date: _fechaDesde,
-                  onTap: _selectFechaDesde,
-                ),
-                const SizedBox(height: 12),
-                _buildDateButton(
-                  label: 'Hasta',
-                  date: _fechaHasta,
-                  onTap: _selectFechaHasta,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(width: double.infinity, child: _buildSearchButton()),
-              ],
-            ),
-            tablet: _buildDesktopFilters(),
-            desktop: _buildDesktopFilters(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopFilters() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildDateButton(
-            label: 'Desde',
-            date: _fechaDesde,
-            onTap: _selectFechaDesde,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildDateButton(
-            label: 'Hasta',
-            date: _fechaHasta,
-            onTap: _selectFechaHasta,
-          ),
-        ),
-        const SizedBox(width: 16),
-        _buildSearchButton(),
-      ],
-    );
-  }
-
-  Widget _buildDateButton({
-    required String label,
-    required DateTime date,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.calendar_today_rounded,
-              color: AppTheme.accentCyan,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    _dateFormat.format(date),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: Colors.white.withValues(alpha: 0.5)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchButton() {
-    return ElevatedButton.icon(
-      onPressed: _buscarReporte,
-      icon: const Icon(Icons.search_rounded),
-      label: const Text('Buscar'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.accentCyan,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+  // ─── CONTENT STATES ─────────────────────────────────────────────────────────
 
   Widget _buildContent(BuildContext context, ReporteVentasState state) {
-    if (state.isLoading) {
-      return _buildLoadingState();
-    }
-
-    if (state.error != null) {
-      return _buildErrorState(context, state.error!);
-    }
-
-    if (!state.hasData) {
-      return _buildEmptyState();
-    }
-
+    if (state.isLoading) return _buildLoadingState();
+    if (state.error != null) return _buildErrorState(context, state.error!);
+    if (!state.hasData) return _buildEmptyState();
     return ResponsiveLayout(
       mobile: _buildMobileList(context, state),
       tablet: _buildDataTable(context, state),
@@ -498,145 +588,96 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
   }
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 50,
-            height: 50,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withValues(alpha: 0.8),
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        SizedBox(
+          width: 44,
+          height: 44,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentCyan.withValues(alpha: 0.8)),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Cargando reporte...',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        Text('Cargando reporte...',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14)),
+      ]),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.insert_chart_outlined_rounded,
-              size: 40,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
-          const SizedBox(height: 24),
-          Text(
-            'No hay datos para mostrar',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Selecciona un rango de fechas y presiona Buscar',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
+          child: Icon(Icons.insert_chart_outlined_rounded,
+              size: 36, color: Colors.white.withValues(alpha: 0.4)),
+        ),
+        const SizedBox(height: 20),
+        Text('Sin datos para mostrar',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 17, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text('Selecciona un rango de fechas y presiona Buscar',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13)),
+      ]),
     );
   }
 
   Widget _buildErrorState(BuildContext context, String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.errorColor.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline_rounded,
-                size: 40,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Error al cargar el reporte',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _buscarReporte,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppTheme.primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: AppTheme.errorColor.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.error_outline_rounded, size: 36, color: Colors.redAccent),
         ),
-      ),
+        const SizedBox(height: 20),
+        const Text('Error al cargar el reporte',
+            style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text(error,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13)),
+        const SizedBox(height: 20),
+        ElevatedButton.icon(
+          onPressed: _buscarReporte,
+          icon: const Icon(Icons.refresh_rounded, size: 16),
+          label: const Text('Reintentar'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: AppTheme.primaryColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ]),
     );
   }
+
+  // ─── DATA DISPLAY ───────────────────────────────────────────────────────────
 
   Widget _buildMobileList(BuildContext context, ReporteVentasState state) {
     final detalles = state.detalles;
     final total = state.total;
-
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: detalles.length + (total != null ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == detalles.length && total != null) {
-          return _buildTotalCard(total);
-        }
+        if (index == detalles.length && total != null) return _buildTotalCard(total);
         return _buildVentaCard(detalles[index]);
       },
     );
@@ -644,356 +685,217 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
 
   Widget _buildVentaCard(VentaReporteEntity venta) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header con fecha y cliente
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  venta.nombreCliente ?? 'Sin cliente',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentCyan.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  venta.fecha ?? '',
-                  style: TextStyle(
-                    color: AppTheme.accentCyan,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Producto
-          Text(
-            venta.productoCompleto ?? 'Sin producto',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 14,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(
+            child: Text(
+              venta.nombreCliente ?? 'Sin cliente',
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Detalles en grid
-          Row(
-            children: [
-              _buildDetailChip(
-                Icons.category_rounded,
-                venta.lineaArticulo ?? '-',
-              ),
-              const SizedBox(width: 8),
-              _buildDetailChip(
-                Icons.shopping_cart_rounded,
-                'Cant: ${venta.cantidad ?? 0}',
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppTheme.accentCyan.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.accentCyan.withValues(alpha: 0.3)),
+            ),
+            child: Text(venta.fecha ?? '',
+                style: TextStyle(color: AppTheme.accentCyan, fontSize: 11, fontWeight: FontWeight.w500)),
           ),
-
-          const SizedBox(height: 12),
-
-          // Precios
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Precio Unit.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                  Text(
-                    venta.formatMoney(venta.precioUnitario),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Descuento',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                  Text(
-                    venta.descuentoPorcentaje,
-                    style: TextStyle(
-                      color: Colors.orange.shade300,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Total',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                  Text(
-                    venta.formatMoney(venta.totalGeneralBs),
-                    style: TextStyle(
-                      color: Colors.green.shade300,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+        ]),
+        const SizedBox(height: 6),
+        Text(venta.productoCompleto ?? 'Sin producto',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13)),
+        const SizedBox(height: 10),
+        Row(children: [
+          _buildChip(Icons.category_rounded, venta.lineaArticulo ?? '-'),
+          const SizedBox(width: 6),
+          _buildChip(Icons.shopping_cart_rounded, '${venta.cantidad ?? 0} uds'),
+        ]),
+        const SizedBox(height: 10),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          _buildMoneyCol('P. Unit.', venta.formatMoney(venta.precioUnitario), Colors.white),
+          _buildMoneyCol('Desc.', venta.descuentoPorcentaje, Colors.orange.shade300),
+          _buildMoneyCol('Total Bs.', venta.formatMoney(venta.totalGeneralBs), Colors.green.shade300, bold: true),
+        ]),
+      ]),
     );
   }
 
-  Widget _buildDetailChip(IconData icon, String text) {
+  Widget _buildChip(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.6)),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.5)),
+        const SizedBox(width: 4),
+        Text(text, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
+      ]),
     );
+  }
+
+  Widget _buildMoneyCol(String label, String value, Color valueColor, {bool bold = false}) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 10)),
+      const SizedBox(height: 2),
+      Text(value, style: TextStyle(color: valueColor, fontSize: 13, fontWeight: bold ? FontWeight.w700 : FontWeight.w500)),
+    ]);
   }
 
   Widget _buildTotalCard(VentaReporteEntity total) {
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 12),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(top: 4, bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.accentCyan.withValues(alpha: 0.3),
-            AppTheme.primaryColor.withValues(alpha: 0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.accentCyan.withValues(alpha: 0.5),
-          width: 2,
-        ),
+        gradient: LinearGradient(colors: [
+          AppTheme.accentCyan.withValues(alpha: 0.2),
+          AppTheme.primaryColor.withValues(alpha: 0.2),
+        ]),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.accentCyan.withValues(alpha: 0.4), width: 1.5),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.summarize_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Text(
-                'TOTAL GENERAL',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Desc: ${total.formatMoney(total.totalBsDesc)}',
-                style: TextStyle(color: Colors.orange.shade200, fontSize: 12),
-              ),
-              Text(
-                total.formatMoney(total.totalGeneralBs),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+          child: const Icon(Icons.summarize_rounded, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text('TOTAL GENERAL',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        ),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text('Desc: ${total.formatMoney(total.totalBsDesc)}',
+              style: TextStyle(color: Colors.orange.shade300, fontSize: 11)),
+          Text(total.formatMoney(total.totalGeneralBs),
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        ]),
+      ]),
     );
   }
+
+  // flex weights — sum = 100
+  static const _colFlex = [11, 18, 26, 13, 6, 12, 7, 14];
 
   Widget _buildDataTable(BuildContext context, ReporteVentasState state) {
     final detalles = state.detalles;
     final total = state.total;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: Column(
-        children: [
-          // Tabla con scroll horizontal
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(
-                    Colors.white.withValues(alpha: 0.1),
-                  ),
-                  dataRowColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.hovered)) {
-                      return Colors.white.withValues(alpha: 0.05);
-                    }
-                    return Colors.transparent;
-                  }),
-                  columnSpacing: 20,
-                  horizontalMargin: 16,
-                  columns: const [
-                    DataColumn(label: Text('Fecha', style: _headerStyle)),
-                    DataColumn(label: Text('Cliente', style: _headerStyle)),
-                    DataColumn(label: Text('Producto', style: _headerStyle)),
-                    DataColumn(label: Text('Línea', style: _headerStyle)),
-                    DataColumn(
-                      label: Text('Cant.', style: _headerStyle),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Text('P. Unit.', style: _headerStyle),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Text('Desc.', style: _headerStyle),
-                      numeric: true,
-                    ),
-                    DataColumn(
-                      label: Text('Total Bs.', style: _headerStyle),
-                      numeric: true,
-                    ),
-                  ],
-                  rows: detalles.map((venta) => _buildDataRow(venta)).toList(),
-                ),
-              ),
-            ),
+      child: Column(children: [
+        // ── Header ────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
+          child: Row(children: [
+            _hCell('Fecha',     _colFlex[0]),
+            _hCell('Cliente',   _colFlex[1]),
+            _hCell('Producto',  _colFlex[2]),
+            _hCell('Línea',     _colFlex[3]),
+            _hCell('Cant.',     _colFlex[4], right: true),
+            _hCell('P. Unit.',  _colFlex[5], right: true),
+            _hCell('Desc.',     _colFlex[6], right: true),
+            _hCell('Total Bs.', _colFlex[7], right: true),
+          ]),
+        ),
 
-          // Total fijo en la parte inferior
-          if (total != null) _buildTotalCard(total),
-        ],
+        // ── Rows ──────────────────────────────────────────────
+        ...detalles.asMap().entries.map((e) {
+          final even = e.key.isEven;
+          return _buildFlexRow(e.value, even);
+        }),
+
+        // ── Total ─────────────────────────────────────────────
+        if (total != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+            child: _buildTotalCard(total),
+          ),
+      ]),
+    );
+  }
+
+  Widget _hCell(String text, int flex, {bool right = false}) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        text,
+        textAlign: right ? TextAlign.right : TextAlign.left,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.65),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
       ),
     );
   }
 
-  DataRow _buildDataRow(VentaReporteEntity venta) {
-    return DataRow(
-      cells: [
-        DataCell(Text(venta.fecha ?? '-', style: _cellStyle)),
-        DataCell(
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 150),
-            child: Text(
-              venta.nombreCliente ?? '-',
-              style: _cellStyle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        DataCell(
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 200),
-            child: Text(
-              venta.productoCompleto ?? '-',
-              style: _cellStyle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        DataCell(Text(venta.lineaArticulo ?? '-', style: _cellStyle)),
-        DataCell(Text('${venta.cantidad ?? 0}', style: _cellStyle)),
-        DataCell(
-          Text(venta.formatMoney(venta.precioUnitario), style: _cellStyle),
-        ),
-        DataCell(
-          Text(
-            venta.descuentoPorcentaje,
-            style: _cellStyle.copyWith(color: Colors.orange.shade300),
-          ),
-        ),
-        DataCell(
-          Text(
-            venta.formatMoney(venta.totalGeneralBs),
-            style: _cellStyle.copyWith(
-              color: Colors.green.shade300,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildFlexRow(VentaReporteEntity v, bool even) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: even ? Colors.transparent : Colors.white.withValues(alpha: 0.03),
+        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+      ),
+      child: Row(children: [
+        _dCell(v.fecha ?? '-',                    _colFlex[0]),
+        _dCell(v.nombreCliente ?? '-',            _colFlex[1]),
+        _dCell(v.productoCompleto ?? '-',         _colFlex[2]),
+        _dCell(v.lineaArticulo ?? '-',            _colFlex[3]),
+        _dCell('${v.cantidad ?? 0}',              _colFlex[4], right: true),
+        _dCell(v.formatMoney(v.precioUnitario),   _colFlex[5], right: true),
+        _dCell(v.descuentoPorcentaje,             _colFlex[6], right: true, color: Colors.orange.shade300),
+        _dCell(v.formatMoney(v.totalGeneralBs),   _colFlex[7], right: true,
+            color: Colors.green.shade300, bold: true),
+      ]),
     );
   }
 
-  static const _headerStyle = TextStyle(
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontSize: 13,
-  );
+  Widget _dCell(String text, int flex,
+      {bool right = false, Color? color, bool bold = false}) {
+    return Expanded(
+      flex: flex,
+      child: Padding(
+        padding: EdgeInsets.only(left: right ? 4 : 0, right: right ? 0 : 6),
+        child: Text(
+          text,
+          textAlign: right ? TextAlign.right : TextAlign.left,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color ?? Colors.white.withValues(alpha: 0.85),
+            fontSize: 12,
+            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
 
-  static const _cellStyle = TextStyle(color: Colors.white, fontSize: 13);
+  static const _headerStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12);
+  static const _cellStyle = TextStyle(color: Colors.white, fontSize: 12);
 }
