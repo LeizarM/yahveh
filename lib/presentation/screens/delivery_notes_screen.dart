@@ -934,6 +934,27 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                     ],
                   ),
                 ],
+                if (nota.nit.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.badge_outlined,
+                        size: 18,
+                        color: AppTheme.accentGreen.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'NIT: ${nota.nit}',
+                        style: TextStyle(
+                          color: AppTheme.accentGreen.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (nota.nombreEmpleado.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
@@ -945,7 +966,7 @@ class _DeliveryNotesScreenState extends ConsumerState<DeliveryNotesScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        nota.nombreEmpleado,
+                        'Vendedor: ${nota.nombreEmpleado}',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 13,
@@ -1489,6 +1510,12 @@ class _NotaDetailsDialog extends ConsumerWidget {
                     title: const Text('Cliente'),
                     subtitle: Text(nota.nombreCliente),
                   ),
+                  if (nota.nit.isNotEmpty)
+                    ListTile(
+                      leading: const Icon(Icons.badge_outlined),
+                      title: const Text('NIT'),
+                      subtitle: Text(nota.nit),
+                    ),
                   if (nota.zona.isNotEmpty)
                     ListTile(
                       leading: const Icon(Icons.location_city),
@@ -1500,6 +1527,12 @@ class _NotaDetailsDialog extends ConsumerWidget {
                       leading: const Icon(Icons.location_on),
                       title: const Text('Dirección'),
                       subtitle: Text(nota.direccion),
+                    ),
+                  if (nota.nombreEmpleado.isNotEmpty)
+                    ListTile(
+                      leading: const Icon(Icons.badge_rounded),
+                      title: const Text('Vendedor'),
+                      subtitle: Text(nota.nombreEmpleado),
                     ),
                 ],
               ),
@@ -1541,6 +1574,10 @@ class _NotaDetailsDialog extends ConsumerWidget {
                           itemBuilder: (context, index) {
                             final detalle = detalles[index];
                             final tieneDescuento = detalle.descuento > 0;
+                            // ⭐ Usar precioConDescuento del histórico si existe, sino calcularlo
+                            final precioConDesc = detalle.precioConDescuento > 0
+                                ? detalle.precioConDescuento
+                                : detalle.precioUnitario * (1 - detalle.descuento / 100);
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
@@ -1552,10 +1589,20 @@ class _NotaDetailsDialog extends ConsumerWidget {
                                       '${detalle.codArticulo} • ${detalle.lineaArticulo}',
                                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                     ),
-                                    if (tieneDescuento)
+                                    if (tieneDescuento) ...[
+                                      Text(
+                                        'Precio: Bs. ${detalle.precioUnitario.toStringAsFixed(2)} → '
+                                        'Bs. ${precioConDesc.toStringAsFixed(2)}',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                                      ),
                                       Text(
                                         'Descuento: ${detalle.descuento.toStringAsFixed(1)}%',
                                         style: TextStyle(fontSize: 11, color: Colors.orange[700], fontWeight: FontWeight.w500),
+                                      ),
+                                    ] else
+                                      Text(
+                                        'Precio: Bs. ${detalle.precioUnitario.toStringAsFixed(2)}',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
                                       ),
                                   ],
                                 ),
@@ -1854,6 +1901,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
   @override
   Widget build(BuildContext context) {
     final clientesAsync = ref.watch(clienteProvider);
+    ref.watch(isAdminProvider);
 
     return Dialog(
       child: Container(
@@ -2238,14 +2286,15 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
               ],
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () {
-                setState(() {
-                  _detalles.removeAt(index);
-                });
-              },
-            ),
+            if (ref.read(isAdminProvider))
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    _detalles.removeAt(index);
+                  });
+                },
+              ),
           ],
         ),
       ),
@@ -2393,9 +2442,22 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
                               title: Text(cliente.nombreCliente),
                               subtitle: Text(cliente.direccion),
                               onTap: () {
+                                // Auto-fill zone matching the client's zone
+                                final allZonas =
+                                    ref.read(zonaProvider).value ?? [];
+                                ZonaEntity? clienteZona;
+                                try {
+                                  clienteZona = allZonas.firstWhere(
+                                      (z) => z.codZona == cliente.codZona);
+                                } catch (_) {
+                                  clienteZona = null;
+                                }
                                 setState(() {
                                   _selectedCliente = cliente;
                                   _direccionController.text = cliente.direccion;
+                                  if (clienteZona != null) {
+                                    _selectedZona = clienteZona;
+                                  }
                                 });
                                 Navigator.pop(context);
                               },
@@ -2829,6 +2891,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
     try {
       // Crear nota de entrega
+      // ⭐ Ahora incluye el NIT del cliente (snapshot histórico)
       final nota = NotaEntregaEntity(
         codNotaEntrega: 0,
         codCliente: _selectedCliente!.codCliente,
@@ -2836,6 +2899,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
         fecha: _selectedDate,
         direccion: _direccionController.text,
         zona: _selectedZona?.zona ?? '',
+        nit: _selectedCliente!.nit,
         audUsuario: 0,
       );
 
@@ -2845,6 +2909,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
 
       if (resultNota != null) {
         // Crear todos los detalles
+        // ⭐ Ahora se envía precioConDescuento (precio unitario con descuento) como snapshot histórico
         for (var detalle in _detalles) {
           final detalleEntity = DetalleNotaEntregaEntity(
             codDetalle: 0,
@@ -2859,6 +2924,7 @@ class _CreateNotaDialogState extends ConsumerState<_CreateNotaDialog> {
             precioTotal: detalle.totalConDescuento,
             precioSinFactura: detalle.precioSinFacturaConDescuento,
             descuento: detalle.descuento,
+            precioConDescuento: detalle.precioConDescuento,
             audUsuario: 0,
           );
 

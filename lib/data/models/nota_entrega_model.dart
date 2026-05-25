@@ -1,10 +1,10 @@
 import 'dart:convert';
 import '../../domain/entities/nota_entrega_entity.dart';
 
-NotaEntregaModel notaEntregaModelFromJson(String str) => 
+NotaEntregaModel notaEntregaModelFromJson(String str) =>
     NotaEntregaModel.fromJson(json.decode(str));
 
-String notaEntregaModelToJson(NotaEntregaModel data) => 
+String notaEntregaModelToJson(NotaEntregaModel data) =>
     json.encode(data.toJson());
 
 class NotaEntregaModel extends NotaEntregaEntity {
@@ -15,6 +15,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
     required super.fecha,
     required super.direccion,
     required super.zona,
+    super.nit = '',
+    super.codEmpleado,
     super.estado = 1,
     super.estadoTexto = 'Válido',
     required super.audUsuario,
@@ -30,6 +32,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
             : DateTime.now(),
         direccion: json["direccion"] ?? '',
         zona: json["zona"] ?? '',
+        nit: json["nit"] ?? '',
+        codEmpleado: json["codEmpleado"],
         estado: json["estado"] ?? 1,
         estadoTexto: json["estadoTexto"] ?? 'Válido',
         audUsuario: json["audUsuario"] ?? 0,
@@ -43,6 +47,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
         "fecha": "${fecha.year.toString().padLeft(4, '0')}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}",
         "direccion": direccion,
         "zona": zona,
+        "nit": nit,
+        "codEmpleado": codEmpleado,
         "estado": estado,
         "estadoTexto": estadoTexto,
         "audUsuario": audUsuario,
@@ -52,6 +58,9 @@ class NotaEntregaModel extends NotaEntregaEntity {
   Map<String, dynamic> toCreateJson() => {
         "codCliente": codCliente,
         "direccion": direccion,
+        "zona": zona,
+        "nit": nit,
+        if (codEmpleado != null) "codEmpleado": codEmpleado,
       };
 
   NotaEntregaEntity toEntity() => NotaEntregaEntity(
@@ -61,6 +70,8 @@ class NotaEntregaModel extends NotaEntregaEntity {
         fecha: fecha,
         direccion: direccion,
         zona: zona,
+        nit: nit,
+        codEmpleado: codEmpleado,
         estado: estado,
         estadoTexto: estadoTexto,
         audUsuario: audUsuario,

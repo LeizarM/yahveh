@@ -12,6 +12,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../domain/entities/venta_reporte_entity.dart';
 import '../providers/auth_provider.dart';
+import '../providers/providers.dart';
 import '../providers/reporte_ventas_provider.dart';
 import '../widgets/app_drawer.dart';
 
@@ -31,15 +32,35 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
   DateTime _vendDesde = DateTime.now().subtract(const Duration(days: 365));
   DateTime _vendHasta = DateTime.now();
   bool _isDownloadingVend = false;
+  int? _selectedEmpleadoId; // null = todos los empleados
 
   DateTime _invDesde = DateTime.now().subtract(const Duration(days: 365));
   DateTime _invHasta = DateTime.now();
   bool _isDownloadingInv = false;
 
+  // ⭐ Reporte de movimientos de inventario
+  DateTime _movDesde = DateTime.now().subtract(const Duration(days: 30));
+  DateTime _movHasta = DateTime.now();
+  final TextEditingController _movArticuloCtrl = TextEditingController();
+  bool _isDownloadingMov = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _buscarReporte());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _buscarReporte();
+      // Precargar empleados (vienen con nombre completo embebido del backend)
+      final isAdmin = ref.read(isAdminProvider);
+      if (isAdmin) {
+        ref.read(empleadoProvider.notifier).cargarEmpleados();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _movArticuloCtrl.dispose();
+    super.dispose();
   }
 
   void _buscarReporte() {
@@ -58,10 +79,10 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.dark(
             primary: AppTheme.accentCyan,
-            surface: Color(0xFF2D3250),
+            surface: AppTheme.cardSurfaceLight,
             onSurface: Colors.white,
           ),
-          dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF1A1D2E)),
+          dialogTheme: DialogThemeData(backgroundColor: AppTheme.cardSurface),
         ),
         child: child!,
       ),
@@ -114,18 +135,52 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
     try {
       final pdfBytes = await ref
           .read(reporteVentasProvider.notifier)
-          .descargarVendedoresPdf(fechaDesde: _vendDesde, fechaHasta: _vendHasta);
+          .descargarVendedoresPdf(
+            fechaDesde: _vendDesde,
+            fechaHasta: _vendHasta,
+            codEmpleado: _selectedEmpleadoId, // null = todos
+          );
       if (pdfBytes != null && mounted) {
+        final suffix = _selectedEmpleadoId != null
+            ? '_emp${_selectedEmpleadoId}'
+            : '';
         await _mostrarOpcionesPDF(
           context,
           pdfBytes,
-          'reporte_vendedores_${DateFormat('yyyyMMdd').format(_vendDesde)}_${DateFormat('yyyyMMdd').format(_vendHasta)}',
+          'reporte_vendedores${suffix}_${DateFormat('yyyyMMdd').format(_vendDesde)}_${DateFormat('yyyyMMdd').format(_vendHasta)}',
         );
       }
     } catch (e) {
       _showPdfResult(e);
     } finally {
       if (mounted) setState(() => _isDownloadingVend = false);
+    }
+  }
+
+  /// ⭐ Descargar reporte de movimientos de inventario
+  Future<void> _descargarMovimientosPdf() async {
+    setState(() => _isDownloadingMov = true);
+    try {
+      final codArt = _movArticuloCtrl.text.trim();
+      final pdfBytes = await ref
+          .read(reporteVentasProvider.notifier)
+          .descargarMovimientosInventarioPdf(
+            fechaDesde: _movDesde,
+            fechaHasta: _movHasta,
+            codArticulo: codArt.isEmpty ? null : codArt,
+          );
+      if (pdfBytes != null && mounted) {
+        final suffix = codArt.isNotEmpty ? '_$codArt' : '';
+        await _mostrarOpcionesPDF(
+          context,
+          pdfBytes,
+          'movimientos_inventario${suffix}_${DateFormat('yyyyMMdd').format(_movDesde)}_${DateFormat('yyyyMMdd').format(_movHasta)}',
+        );
+      }
+    } catch (e) {
+      _showPdfResult(e);
+    } finally {
+      if (mounted) setState(() => _isDownloadingMov = false);
     }
   }
 
@@ -354,7 +409,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       color: AppTheme.accentCyan,
       icon: Icons.people_alt_rounded,
       title: 'Por Vendedor',
-      subtitle: 'Resumen y detalle por vendedor',
+      subtitle: 'General o filtrado por empleado',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           Expanded(child: _buildDateButton(label: 'Desde', date: _vendDesde, onTap: () async {
@@ -367,6 +422,9 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
             if (p != null) setState(() => _vendHasta = p);
           })),
         ]),
+        const SizedBox(height: 10),
+        // ⭐ Selector de empleado (admin)
+        _buildEmpleadoDropdown(),
         const SizedBox(height: 10),
         _buildActionButton(
           label: _isDownloadingVend ? 'Generando...' : 'Descargar PDF',
@@ -382,7 +440,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
     final invCard = _buildSectionCard(
       color: AppTheme.accentGreen,
       icon: Icons.inventory_2_rounded,
-      title: 'Inventario',
+      title: 'Inventario (Stock)',
       subtitle: 'Artículos con entradas, salidas y stock',
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
@@ -408,14 +466,173 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
       ]),
     );
 
+    // ⭐ Card de movimientos de inventario entre fechas
+    final movCard = _buildSectionCard(
+      color: AppTheme.accentOrange,
+      icon: Icons.swap_horiz_rounded,
+      title: 'Movimientos de Inventario',
+      subtitle: 'Entradas, salidas y ajustes entre fechas',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(child: _buildDateButton(label: 'Desde', date: _movDesde, onTap: () async {
+            final p = await _pickDate(context, _movDesde);
+            if (p != null) setState(() => _movDesde = p);
+          })),
+          const SizedBox(width: 8),
+          Expanded(child: _buildDateButton(label: 'Hasta', date: _movHasta, onTap: () async {
+            final p = await _pickDate(context, _movHasta, firstDate: _movDesde);
+            if (p != null) setState(() => _movHasta = p);
+          })),
+        ]),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _movArticuloCtrl,
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'Código de artículo (opcional)',
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+            prefixIcon: Icon(Icons.qr_code_rounded,
+                color: AppTheme.accentOrange.withValues(alpha: 0.7), size: 18),
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.08),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppTheme.accentOrange, width: 1.5),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        _buildActionButton(
+          label: _isDownloadingMov ? 'Generando...' : 'Descargar PDF',
+          icon: Icons.picture_as_pdf_rounded,
+          color: AppTheme.accentOrange,
+          onTap: _isDownloadingMov ? null : _descargarMovimientosPdf,
+          isLoading: _isDownloadingMov,
+          fullWidth: true,
+        ),
+      ]),
+    );
+
     if (isMobile) {
-      return Column(children: [vendCard, const SizedBox(height: 12), invCard]);
+      return Column(children: [
+        vendCard,
+        const SizedBox(height: 12),
+        invCard,
+        const SizedBox(height: 12),
+        movCard,
+      ]);
     }
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: vendCard),
-      const SizedBox(width: 12),
-      Expanded(child: invCard),
+    return Column(children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: vendCard),
+        const SizedBox(width: 12),
+        Expanded(child: invCard),
+      ]),
+      const SizedBox(height: 12),
+      movCard,
     ]);
+  }
+
+  /// ⭐ Dropdown de empleados. "Todos" = null = sin filtro.
+  /// Usa el nombre completo embebido en EmpleadoEntity (viene del backend).
+  Widget _buildEmpleadoDropdown() {
+    final empleadosAsync = ref.watch(empleadoProvider);
+
+    return empleadosAsync.when(
+      data: (empleados) {
+        // ⭐ Asegurar que el valor seleccionado siga siendo válido.
+        // Si no lo es, lo "limpiamos" en el siguiente frame (no en build).
+        final valoresValidos = <int?>{null, ...empleados.map((e) => e.codEmpleado)};
+        final selectedValue = valoresValidos.contains(_selectedEmpleadoId)
+            ? _selectedEmpleadoId
+            : null;
+        if (selectedValue != _selectedEmpleadoId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _selectedEmpleadoId = selectedValue);
+          });
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+          ),
+          child: Row(children: [
+            Icon(Icons.person_outline_rounded,
+                color: AppTheme.accentCyan, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Empleado:',
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int?>(
+                  // Usar el valor saneado para evitar crash si la lista cambia
+                  value: selectedValue,
+                  isExpanded: true,
+                  dropdownColor: AppTheme.cardSurface,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  iconEnabledColor: Colors.white.withValues(alpha: 0.7),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text(
+                        'Todos los vendedores',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    ...empleados.map(
+                      (e) => DropdownMenuItem<int?>(
+                        value: e.codEmpleado,
+                        child: Text(e.displayName,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _selectedEmpleadoId = v),
+                ),
+              ),
+            ),
+          ]),
+        );
+      },
+      loading: () => Container(
+        height: 44,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppTheme.accentCyan.withValues(alpha: 0.7)),
+        ),
+      ),
+      error: (_, __) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          'No se pudo cargar la lista de empleados',
+          style: TextStyle(color: Colors.red.shade300, fontSize: 12),
+        ),
+      ),
+    );
   }
 
   // ─── SHARED UI COMPONENTS ───────────────────────────────────────────────────
@@ -544,8 +761,8 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -563,7 +780,7 @@ class _ReportesScreenState extends ConsumerState<ReportesScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
             ),

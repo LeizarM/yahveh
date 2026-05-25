@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,23 +30,41 @@ class ItemsScreen extends ConsumerStatefulWidget {
 class _ItemsScreenState extends ConsumerState<ItemsScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  // Debounce para evitar disparar una petición HTTP por cada tecla.
+  Timer? _searchDebounce;
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Dispara la búsqueda al backend con debounce (350ms).
+  /// Resetea a la página 1 al buscar.
+  void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      ref.read(articulosPagedProvider.notifier).setSearch(value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final articulosAsync = ref.watch(articuloProvider);
+    // ⭐ Ahora usamos el provider paginado (server-side)
+    final pagedState = ref.watch(articulosPagedProvider);
     final isMobile = context.isMobile;
     final isAdmin = ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Artículos'),
+        title: Text(
+          pagedState.page.total > 0
+              ? 'Artículos (${pagedState.page.total})'
+              : 'Artículos',
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -64,7 +83,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => ref.refresh(articuloProvider),
+            onPressed: () =>
+                ref.read(articulosPagedProvider.notifier).refresh(),
             tooltip: 'Actualizar',
           ),
         ],
@@ -106,23 +126,31 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
             if (!isMobile) _buildPermanentDrawer(),
             Expanded(
               child: SafeArea(
-                child: articulosAsync.when(
-                  data: (articulos) {
-                    final filteredArticulos = _filterArticulos(articulos);
-                    return ResponsiveLayout(
-                      mobile: _buildMobileLayout(context, filteredArticulos),
-                      tablet: _buildTabletLayout(context, filteredArticulos),
-                      desktop: _buildDesktopLayout(context, filteredArticulos),
-                    );
-                  },
-                  loading: () => _buildLoadingState(),
-                  error: (error, stack) => _buildErrorState(context, error),
-                ),
+                child: _buildPagedBody(context, pagedState),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  /// Body con estado paginado server-side.
+  Widget _buildPagedBody(BuildContext context, ArticulosPagedState s) {
+    // Estado inicial: cargando sin datos
+    if (s.isLoading && s.page.data.isEmpty && s.error == null) {
+      return _buildLoadingState();
+    }
+    if (s.error != null && s.page.data.isEmpty) {
+      return _buildErrorState(context, s.error!);
+    }
+
+    final articulos = s.page.data;
+
+    return ResponsiveLayout(
+      mobile: _buildMobileLayout(context, articulos),
+      tablet: _buildTabletLayout(context, articulos),
+      desktop: _buildDesktopLayout(context, articulos),
     );
   }
 
@@ -138,8 +166,8 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -157,7 +185,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                 color: Colors.white.withValues(alpha: 0.1),
@@ -294,6 +322,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   },
                 ),
         ),
+        _buildPaginationFooter(context),
       ],
     );
   }
@@ -323,11 +352,12 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   },
                 ),
         ),
+        _buildPaginationFooter(context),
       ],
     );
   }
 
-  /// Layout para desktop
+  /// Layout para desktop — Vista de TABLA responsiva con flex/autosize
   Widget _buildDesktopLayout(
     BuildContext context,
     List<ArticuloEntity> articulos,
@@ -338,21 +368,369 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         Expanded(
           child: articulos.isEmpty
               ? _buildEmptyState(context)
-              : GridView.builder(
-                  padding: context.screenPadding,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    mainAxisExtent: 240,
-                  ),
-                  itemCount: articulos.length,
-                  itemBuilder: (context, index) {
-                    return _buildItemCard(context, articulos[index], index);
-                  },
-                ),
+              : _buildDesktopTable(context, articulos),
         ),
+        _buildPaginationFooter(context),
       ],
+    );
+  }
+
+  /// Tabla responsiva con flex y autosize para vista desktop/web.
+  /// Usa Row + Expanded para que cada columna crezca según el contenido y
+  /// se adapte al ancho disponible (flex). El header y las filas comparten
+  /// los mismos `flex` para alinearse correctamente.
+  Widget _buildDesktopTable(
+    BuildContext context,
+    List<ArticuloEntity> articulos,
+  ) {
+    final isAdmin = ref.watch(isAdminProvider);
+
+    return FadeSlideAnimation(
+      child: Padding(
+        padding: context.screenPadding,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildTableHeader(isAdmin),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: articulos.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      itemBuilder: (context, index) {
+                        return FadeSlideAnimation(
+                          delay: Duration(milliseconds: 25 * (index % 14)),
+                          child: _buildTableRow(
+                            context,
+                            articulos[index],
+                            index,
+                            isAdmin,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Encabezado de la tabla (los flex coinciden con los de _buildTableRow)
+  Widget _buildTableHeader(bool isAdmin) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppTheme.accentCyan.withValues(alpha: 0.15),
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.accentCyan.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          _headerCell('#', flex: 1, alignment: Alignment.center),
+          _headerCell('Código', flex: 2),
+          _headerCell('Línea', flex: 2),
+          _headerCell('Descripción', flex: 4),
+          _headerCell('Descripción 2', flex: 3),
+          _headerCell('Precio', flex: 2, alignment: Alignment.centerRight),
+          _headerCell('Stock', flex: 2, alignment: Alignment.center),
+          _headerCell('Acciones', flex: 2, alignment: Alignment.centerRight),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerCell(
+    String label, {
+    required int flex,
+    Alignment alignment = Alignment.centerLeft,
+  }) {
+    return Expanded(
+      flex: flex,
+      child: Align(
+        alignment: alignment,
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Fila de la tabla con autosize: cada celda usa Expanded(flex) y los
+  /// textos se ajustan con maxLines/ellipsis para evitar overflow.
+  Widget _buildTableRow(
+    BuildContext context,
+    ArticuloEntity articulo,
+    int index,
+    bool isAdmin,
+  ) {
+    final stockActual = articulo.stockActual ?? 0;
+    final hasStock = stockActual > 0;
+    final isLowStock = stockActual > 0 && stockActual <= 10;
+
+    final stockColor = hasStock
+        ? (isLowStock ? Colors.orange : AppTheme.accentCyan)
+        : Colors.red.shade300;
+
+    // ⭐ Si el SP devolvió rowNumber > 0 lo usamos (es global); si no,
+    // usamos el índice local de la página actual + offset.
+    final pageState = ref.read(articulosPagedProvider);
+    final offset = (pageState.currentPage - 1) * pageState.pageSize;
+    final displayNumber = articulo.rowNumber > 0
+        ? articulo.rowNumber
+        : (offset + index + 1);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showItemDetails(context, articulo),
+        hoverColor: AppTheme.accentCyan.withValues(alpha: 0.08),
+        splashColor: AppTheme.accentCyan.withValues(alpha: 0.15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          child: Row(
+            children: [
+              // # — Numeración global (se mantiene entre páginas)
+              Expanded(
+                flex: 1,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$displayNumber',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.55),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              // Código
+              Expanded(
+                flex: 2,
+                child: Text(
+                  articulo.codArticulo ?? 'N/A',
+                  style: TextStyle(
+                    color: AppTheme.accentCyan,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Línea (badge)
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Text(
+                      articulo.linea ?? 'Sin línea',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+              // Descripción
+              Expanded(
+                flex: 4,
+                child: Text(
+                  articulo.descripcion,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Descripción 2
+              Expanded(
+                flex: 3,
+                child: Text(
+                  articulo.descripcion2,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Precio
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentGreen.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.accentGreen.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Text(
+                      '\$${(articulo.precioActual ?? 0).toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: AppTheme.accentGreen,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Stock
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: stockColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: stockColor.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          hasStock
+                              ? (isLowStock
+                                    ? Icons.warning_rounded
+                                    : Icons.inventory_rounded)
+                              : Icons.error_outline_rounded,
+                          size: 14,
+                          color: stockColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$stockActual uds',
+                          style: TextStyle(
+                            color: stockColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Acciones
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: isAdmin
+                        ? [
+                            _buildActionButton(
+                              icon: Icons.warehouse_rounded,
+                              color: AppTheme.accentGreen,
+                              tooltip: 'Gestionar inventario',
+                              onPressed: () => _showEntradaInventarioDialog(
+                                context,
+                                articulo,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            _buildActionButton(
+                              icon: Icons.monetization_on_rounded,
+                              color: AppTheme.accentOrange,
+                              tooltip: 'Gestionar precios',
+                              onPressed: () =>
+                                  _showPreciosDialog(context, articulo),
+                            ),
+                            const SizedBox(width: 6),
+                            _buildActionButton(
+                              icon: Icons.edit_rounded,
+                              color: AppTheme.accentCyan,
+                              tooltip: 'Editar artículo',
+                              onPressed: () =>
+                                  _showEditArticuloDialog(context, articulo),
+                            ),
+                          ]
+                        : [
+                            _buildActionButton(
+                              icon: Icons.visibility_rounded,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              tooltip: 'Ver detalles',
+                              onPressed: () =>
+                                  _showItemDetails(context, articulo),
+                            ),
+                          ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -387,11 +765,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                         Icons.clear,
                         color: Colors.white.withValues(alpha: 0.7),
                       ),
+                      tooltip: 'Limpiar búsqueda',
                       onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                          _searchQuery = '';
-                        });
+                        _searchController.clear();
+                        _onSearchChanged('');
                       },
                     )
                   : null,
@@ -414,11 +791,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.15),
             ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+            onChanged: _onSearchChanged,
           ),
         ),
       ),
@@ -435,6 +808,13 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     final stockActual = articulo.stockActual ?? 0;
     final hasStock = stockActual > 0;
     final isLowStock = stockActual > 0 && stockActual <= 10;
+
+    // ⭐ Numeración global (se mantiene entre páginas)
+    final pageState = ref.read(articulosPagedProvider);
+    final offset = (pageState.currentPage - 1) * pageState.pageSize;
+    final displayNumber = articulo.rowNumber > 0
+        ? articulo.rowNumber
+        : (offset + index + 1);
 
     return FadeSlideAnimation(
       delay: Duration(milliseconds: 50 * (index % 10)),
@@ -480,6 +860,29 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                   // Header con código, ícono y botones de acción
                   Row(
                     children: [
+                      // Badge de numeración global
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Text(
+                          '#$displayNumber',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Ícono principal con gradiente
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -774,20 +1177,37 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
     required String tooltip,
     required VoidCallback onPressed,
   }) {
-    return Container(
+    // ⭐ Envolvemos en Tooltip para que sea claro qué hace cada botón.
+    // En desktop/web aparece al hacer hover; en móvil al mantener presionado.
+    return Tooltip(
+      message: tooltip,
+      preferBelow: false,
+      waitDuration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: AppTheme.cardSurface.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Icon(icon, size: 20, color: color),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(icon, size: 20, color: color),
+            ),
           ),
         ),
       ),
@@ -1178,6 +1598,10 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                                   final message = await ref
                                       .read(articuloProvider.notifier)
                                       .deleteArticulo(articulo.codArticulo!);
+                                  // ⭐ Refrescar la lista paginada
+                                  await ref
+                                      .read(articulosPagedProvider.notifier)
+                                      .refresh();
                                   if (context.mounted) {
                                     context.showSnackBar(
                                       message,
@@ -1336,7 +1760,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          return await ref
+          final result = await ref
               .read(articuloProvider.notifier)
               .createArticulo(
                 codArticulo: codArticulo,
@@ -1345,6 +1769,9 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 descripcion2: descripcion2,
                 audUsuario: user?.codUsuario ?? 0,
               );
+          // ⭐ Refrescar la lista paginada para reflejar el nuevo artículo
+          await ref.read(articulosPagedProvider.notifier).refresh();
+          return result;
         },
       ),
     );
@@ -1360,7 +1787,7 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
         onSubmit: (codArticulo, codLinea, descripcion, descripcion2) async {
           final userAsync = ref.read(authProvider);
           final user = userAsync.value;
-          return await ref
+          final result = await ref
               .read(articuloProvider.notifier)
               .updateArticulo(
                 codArticulo: codArticulo,
@@ -1369,6 +1796,9 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
                 descripcion2: descripcion2,
                 audUsuario: user?.codUsuario ?? 0,
               );
+          // ⭐ Refrescar la lista paginada
+          await ref.read(articulosPagedProvider.notifier).refresh();
+          return result;
         },
       ),
     );
@@ -1392,6 +1822,195 @@ class _ItemsScreenState extends ConsumerState<ItemsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => _EntradaInventarioDialog(articulo: articulo),
+    );
+  }
+
+  /// ⭐ Footer de paginación server-side: muestra rango actual, total,
+  /// botones primera/anterior/siguiente/última y selector de tamaño de página.
+  Widget _buildPaginationFooter(BuildContext context) {
+    final s = ref.watch(articulosPagedProvider);
+    final notifier = ref.read(articulosPagedProvider.notifier);
+    final isMobile = context.isMobile;
+
+    if (s.page.total == 0 && !s.isLoading) {
+      return const SizedBox.shrink();
+    }
+
+    final firstItem = s.page.data.isEmpty
+        ? 0
+        : (s.currentPage - 1) * s.pageSize + 1;
+    final lastItem = s.page.data.isEmpty
+        ? 0
+        : firstItem + s.page.data.length - 1;
+
+    final hasNext = s.page.hasNext && !s.isLoading;
+    final hasPrev = s.page.hasPrev && !s.isLoading;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 20,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface.withValues(alpha: 0.85),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+      ),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          // Resumen "Mostrando X-Y de Z"
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (s.isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.accentCyan.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              Icon(
+                Icons.list_alt_rounded,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                s.page.total == 0
+                    ? 'Sin resultados'
+                    : 'Mostrando $firstItem – $lastItem de ${s.page.total}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          // Selector de tamaño de página
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Por página:',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  // ⭐ Construimos la lista incluyendo el valor actual si no
+                  // está en los defaults, para evitar el assert de Flutter:
+                  // "There should be exactly one item with [DropdownButton]'s value"
+                  child: Builder(
+                    builder: (_) {
+                      final defaults = <int>{10, 20, 50, 100, 200};
+                      final values = {...defaults, s.pageSize}.toList()..sort();
+                      return DropdownButton<int>(
+                        value: s.pageSize,
+                        dropdownColor: AppTheme.cardSurface,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        iconEnabledColor: Colors.white.withValues(alpha: 0.7),
+                        items: values
+                            .map(
+                              (n) => DropdownMenuItem<int>(
+                                value: n,
+                                child: Text('$n'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: s.isLoading
+                            ? null
+                            : (v) {
+                                if (v != null) notifier.setPageSize(v);
+                              },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Controles de página
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.first_page_rounded),
+                color: Colors.white,
+                disabledColor: Colors.white.withValues(alpha: 0.25),
+                tooltip: 'Primera página',
+                onPressed: hasPrev ? () => notifier.firstPage() : null,
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded),
+                color: Colors.white,
+                disabledColor: Colors.white.withValues(alpha: 0.25),
+                tooltip: 'Página anterior',
+                onPressed: hasPrev ? () => notifier.prevPage() : null,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentCyan.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.accentCyan.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Text(
+                  'Página ${s.currentPage} de ${s.page.totalPages == 0 ? 1 : s.page.totalPages}',
+                  style: TextStyle(
+                    color: AppTheme.accentCyan,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded),
+                color: Colors.white,
+                disabledColor: Colors.white.withValues(alpha: 0.25),
+                tooltip: 'Página siguiente',
+                onPressed: hasNext ? () => notifier.nextPage() : null,
+              ),
+              IconButton(
+                icon: const Icon(Icons.last_page_rounded),
+                color: Colors.white,
+                disabledColor: Colors.white.withValues(alpha: 0.25),
+                tooltip: 'Última página',
+                onPressed: hasNext ? () => notifier.lastPage() : null,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1566,12 +2185,6 @@ class _ArticuloFormDialogState extends ConsumerState<_ArticuloFormDialog> {
                             controller: _descripcion2Controller,
                             label: 'Descripción 2',
                             icon: Icons.notes,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'La descripción 2 es obligatoria';
-                              }
-                              return null;
-                            },
                           ),
                           const SizedBox(height: 16),
 
@@ -2495,7 +3108,8 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
     }
   }
 
-  // Calcula el precio de venta: Precio Con Factura (base + incremento por porcentaje)
+  // ⭐ El precioBase es el COSTO; ambos (con factura y sin factura)
+  // se obtienen aplicando el porcentaje de incremento sobre el costo.
   double? _calcularPrecioVenta() {
     final precioBase = double.tryParse(_precioBaseController.text.trim());
     final porcentaje = double.tryParse(_porcentajeController.text.trim());
@@ -2506,9 +3120,15 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
     return null;
   }
 
-  // Devuelve el Precio Sin Factura (base, sin incremento)
+  // ⭐ Precio Sin Factura = costo + incremento (mismo cálculo que el de venta)
   double? _calcularPrecioSinFactura() {
-    return double.tryParse(_precioBaseController.text.trim());
+    final precioBase = double.tryParse(_precioBaseController.text.trim());
+    final porcentaje = double.tryParse(_porcentajeController.text.trim());
+
+    if (precioBase != null && porcentaje != null) {
+      return precioBase * (1 + (porcentaje / 100));
+    }
+    return null;
   }
 
   @override
@@ -2710,7 +3330,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Base (sin factura): \$${precio.precioBase.toStringAsFixed(2)}',
+                                          'Costo: \$${precio.precioBase.toStringAsFixed(2)}',
                                           style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -2800,11 +3420,11 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
 
                   const SizedBox(height: 20),
 
-                  // Precio Base
+                  // Precio Base (COSTO)
                   TextFormField(
                     controller: _precioBaseController,
                     decoration: InputDecoration(
-                      labelText: 'Precio Base (Sin Factura)',
+                      labelText: 'Precio Base (Costo)',
                       hintText: '0.00',
                       prefixIcon: Icon(
                         Icons.monetization_on,
@@ -2813,7 +3433,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       prefixText: '\$ ',
                       border: const OutlineInputBorder(),
                       helperText:
-                          'Precio sin factura (base) desde el cual se calculan ambos valores',
+                          'Costo del artículo. El % de incremento se aplica para obtener Precio Venta y Sin Factura',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -2849,7 +3469,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                       suffixText: '%',
                       border: const OutlineInputBorder(),
                       helperText:
-                          'Incremento aplicado para obtener el precio con factura',
+                          'Incremento aplicado sobre el costo para venta y sin factura',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -2911,7 +3531,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                       const Spacer(),
                                       Tooltip(
                                         message:
-                                            'Con factura = base × (1 + %).\nSin factura = base (sin incremento).',
+                                            'Precio Venta = costo × (1 + %).\nSin Factura = costo × (1 + %).',
                                         child: Icon(
                                           Icons.info_outline,
                                           size: 18,
@@ -2965,7 +3585,7 @@ class _PreciosFormDialogState extends ConsumerState<_PreciosFormDialog> {
                                           ),
                                           const SizedBox(width: 8),
                                           const Text(
-                                            'Precio sin factura (base):',
+                                            'Precio sin factura:',
                                             style: TextStyle(fontSize: 14),
                                           ),
                                         ],

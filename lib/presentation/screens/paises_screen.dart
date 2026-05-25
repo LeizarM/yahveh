@@ -32,6 +32,7 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
   @override
   Widget build(BuildContext context) {
     final paisesAsync = ref.watch(paisProvider);
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -118,8 +119,8 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -142,8 +143,8 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                const Color(0xFF2D3250).withValues(alpha: 0.92),
+                AppTheme.cardSurface.withValues(alpha: 0.95),
+                AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
               ],
             ),
             border: Border(
@@ -404,14 +405,15 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                     onPressed: () => _showEditPaisDialog(context, pais),
                     tooltip: 'Editar',
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete_outline,
-                      color: AppTheme.accentOrange,
+                  if (ref.read(isAdminProvider))
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: AppTheme.accentOrange,
+                      ),
+                      onPressed: () => _showDeleteConfirmation(context, pais),
+                      tooltip: 'Eliminar',
                     ),
-                    onPressed: () => _showDeleteConfirmation(context, pais),
-                    tooltip: 'Eliminar',
-                  ),
                 ],
               ),
             ),
@@ -472,8 +474,8 @@ class _PaisesScreenState extends ConsumerState<PaisesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
@@ -616,8 +618,8 @@ class _PaisFormDialogState extends ConsumerState<_PaisFormDialog> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                const Color(0xFF2D3250).withValues(alpha: 0.92),
+                AppTheme.cardSurface.withValues(alpha: 0.95),
+                AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(24),

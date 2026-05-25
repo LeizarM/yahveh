@@ -169,27 +169,23 @@ class NetworkInfoImpl implements NetworkInfo {
       stopwatch.stop();
       final latency = stopwatch.elapsedMilliseconds;
 
-      // Determinar calidad basada en latencia
-      if (latency > 2000) {
-        // Más de 2 segundos = conexión débil
+      // Umbral conservador: solo marcamos "débil" si hay más de 3 s de latencia.
+      // Valores menores (incluso ~1-2 s al arrancar la app) se consideran normales.
+      if (latency > 3000) {
         return NetworkConnectionState.weak(primaryConnection);
-      } else if (latency > 1000) {
-        // Entre 1-2 segundos = conexión algo lenta pero funcional
-        return NetworkConnectionState.weak(primaryConnection);
-      } else {
-        // Menos de 1 segundo = buena conexión
-        return NetworkConnectionState.connected(primaryConnection);
       }
+      return NetworkConnectionState.connected(primaryConnection);
     } on SocketException {
-      // No hay conexión real a internet
+      // No se pudo establecer la conexión TCP → sin internet
       return NetworkConnectionState.disconnected();
     } on TimeoutException {
-      // Timeout = conexión muy débil o sin internet
+      // El socket tardó más de 5 s → conexión muy débil o sin internet
       return NetworkConnectionState.weak(primaryConnection);
     } catch (e) {
+      // Cualquier otro error (permisos, plataforma, etc.) NO implica conexión débil;
+      // preferimos asumir conectado para no mostrar falsos avisos al arrancar.
       console('Error al verificar calidad de conexión: $e');
-      // En caso de error, asumimos que hay conexión pero posiblemente débil
-      return NetworkConnectionState.weak(primaryConnection);
+      return NetworkConnectionState.connected(primaryConnection);
     }
   }
 

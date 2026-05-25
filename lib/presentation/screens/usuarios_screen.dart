@@ -9,6 +9,7 @@ import '../../core/utils/extensions.dart';
 import '../../core/utils/app_overlay.dart';
 import '../../core/utils/animations.dart';
 import '../providers/providers.dart';
+import '../providers/auth_provider.dart';
 import '../providers/permisos_provider.dart';
 import '../widgets/app_drawer.dart';
 
@@ -32,6 +33,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
   Widget build(BuildContext context) {
     final usuariosAsync = ref.watch(usuarioProvider);
     final isMobile = context.screenWidth < 600;
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -97,14 +99,7 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
           filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
-                ],
-              ),
+              color: AppTheme.drawerSurface.withValues(alpha: 0.96),
             ),
             child: const AppDrawer(),
           ),
@@ -120,10 +115,10 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.drawerSurface.withValues(alpha: 0.6),
             border: Border(
               right: BorderSide(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: Colors.white.withValues(alpha: 0.08),
                 width: 1,
               ),
             ),
@@ -249,15 +244,17 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.security_rounded,
-                        color: AppTheme.accentBlue.withValues(alpha: 0.85),
-                        size: 20,
+                    // Los admin siempre tienen acceso total → ocultar el botón de permisos
+                    if (usuario.tipoUsuario != 'admin')
+                      IconButton(
+                        icon: Icon(
+                          Icons.security_rounded,
+                          color: AppTheme.accentBlue.withValues(alpha: 0.85),
+                          size: 20,
+                        ),
+                        onPressed: () => _showPermisosDialog(usuario),
+                        tooltip: 'Gestionar Permisos',
                       ),
-                      onPressed: () => _showPermisosDialog(usuario),
-                      tooltip: 'Gestionar Permisos',
-                    ),
                     IconButton(
                       icon: Icon(
                         Icons.edit_rounded,
@@ -267,15 +264,16 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
                       onPressed: () => _showEditDialog(usuario),
                       tooltip: 'Editar',
                     ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.delete_outline_rounded,
-                        color: AppTheme.accentOrange.withValues(alpha: 0.8),
-                        size: 20,
+                    if (ref.read(isAdminProvider))
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: AppTheme.accentOrange.withValues(alpha: 0.8),
+                          size: 20,
+                        ),
+                        onPressed: () => _confirmDelete(usuario),
+                        tooltip: 'Eliminar',
                       ),
-                      onPressed: () => _confirmDelete(usuario),
-                      tooltip: 'Eliminar',
-                    ),
                   ],
                 ),
               ],
@@ -497,8 +495,8 @@ class _UsuariosScreenState extends ConsumerState<UsuariosScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF2D3250).withValues(alpha: 0.95),
-                const Color(0xFF1A1D2E).withValues(alpha: 0.98),
+                AppTheme.cardSurfaceLight.withValues(alpha: 0.95),
+                AppTheme.cardSurface.withValues(alpha: 0.98),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
@@ -655,8 +653,8 @@ class _PermisosDialogState extends ConsumerState<_PermisosDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF2D3250).withValues(alpha: 0.97),
-              const Color(0xFF1A1D2E).withValues(alpha: 0.99),
+              AppTheme.cardSurfaceLight.withValues(alpha: 0.97),
+              AppTheme.cardSurface.withValues(alpha: 0.99),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
@@ -1062,8 +1060,8 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF2D3250).withValues(alpha: 0.95),
-              const Color(0xFF1A1D2E).withValues(alpha: 0.98),
+              AppTheme.cardSurfaceLight.withValues(alpha: 0.95),
+              AppTheme.cardSurface.withValues(alpha: 0.98),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
@@ -1292,7 +1290,7 @@ class _UsuarioFormDialogState extends State<_UsuarioFormDialog> {
       items: items,
       onChanged: onChanged,
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-      dropdownColor: const Color(0xFF1A1D2E),
+      dropdownColor: AppTheme.cardSurface,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),

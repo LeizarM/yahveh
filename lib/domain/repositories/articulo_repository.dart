@@ -12,8 +12,15 @@ abstract class ArticuloRepository {
     required int audUsuario,
   });
 
-  /// Obtener todos los artículos
+  /// Obtener todos los artículos (sin paginar). Usar para combos/dropdowns.
   Future<List<ArticuloEntity>> getArticulos();
+
+  /// ⭐ Obtener una página de artículos (paginación server-side).
+  Future<ArticuloPage> getArticulosPaginados({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  });
 
   /// Obtener un artículo por su código
   Future<ArticuloEntity> getArticuloById(String codArticulo);

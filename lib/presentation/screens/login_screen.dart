@@ -1,5 +1,6 @@
 ﻿
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yahveh/core/utils/error_messages.dart';
 import '../../core/theme/app_theme.dart';
@@ -79,9 +80,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
+      // ⭐ Trim en ambos lados para usuario y contraseña
+      // por si el usuario pega espacios accidentales al inicio/fin
       ref
           .read(authProvider.notifier)
-          .login(_usernameController.text.trim(), _passwordController.text);
+          .login(
+            _usernameController.text.trim(),
+            _passwordController.text.trim(),
+          );
     }
   }
 
@@ -197,6 +203,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                             // Card de login con glassmorphism
                             _buildLoginCard(isLoading),
+
+                            const SizedBox(height: 28),
+
+                            // Versión
+                            Text(
+                              'Yahveh Sistema v1.0',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.35),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -277,7 +295,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildLoginCard(bool isLoading) {
-    return Container(
+    // ⭐ Soporte de teclado: Enter dispara el login también desde fuera
+    // de un TextField (botón enfocado, hover en web, etc.)
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.enter): () {
+          if (!isLoading) _handleLogin();
+        },
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): () {
+          if (!isLoading) _handleLogin();
+        },
+      },
+      child: Focus(
+        autofocus: true,
+        child: Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15),
@@ -321,25 +352,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
             const SizedBox(height: 32),
 
-            // Campo de usuario
+            // Campo de usuario — Enter pasa al siguiente campo
             _buildTextField(
               controller: _usernameController,
               label: 'Usuario',
               icon: Icons.person_outline_rounded,
               enabled: !isLoading,
+              textInputAction: TextInputAction.next,
               validator: (value) =>
                   Validators.required(value, fieldName: 'Usuario'),
             ),
 
             const SizedBox(height: 20),
 
-            // Campo de contraseña
+            // Campo de contraseña — Enter dispara el login
             _buildTextField(
               controller: _passwordController,
               label: 'Contraseña',
               icon: Icons.lock_outline_rounded,
               obscureText: _obscurePassword,
               enabled: !isLoading,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) {
+                if (!isLoading) _handleLogin();
+              },
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
@@ -363,6 +399,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -374,11 +412,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     bool enabled = true,
     Widget? suffixIcon,
     String? Function(String?)? validator,
+    TextInputAction? textInputAction,
+    void Function(String)? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       enabled: enabled,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
       style: const TextStyle(
         color: Colors.white,
         fontSize: 16,
@@ -434,41 +476,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: 56,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : _handleLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: AppTheme.primaryColor,
-          disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: isLoading
-            ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppTheme.primaryColor.withValues(alpha: 0.7),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: isLoading
+              ? LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.3),
+                    Colors.white.withValues(alpha: 0.2),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppTheme.primaryLight, AppTheme.accentCyan],
                 ),
-              )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Iniciar Sesión',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isLoading
+              ? []
+              : [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.45),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 8),
                   ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward_rounded, size: 20),
                 ],
-              ),
+        ),
+        child: ElevatedButton(
+          onPressed: isLoading ? null : _handleLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Iniciar Sesión',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
+                  ],
+                ),
+        ),
       ),
     );
   }

@@ -130,8 +130,8 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-              const Color(0xFF2D3250).withValues(alpha: 0.95),
+              AppTheme.cardSurface.withValues(alpha: 0.95),
+              AppTheme.cardSurfaceLight.withValues(alpha: 0.95),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
@@ -246,8 +246,8 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -265,7 +265,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                 color: Colors.white.withValues(alpha: 0.1),
@@ -283,6 +283,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
   Widget build(BuildContext context) {
     final lineasState = ref.watch(lineaProvider);
     final deviceType = context.deviceType;
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -637,14 +638,15 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
             tooltip: 'Editar',
             color: AppTheme.accentCyan,
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: linea.codLinea != null
-                ? () => _handleDelete(linea.codLinea!)
-                : null,
-            tooltip: 'Eliminar',
-            color: Colors.red.shade300,
-          ),
+          if (ref.read(isAdminProvider))
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: linea.codLinea != null
+                  ? () => _handleDelete(linea.codLinea!)
+                  : null,
+              tooltip: 'Eliminar',
+              color: Colors.red.shade300,
+            ),
         ],
       ),
     );
@@ -796,7 +798,7 @@ class _LineasScreenState extends ConsumerState<LineasScreen> {
           child: DropdownButtonFormField<int>(
             initialValue: _selectedFamiliaId,
             isExpanded: true,
-            dropdownColor: const Color(0xFF1A1D2E),
+            dropdownColor: AppTheme.cardSurface,
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               labelText: 'Familia *',

@@ -21,6 +21,7 @@ class ArticuloModel extends ArticuloEntity {
         super.precioSinFactura,
         required super.audUsuario,
         super.audFecha,
+        super.rowNumber = 0,
     });
 
     factory ArticuloModel.fromJson(Map<String, dynamic> json) => ArticuloModel(
@@ -34,6 +35,9 @@ class ArticuloModel extends ArticuloEntity {
         precioSinFactura: json["precioSinFactura"]?.toDouble(),
         audUsuario: json["audUsuario"],
         audFecha: json["audFecha"] != null ? DateTime.parse(json["audFecha"]) : null,
+        rowNumber: (json["rowNumber"] ?? 0) is int
+            ? (json["rowNumber"] ?? 0) as int
+            : (json["rowNumber"] as num).toInt(),
     );
 
     Map<String, dynamic> toJson() => {
@@ -47,6 +51,7 @@ class ArticuloModel extends ArticuloEntity {
         "precioSinFactura": precioSinFactura,
         "audUsuario": audUsuario,
         "audFecha": audFecha?.toIso8601String(),
+        "rowNumber": rowNumber,
     };
 
     Map<String, dynamic> toCreateJson() => {
@@ -57,4 +62,30 @@ class ArticuloModel extends ArticuloEntity {
         "audUsuario": audUsuario,
     };
 
+}
+
+/// Modelo de página de artículos (server-side pagination).
+class ArticuloPageModel extends ArticuloPage {
+    ArticuloPageModel({
+        required super.data,
+        required super.total,
+        required super.page,
+        required super.pageSize,
+        required super.totalPages,
+    });
+
+    factory ArticuloPageModel.fromJson(Map<String, dynamic> json) {
+        final List<dynamic> raw = (json["data"] as List<dynamic>?) ?? [];
+        return ArticuloPageModel(
+            data: raw
+                .map((e) => ArticuloModel.fromJson(e as Map<String, dynamic>))
+                .toList(),
+            total: (json["total"] ?? 0) is int
+                ? (json["total"] ?? 0) as int
+                : (json["total"] as num).toInt(),
+            page: (json["page"] ?? 1) as int,
+            pageSize: (json["pageSize"] ?? 20) as int,
+            totalPages: (json["totalPages"] ?? 0) as int,
+        );
+    }
 }

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import '../../domain/entities/detalle_nota_entrega_entity.dart';
 
-DetalleNotaEntregaModel detalleNotaEntregaModelFromJson(String str) => 
+DetalleNotaEntregaModel detalleNotaEntregaModelFromJson(String str) =>
     DetalleNotaEntregaModel.fromJson(json.decode(str));
 
-String detalleNotaEntregaModelToJson(DetalleNotaEntregaModel data) => 
+String detalleNotaEntregaModelToJson(DetalleNotaEntregaModel data) =>
     json.encode(data.toJson());
 
 class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
@@ -21,6 +21,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
     required super.precioTotal,
     required super.precioSinFactura,
     super.descuento = 0,
+    super.precioConDescuento = 0,
     required super.audUsuario,
   });
 
@@ -38,6 +39,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         precioTotal: json["precioTotal"]?.toDouble() ?? 0.0,
         precioSinFactura: json["precioSinFactura"]?.toDouble() ?? 0.0,
         descuento: json["descuento"]?.toDouble() ?? 0.0,
+        precioConDescuento: json["precioConDescuento"]?.toDouble() ?? 0.0,
         audUsuario: json["audUsuario"] ?? 0,
       );
 
@@ -54,6 +56,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         "precioTotal": precioTotal,
         "precioSinFactura": precioSinFactura,
         "descuento": descuento,
+        "precioConDescuento": precioConDescuento,
         "audUsuario": audUsuario,
       };
 
@@ -78,6 +81,7 @@ class DetalleNotaEntregaModel extends DetalleNotaEntregaEntity {
         precioTotal: precioTotal,
         precioSinFactura: precioSinFactura,
         descuento: descuento,
+        precioConDescuento: precioConDescuento,
         audUsuario: audUsuario,
       );
 }

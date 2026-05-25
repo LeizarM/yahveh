@@ -38,10 +38,12 @@ class ReporteVentasRepositoryImpl implements ReporteVentasRepository {
   Future<Uint8List> descargarVendedoresPdf({
     required String fechaDesde,
     required String fechaHasta,
+    int? codEmpleado,
   }) async {
     return await _remoteDataSource.descargarVendedoresPdf(
       fechaDesde: fechaDesde,
       fechaHasta: fechaHasta,
+      codEmpleado: codEmpleado,
     );
   }
 
@@ -53,6 +55,19 @@ class ReporteVentasRepositoryImpl implements ReporteVentasRepository {
     return await _remoteDataSource.descargarInventarioPdf(
       fechaDesde: fechaDesde,
       fechaHasta: fechaHasta,
+    );
+  }
+
+  @override
+  Future<Uint8List> descargarMovimientosInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+    String? codArticulo,
+  }) async {
+    return await _remoteDataSource.descargarMovimientosInventarioPdf(
+      fechaDesde: fechaDesde,
+      fechaHasta: fechaHasta,
+      codArticulo: codArticulo,
     );
   }
 }

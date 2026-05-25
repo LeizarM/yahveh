@@ -118,16 +118,19 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
     }
   }
 
-  /// Descarga el reporte de notas por vendedor en PDF
+  /// Descarga el reporte de notas por vendedor en PDF.
+  /// Si [codEmpleado] es null → reporte general; si no → filtrado por ese empleado.
   Future<Uint8List?> descargarVendedoresPdf({
     required DateTime fechaDesde,
     required DateTime fechaHasta,
+    int? codEmpleado,
   }) async {
     try {
       final repository = ref.read(reporteVentasRepositoryProvider);
       return await repository.descargarVendedoresPdf(
         fechaDesde: _formatDate(fechaDesde),
         fechaHasta: _formatDate(fechaHasta),
+        codEmpleado: codEmpleado,
       );
     } catch (e) {
       state = state.copyWith(error: 'Error al descargar reporte de vendedores: $e');
@@ -148,6 +151,25 @@ class ReporteVentasNotifier extends Notifier<ReporteVentasState> {
       );
     } catch (e) {
       state = state.copyWith(error: 'Error al descargar reporte de inventario: $e');
+      return null;
+    }
+  }
+
+  /// Descarga el reporte de movimientos de inventario.
+  Future<Uint8List?> descargarMovimientosInventarioPdf({
+    required DateTime fechaDesde,
+    required DateTime fechaHasta,
+    String? codArticulo,
+  }) async {
+    try {
+      final repository = ref.read(reporteVentasRepositoryProvider);
+      return await repository.descargarMovimientosInventarioPdf(
+        fechaDesde: _formatDate(fechaDesde),
+        fechaHasta: _formatDate(fechaHasta),
+        codArticulo: codArticulo,
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Error al descargar reporte de movimientos: $e');
       return null;
     }
   }

@@ -30,19 +30,24 @@ class AppTheme {
   static const Color infoColor = Color(0xFF0ea5e9);
   
   // Fondos - Tonos oscuros elegantes
-  static const Color backgroundLight = Color(0xFFF0FDF4);   // Verde muy claro
-  static const Color backgroundDark = Color(0xFF0a1628);    // Azul muy oscuro
+  static const Color backgroundLight = Color(0xFFF8F9FE);   // Gris azulado muy claro
+  static const Color backgroundDark = Color(0xFF060C1A);    // Azul medianoche
   static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF1a2e44);       // Azul noche
+  static const Color surfaceDark = Color(0xFF0D1A38);       // Azul oscuro profundo
   
   // Colores para cards glassmorphism
   static const Color glassLight = Color(0x20FFFFFF);
   static const Color glassDark = Color(0x20000000);
   
-  // Colores adicionales para gradientes
-  static const Color gradientStart = Color(0xFF0f766e);     // Teal
-  static const Color gradientMiddle = Color(0xFF1e3a5f);    // Azul noche
-  static const Color gradientEnd = Color(0xFF0d3331);       // Verde oscuro profundo
+  // Colores adicionales para gradientes — tema azul profundo / premium dark
+  static const Color gradientStart = Color(0xFF080C20);     // Medianoche profundo
+  static const Color gradientMiddle = Color(0xFF0F1E45);    // Azul real oscuro
+  static const Color gradientEnd = Color(0xFF060A18);       // Azul casi negro
+
+  // Superficie del drawer / diálogos
+  static const Color drawerSurface = Color(0xFF0C1428);     // Fondo del sidebar
+  static const Color cardSurface = Color(0xFF141C35);       // Superficie de cards oscuras
+  static const Color cardSurfaceLight = Color(0xFF1E2A50);  // Variante clara de card
 
   // ============================================================================
   // DECORACIONES GLASSMORPHISM
@@ -91,14 +96,24 @@ class AppTheme {
     colors: [primaryColor, secondaryColor],
   );
 
-  /// Gradiente de fondo para pantallas - Elegante azul/verde oscuro
+  /// Gradiente del sidebar / drawer
+  static LinearGradient get sidebarGradient => const LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      drawerSurface,
+      Color(0xFF08101F),
+    ],
+  );
+
+  /// Gradiente de fondo para pantallas - Azul profundo premium
   static LinearGradient get backgroundGradient => const LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      gradientStart,      // Teal oscuro
-      gradientMiddle,     // Azul noche
-      gradientEnd,        // Verde oscuro profundo
+      gradientStart,      // Medianoche profundo
+      gradientMiddle,     // Azul real oscuro
+      gradientEnd,        // Azul casi negro
     ],
     stops: [0.0, 0.5, 1.0],
   );

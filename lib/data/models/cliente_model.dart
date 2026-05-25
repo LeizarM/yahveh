@@ -26,15 +26,16 @@ class ClienteModel extends ClienteEntity {
   });
 
   factory ClienteModel.fromJson(Map<String, dynamic> json) => ClienteModel(
-        codCliente: json["codCliente"],
-        codZona: json["codZona"],
-        nit: json["nit"],
-        razonSocial: json["razonSocial"],
-        nombreCliente: json["nombreCliente"],
-        direccion: json["direccion"],
-        referencia: json["referencia"],
-        obs: json["obs"],
-        audUsuario: json["audUsuario"],
+        // ⭐ Defensivo: campos requeridos pero pueden venir null del backend
+        codCliente: json["codCliente"] ?? 0,
+        codZona: json["codZona"] ?? 0,
+        nit: json["nit"] ?? '',
+        razonSocial: json["razonSocial"] ?? '',
+        nombreCliente: json["nombreCliente"] ?? '',
+        direccion: json["direccion"] ?? '',
+        referencia: json["referencia"] ?? '',
+        obs: json["obs"] ?? '',
+        audUsuario: json["audUsuario"] ?? 0,
         zonaNombre: json["zonaNombre"] ?? json["zona"],
         ciudadNombre: json["ciudadNombre"] ?? json["ciudad"],
         paisNombre: json["paisNombre"] ?? json["pais"],

@@ -32,6 +32,19 @@ class ArticuloRepositoryImpl implements ArticuloRepository {
   }
 
   @override
+  Future<ArticuloPage> getArticulosPaginados({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  }) async {
+    return await _remoteDataSource.getArticulosPaginados(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    );
+  }
+
+  @override
   Future<ArticuloEntity> getArticuloById(String codArticulo) async {
     return await _remoteDataSource.getArticuloById(codArticulo);
   }

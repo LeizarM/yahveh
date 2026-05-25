@@ -34,6 +34,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
   @override
   Widget build(BuildContext context) {
     final zonasAsync = ref.watch(zonaProvider);
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -115,8 +116,8 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -134,7 +135,7 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                 color: Colors.white.withValues(alpha: 0.1),
@@ -358,13 +359,14 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
                       ),
                       onPressed: () => _showEditZonaDialog(context, zona),
                     ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        color: AppTheme.errorColor.withValues(alpha: 0.8),
+                    if (ref.read(isAdminProvider))
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: AppTheme.errorColor.withValues(alpha: 0.8),
+                        ),
+                        onPressed: () => _showDeleteConfirmation(context, zona),
                       ),
-                      onPressed: () => _showDeleteConfirmation(context, zona),
-                    ),
                   ],
                 ),
               ),
@@ -423,8 +425,8 @@ class _ZonasScreenState extends ConsumerState<ZonasScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                const Color(0xFF2D3250).withValues(alpha: 0.95),
+                AppTheme.cardSurface.withValues(alpha: 0.95),
+                AppTheme.cardSurfaceLight.withValues(alpha: 0.95),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
@@ -566,8 +568,8 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-              const Color(0xFF2D3250).withValues(alpha: 0.95),
+              AppTheme.cardSurface.withValues(alpha: 0.95),
+              AppTheme.cardSurfaceLight.withValues(alpha: 0.95),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
@@ -658,7 +660,7 @@ class _ZonaFormDialogState extends ConsumerState<_ZonaFormDialog> {
                       ),
                       child: DropdownButtonFormField<int>(
                         initialValue: _selectedCiudadId,
-                        dropdownColor: const Color(0xFF2D3250),
+                        dropdownColor: AppTheme.cardSurfaceLight,
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                         icon: Icon(Icons.keyboard_arrow_down, color: Colors.white.withValues(alpha: 0.8)),
                         decoration: InputDecoration(

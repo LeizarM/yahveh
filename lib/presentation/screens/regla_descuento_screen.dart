@@ -8,6 +8,7 @@ import '../../core/utils/error_messages.dart';
 import '../../domain/entities/articulo_entity.dart';
 import '../../domain/entities/regla_descuento_entity.dart';
 import '../providers/articulo_provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/providers.dart';
 import '../widgets/app_drawer.dart';
 
@@ -31,6 +32,7 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
   Widget build(BuildContext context) {
     final reglasAsync = ref.watch(reglaDescuentoProvider);
     final isMobile = context.isMobile;
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -188,12 +190,13 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
               tooltip: 'Editar',
               onPressed: () => _showFormDialog(context, regla: regla),
             ),
-            IconButton(
-              icon: Icon(Icons.delete_outline_rounded,
-                  color: Colors.red.withValues(alpha: 0.8), size: 20),
-              tooltip: 'Eliminar',
-              onPressed: () => _confirmarEliminar(context, regla),
-            ),
+            if (ref.read(isAdminProvider))
+              IconButton(
+                icon: Icon(Icons.delete_outline_rounded,
+                    color: Colors.red.withValues(alpha: 0.8), size: 20),
+                tooltip: 'Eliminar',
+                onPressed: () => _confirmarEliminar(context, regla),
+              ),
           ],
         ),
       ),
@@ -240,6 +243,7 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
         text: esEdicion ? regla.descuento.toStringAsFixed(1) : '');
     final formKey = GlobalKey<FormState>();
     bool loading = false;
+    bool articuloError = false;
 
     showDialog(
       context: context,
@@ -253,27 +257,38 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
               children: [
                 // Artículo
                 if (!esEdicion)
-                  DropdownButtonFormField<ArticuloEntity>(
-                    value: articuloSeleccionado,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Artículo *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.inventory_2_outlined),
+                  GestureDetector(
+                    onTap: () => _showArticuloSearch(
+                      ctx,
+                      articulos,
+                      articuloSeleccionado,
+                      (selected) => setDs(() {
+                        articuloSeleccionado = selected;
+                        articuloError = false;
+                      }),
                     ),
-                    items: articulos
-                        .map((a) => DropdownMenuItem(
-                              value: a,
-                              child: Text(
-                                '${a.codArticulo} - ${a.descripcion}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (a) =>
-                        setDs(() => articuloSeleccionado = a),
-                    validator: (v) =>
-                        v == null ? 'Selecciona un artículo' : null,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Artículo *',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.inventory_2_outlined),
+                        suffixIcon: const Icon(Icons.search_rounded),
+                        errorText: articuloError
+                            ? 'Selecciona un artículo'
+                            : null,
+                      ),
+                      child: Text(
+                        articuloSeleccionado != null
+                            ? '${articuloSeleccionado!.codArticulo} - ${articuloSeleccionado!.descripcion}'
+                            : 'Toca para buscar artículo...',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: articuloSeleccionado != null
+                              ? null
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
                   )
                 else
                   InputDecorator(
@@ -339,6 +354,11 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
               onPressed: loading
                   ? null
                   : () async {
+                      // Validate article selection manually
+                      if (!esEdicion && articuloSeleccionado == null) {
+                        setDs(() => articuloError = true);
+                        return;
+                      }
                       if (!formKey.currentState!.validate()) return;
                       setDs(() => loading = true);
                       try {
@@ -398,6 +418,275 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Diálogo de búsqueda y selección de artículo con paginación
+  void _showArticuloSearch(
+    BuildContext parentCtx,
+    List<ArticuloEntity> todos,
+    ArticuloEntity? seleccionado,
+    void Function(ArticuloEntity) onSelect,
+  ) {
+    const int pageSize = 20;
+    final searchCtrl = TextEditingController();
+    List<ArticuloEntity> filtered = List.of(todos);
+    int page = 0;
+
+    showDialog(
+      context: parentCtx,
+      builder: (sCtx) => StatefulBuilder(
+        builder: (sCtx, setSt) {
+          final totalPages = (filtered.length / pageSize).ceil();
+          final start = page * pageSize;
+          final end = (start + pageSize).clamp(0, filtered.length);
+          final pageItems = filtered.sublist(start, end);
+
+          void applySearch(String q) {
+            setSt(() {
+              page = 0;
+              if (q.isEmpty) {
+                filtered = List.of(todos);
+              } else {
+                final lower = q.toLowerCase();
+                filtered = todos
+                    .where((a) =>
+                        (a.codArticulo ?? '').toLowerCase().contains(lower) ||
+                        a.descripcion.toLowerCase().contains(lower))
+                    .toList();
+              }
+            });
+          }
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600, maxHeight: 640),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 8, 12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(sCtx).colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.inventory_2_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Seleccionar Artículo',
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(sCtx),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Search field
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: TextField(
+                      controller: searchCtrl,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por código o descripción...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: searchCtrl.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded),
+                                onPressed: () {
+                                  searchCtrl.clear();
+                                  applySearch('');
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 12),
+                      ),
+                      onChanged: applySearch,
+                    ),
+                  ),
+
+                  // Results count
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${filtered.length} artículo${filtered.length != 1 ? 's' : ''}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(sCtx)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color),
+                        ),
+                        if (totalPages > 1) ...[
+                          const Spacer(),
+                          Text(
+                            'Página ${page + 1} de $totalPages',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(sCtx)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1),
+
+                  // List
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.search_off_rounded,
+                                    size: 48, color: Colors.grey),
+                                SizedBox(height: 12),
+                                Text('Sin resultados',
+                                    style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: pageItems.length,
+                            itemBuilder: (_, i) {
+                              final a = pageItems[i];
+                              final isSelected =
+                                  seleccionado?.codArticulo == a.codArticulo;
+                              return ListTile(
+                                dense: true,
+                                selected: isSelected,
+                                selectedTileColor: Theme.of(sCtx)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.1),
+                                leading: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(sCtx)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 16,
+                                    color:
+                                        Theme.of(sCtx).colorScheme.primary,
+                                  ),
+                                ),
+                                title: Text(
+                                  a.descripcion,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                subtitle: Text(
+                                  a.codArticulo ?? '',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                trailing: isSelected
+                                    ? Icon(Icons.check_circle_rounded,
+                                        color: Theme.of(sCtx)
+                                            .colorScheme
+                                            .primary,
+                                        size: 18)
+                                    : null,
+                                onTap: () {
+                                  onSelect(a);
+                                  Navigator.pop(sCtx);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+
+                  // Pagination bar
+                  if (totalPages > 1) ...[
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.first_page_rounded),
+                            tooltip: 'Primera',
+                            onPressed: page > 0
+                                ? () => setSt(() => page = 0)
+                                : null,
+                            iconSize: 20,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.chevron_left_rounded),
+                            tooltip: 'Anterior',
+                            onPressed: page > 0
+                                ? () => setSt(() => page--)
+                                : null,
+                            iconSize: 20,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              '${page + 1} / $totalPages',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.chevron_right_rounded),
+                            tooltip: 'Siguiente',
+                            onPressed: page < totalPages - 1
+                                ? () => setSt(() => page++)
+                                : null,
+                            iconSize: 20,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.last_page_rounded),
+                            tooltip: 'Última',
+                            onPressed: page < totalPages - 1
+                                ? () => setSt(() => page = totalPages - 1)
+                                : null,
+                            iconSize: 20,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -474,8 +763,8 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -493,7 +782,7 @@ class _ReglaDescuentoScreenState extends ConsumerState<ReglaDescuentoScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                   color: Colors.white.withValues(alpha: 0.1), width: 1),

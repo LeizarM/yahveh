@@ -6,6 +6,8 @@ class NotaEntregaEntity {
   final DateTime fecha;
   final String direccion;
   final String zona;
+  final String nit;
+  final int? codEmpleado;
   final int estado;
   final String estadoTexto;
   final int audUsuario;
@@ -18,6 +20,8 @@ class NotaEntregaEntity {
     required this.fecha,
     required this.direccion,
     required this.zona,
+    this.nit = '',
+    this.codEmpleado,
     this.estado = 1,
     this.estadoTexto = 'Válido',
     required this.audUsuario,
@@ -34,6 +38,8 @@ class NotaEntregaEntity {
     DateTime? fecha,
     String? direccion,
     String? zona,
+    String? nit,
+    int? codEmpleado,
     int? estado,
     String? estadoTexto,
     int? audUsuario,
@@ -46,6 +52,8 @@ class NotaEntregaEntity {
       fecha: fecha ?? this.fecha,
       direccion: direccion ?? this.direccion,
       zona: zona ?? this.zona,
+      nit: nit ?? this.nit,
+      codEmpleado: codEmpleado ?? this.codEmpleado,
       estado: estado ?? this.estado,
       estadoTexto: estadoTexto ?? this.estadoTexto,
       audUsuario: audUsuario ?? this.audUsuario,

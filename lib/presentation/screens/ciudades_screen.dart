@@ -34,6 +34,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
   @override
   Widget build(BuildContext context) {
     final ciudadesAsync = ref.watch(ciudadProvider);
+    ref.watch(isAdminProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -124,8 +125,8 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -143,7 +144,7 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                 color: Colors.white.withValues(alpha: 0.1),
@@ -366,13 +367,14 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
               ),
               onPressed: () => _showEditCiudadDialog(context, ciudad),
             ),
-            IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                color: AppTheme.errorColor.withValues(alpha: 0.8),
+            if (ref.read(isAdminProvider))
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.errorColor.withValues(alpha: 0.8),
+                ),
+                onPressed: () => _showDeleteConfirmation(context, ciudad),
               ),
-              onPressed: () => _showDeleteConfirmation(context, ciudad),
-            ),
           ],
         ),
       ),
@@ -429,8 +431,8 @@ class _CiudadesScreenState extends ConsumerState<CiudadesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -581,8 +583,8 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                const Color(0xFF2D3250).withValues(alpha: 0.92),
+                AppTheme.cardSurface.withValues(alpha: 0.95),
+                AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
@@ -647,7 +649,7 @@ class _CiudadFormDialogState extends ConsumerState<_CiudadFormDialog> {
                       ),
                       child: DropdownButtonFormField<int>(
                         initialValue: _selectedPaisId,
-                        dropdownColor: const Color(0xFF2D3250),
+                        dropdownColor: AppTheme.cardSurfaceLight,
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(

@@ -6,14 +6,26 @@ class EmpleadoModel extends EmpleadoEntity {
     required super.codEmpleado,
     required super.codPersona,
     required super.audUsuario,
+    super.nombres = '',
+    super.apPaterno = '',
+    super.apMaterno = '',
+    super.nombreCompleto = '',
+    super.ciNumero = '',
   });
 
   /// Crear desde JSON
+  /// ⭐ El backend (EmpleadoResponse) ya devuelve los datos de la persona embebidos.
+  /// Defensivo contra valores null.
   factory EmpleadoModel.fromJson(Map<String, dynamic> json) {
     return EmpleadoModel(
-      codEmpleado: json['codEmpleado'] as int,
-      codPersona: json['codPersona'] as int,
-      audUsuario: json['audUsuario'] as int,
+      codEmpleado: (json['codEmpleado'] as num?)?.toInt() ?? 0,
+      codPersona: (json['codPersona'] as num?)?.toInt() ?? 0,
+      audUsuario: (json['audUsuario'] as num?)?.toInt() ?? 0,
+      nombres: (json['nombres'] as String?) ?? '',
+      apPaterno: (json['apPaterno'] as String?) ?? '',
+      apMaterno: (json['apMaterno'] as String?) ?? '',
+      nombreCompleto: (json['nombreCompleto'] as String?) ?? '',
+      ciNumero: (json['ciNumero'] as String?) ?? '',
     );
   }
 
@@ -23,6 +35,11 @@ class EmpleadoModel extends EmpleadoEntity {
       'codEmpleado': codEmpleado,
       'codPersona': codPersona,
       'audUsuario': audUsuario,
+      'nombres': nombres,
+      'apPaterno': apPaterno,
+      'apMaterno': apMaterno,
+      'nombreCompleto': nombreCompleto,
+      'ciNumero': ciNumero,
     };
   }
 
@@ -44,6 +61,11 @@ class EmpleadoModel extends EmpleadoEntity {
       codEmpleado: codEmpleado,
       codPersona: codPersona,
       audUsuario: audUsuario,
+      nombres: nombres,
+      apPaterno: apPaterno,
+      apMaterno: apMaterno,
+      nombreCompleto: nombreCompleto,
+      ciNumero: ciNumero,
     );
   }
 }

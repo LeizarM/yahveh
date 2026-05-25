@@ -15,7 +15,15 @@ abstract class ArticuloRemoteDataSource {
     required int audUsuario,
   });
 
+  /// Lista completa de artículos (sin paginación). Usar para combos/dropdowns.
   Future<List<ArticuloModel>> getArticulos();
+
+  /// ⭐ Lista paginada server-side. Pensado para catálogos grandes.
+  Future<ArticuloPageModel> getArticulosPaginados({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  });
 
   Future<ArticuloModel> getArticuloById(String codArticulo);
 
@@ -100,18 +108,20 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
   @override
   Future<List<ArticuloModel>> getArticulos() async {
     try {
-      final response = await _client.get('/articulos/');
+      // ⭐ Usa el endpoint /todos que retorna la lista completa sin paginar.
+      // El endpoint base /articulos ahora es paginado.
+      final response = await _client.get('/articulos/todos');
 
       if (response.data != null && response.data['success'] == true) {
         final data = response.data['data'];
-        
+
         // Si data es una lista
         if (data is List) {
           return data
               .map((json) => ArticuloModel.fromJson(json as Map<String, dynamic>))
               .toList();
         }
-        
+
         // Si data es null o está vacío, retornar lista vacía
         return [];
       } else {
@@ -133,6 +143,65 @@ class ArticuloRemoteDataSourceImpl implements ArticuloRemoteDataSource {
         }
       }
       throw ApiException.fromError(e, 'Error al obtener artículos');
+    }
+  }
+
+  @override
+  Future<ArticuloPageModel> getArticulosPaginados({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  }) async {
+    try {
+      final qp = <String, dynamic>{
+        'page': page,
+        'pageSize': pageSize,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      };
+
+      final response = await _client.get('/articulos', queryParameters: qp);
+
+      if (response.data != null && response.data['success'] == true) {
+        final data = response.data['data'];
+        if (data is Map<String, dynamic>) {
+          return ArticuloPageModel.fromJson(data);
+        }
+        // Defensa: si el backend cambió y mandó solo una lista
+        if (data is List) {
+          final items = data
+              .map((e) => ArticuloModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+          return ArticuloPageModel(
+            data: items,
+            total: items.length,
+            page: 1,
+            pageSize: items.length,
+            totalPages: 1,
+          );
+        }
+        return ArticuloPageModel(
+          data: [],
+          total: 0,
+          page: page,
+          pageSize: pageSize,
+          totalPages: 0,
+        );
+      } else {
+        throw ApiException.fromResponse(response.data, response.statusCode);
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      if (e is DioException && e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+          throw ApiException(
+            message: responseData['message'] as String,
+            statusCode: e.response?.statusCode,
+            originalError: e,
+          );
+        }
+      }
+      throw ApiException.fromError(e, 'Error al obtener artículos paginados');
     }
   }
 

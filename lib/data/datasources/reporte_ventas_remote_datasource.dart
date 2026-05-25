@@ -92,14 +92,17 @@ class ReporteVentasRemoteDataSource {
     }
   }
 
-  /// GET /api/reportes/vendedores/pdf/{fechaDesde}/{fechaHasta}
+  /// GET /api/reportes/vendedores/pdf/{fechaDesde}/{fechaHasta}?codEmpleado=N
+  /// Si [codEmpleado] es null → reporte general; si no → filtrado por ese empleado.
   Future<Uint8List> descargarVendedoresPdf({
     required String fechaDesde,
     required String fechaHasta,
+    int? codEmpleado,
   }) async {
     try {
       final response = await _dioClient.get(
         '/reportes/vendedores/pdf/$fechaDesde/$fechaHasta',
+        queryParameters: codEmpleado != null ? {'codEmpleado': codEmpleado} : null,
         options: Options(
           responseType: ResponseType.bytes,
           headers: {'Accept': 'application/pdf'},
@@ -139,6 +142,38 @@ class ReporteVentasRemoteDataSource {
       throw ApiException(
         message: e.response?.statusCode == 404
             ? 'No hay datos para el período seleccionado'
+            : 'Error de conexión',
+      );
+    }
+  }
+
+  /// ⭐ GET /api/reportes/movimientos-inventario/pdf/{desde}/{hasta}?codArticulo=
+  /// Lista cada movimiento (entrada/salida/ajuste) entre fechas.
+  Future<Uint8List> descargarMovimientosInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+    String? codArticulo,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/reportes/movimientos-inventario/pdf/$fechaDesde/$fechaHasta',
+        queryParameters:
+            (codArticulo != null && codArticulo.trim().isNotEmpty)
+                ? {'codArticulo': codArticulo.trim()}
+                : null,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+      if (response.statusCode == 200) {
+        return Uint8List.fromList(response.data);
+      }
+      throw ApiException(message: 'Error al descargar reporte de movimientos');
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.response?.statusCode == 404
+            ? 'No hay movimientos en el período seleccionado'
             : 'Error de conexión',
       );
     }

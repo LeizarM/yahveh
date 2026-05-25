@@ -18,10 +18,18 @@ abstract class ReporteVentasRepository {
   Future<Uint8List> descargarVendedoresPdf({
     required String fechaDesde,
     required String fechaHasta,
+    int? codEmpleado,
   });
 
   Future<Uint8List> descargarInventarioPdf({
     required String fechaDesde,
     required String fechaHasta,
+  });
+
+  /// Movimientos de inventario entre fechas, opcionalmente filtrado por artículo
+  Future<Uint8List> descargarMovimientosInventarioPdf({
+    required String fechaDesde,
+    required String fechaHasta,
+    String? codArticulo,
   });
 }

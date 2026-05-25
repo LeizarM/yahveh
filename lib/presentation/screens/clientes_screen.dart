@@ -36,6 +36,9 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
   @override
   Widget build(BuildContext context) {
     final clientesAsync = ref.watch(clienteProvider);
+    // Observar isAdminProvider para que el widget se reconstruya
+    // cuando cambie el rol del usuario (y los botones de eliminar se oculten/muestren correctamente)
+    ref.watch(isAdminProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -57,15 +60,17 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
         ],
       ),
       drawer: context.isMobile ? _buildBlurredDrawer() : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddClienteDialog(context),
-        backgroundColor: AppTheme.accentGreen,
-        icon: const Icon(Icons.person_add, color: Colors.white),
-        label: const Text(
-          'Nuevo Cliente',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      floatingActionButton: ref.read(isAdminProvider)
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddClienteDialog(context),
+              backgroundColor: AppTheme.accentGreen,
+              icon: const Icon(Icons.person_add, color: Colors.white),
+              label: const Text(
+                'Nuevo Cliente',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            )
+          : null,
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
@@ -112,8 +117,8 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
             ),
@@ -131,7 +136,7 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E).withValues(alpha: 0.85),
+            color: AppTheme.cardSurface.withValues(alpha: 0.85),
             border: Border(
               right: BorderSide(
                 color: Colors.white.withValues(alpha: 0.1),
@@ -327,12 +332,13 @@ class _ClientesScreenState extends ConsumerState<ClientesScreen> {
                 tooltip: 'Editar',
                 onPressed: () => _showEditClienteDialog(context, cliente),
               ),
-              _buildIconButton(
-                icon: Icons.delete,
-                color: AppTheme.errorColor,
-                tooltip: 'Eliminar',
-                onPressed: () => _showDeleteConfirmation(context, cliente),
-              ),
+              if (ref.read(isAdminProvider))
+                _buildIconButton(
+                  icon: Icons.delete,
+                  color: AppTheme.errorColor,
+                  tooltip: 'Eliminar',
+                  onPressed: () => _showDeleteConfirmation(context, cliente),
+                ),
             ],
           ),
           iconColor: Colors.white.withValues(alpha: 0.7),
@@ -812,8 +818,8 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                      const Color(0xFF2D3250).withValues(alpha: 0.92),
+                      AppTheme.cardSurface.withValues(alpha: 0.95),
+                      AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(24),
@@ -925,7 +931,7 @@ class _ClienteFormDialogState extends ConsumerState<_ClienteFormDialog> {
                                   return DropdownButtonFormField<int>(
                                     initialValue: _selectedZonaId,
                                     isExpanded: true,
-                                    dropdownColor: const Color(0xFF2D3250),
+                                    dropdownColor: AppTheme.cardSurfaceLight,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: _glassInputDecoration(
                                       'Zona *',
@@ -1348,8 +1354,8 @@ class _GlassDialog extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -1602,8 +1608,8 @@ class _TelefonosClienteDialogState
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF1A1D2E).withValues(alpha: 0.95),
-                  const Color(0xFF2D3250).withValues(alpha: 0.92),
+                  AppTheme.cardSurface.withValues(alpha: 0.95),
+                  AppTheme.cardSurfaceLight.withValues(alpha: 0.92),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
@@ -1782,15 +1788,17 @@ class _TelefonosClienteDialogState
                                             color: Colors.white,
                                           ),
                                         ),
-                                        trailing: IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: AppTheme.errorColor,
-                                          ),
-                                          onPressed: () =>
-                                              _deleteTelefono(telefono),
-                                          tooltip: 'Eliminar',
-                                        ),
+                                        trailing: ref.read(isAdminProvider)
+                                            ? IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: AppTheme.errorColor,
+                                                ),
+                                                onPressed: () =>
+                                                    _deleteTelefono(telefono),
+                                                tooltip: 'Eliminar',
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
