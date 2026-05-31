@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yahveh/core/utils/error_messages.dart';
 import '../providers/auth_provider.dart';
+import '../providers/menu_provider.dart';
 import '../screens/screens.dart';
 
 /// Notifier que solo emite cuando el estado de autenticación cambia
@@ -94,6 +95,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated && isLoggingIn) {
         console('🧭 → Ir a dashboard (autenticado)');
         return '/dashboard';
+      }
+
+      // ===== Protección por PERMISOS DE VISTA =====
+      // Un usuario solo puede entrar a las pantallas que el admin le asignó
+      // (tabla tb_usuario_vista). Admin tiene acceso total (su menú trae todas).
+      if (isAuthenticated) {
+        final user = authState.value;
+        final path = state.matchedLocation;
+        final isAdmin = (user?.tipoUsuario ?? '').toLowerCase() == 'admin';
+
+        // Rutas siempre permitidas para cualquier usuario autenticado
+        const alwaysAllowed = {'/', '/splash', '/login', '/dashboard', '/perfil'};
+
+        if (!isAdmin && !alwaysAllowed.contains(path)) {
+          // Solo aplicar el guard cuando el menú ya cargó (con datos)
+          final vistas = ref.read(menuProvider).asData?.value;
+          if (vistas != null) {
+            final permitidas = vistas.map((v) {
+              final d = v.direccion.trim();
+              return d.startsWith('/') ? d : '/$d';
+            }).toSet();
+
+            if (!permitidas.contains(path)) {
+              console('🚫 Acceso denegado a "$path" (sin permiso) → /dashboard');
+              return '/dashboard';
+            }
+          }
+        }
       }
 
       console('🧭 → Sin redirección');
