@@ -24,6 +24,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       final user = await remoteDataSource.login(username, password);
+      // Guardado explícito del token en la capa de dominio (no depender
+      // únicamente del interceptor de Dio, que actúa como respaldo).
+      if (user.token.isNotEmpty) {
+        await localDataSource.saveToken(user.token);
+      }
       await localDataSource.saveUser(user);
       return user;
     } on ServerException catch (e) {

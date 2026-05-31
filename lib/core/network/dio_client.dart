@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import '../config/app_config.dart';
@@ -37,22 +38,24 @@ class DioClient {
           if (!options.path.contains('/login')) {
             final token = await _storage.read(key: AppConfig.tokenKey);
             if (token != null) {
-              options.headers[ApiConstants.authorization] = 
+              options.headers[ApiConstants.authorization] =
                   '${ApiConstants.bearer} $token';
-              _logger.d('🔑 Token agregado');
-            } else {
+            } else if (kDebugMode) {
               _logger.w('⚠️ No hay token disponible');
             }
           }
-          _logger.d('🚀 Request: ${options.method} ${options.baseUrl}${options.path}');
-          _logger.d('📦 Data: ${options.data}');
-          _logger.d('📋 Headers: ${options.headers}');
+          // No imprimir data ni headers: pueden contener credenciales/token.
+          if (kDebugMode) {
+            _logger.d('🚀 Request: ${options.method} ${options.baseUrl}${options.path}');
+          }
           return handler.next(options);
         },
         onResponse: (response, handler) async {
-          _logger.d('✅ Response: ${response.statusCode} ${response.requestOptions.path}');
-          _logger.d('📦 Response Data: ${response.data}');
-          
+          // No imprimir el body de la respuesta: puede contener el token.
+          if (kDebugMode) {
+            _logger.d('✅ Response: ${response.statusCode} ${response.requestOptions.path}');
+          }
+
           // Si la respuesta contiene token, guardarlo automáticamente
           if (response.data != null && response.data is Map) {
             final data = response.data as Map<String, dynamic>;
@@ -60,8 +63,8 @@ class DioClient {
               // Verificar que data['data'] sea un Map (no una Lista)
               if (data['data'] is Map<String, dynamic>) {
                 final responseData = data['data'] as Map<String, dynamic>;
-                if (responseData.containsKey('token')) {
-                  final token = responseData['token'] as String;
+                final token = responseData['token'] as String?;
+                if (token != null && token.isNotEmpty) {
                   await _storage.write(key: AppConfig.tokenKey, value: token);
                 }
               }
@@ -71,13 +74,17 @@ class DioClient {
           return handler.next(response);
         },
         onError: (error, handler) async {
-          _logger.e('❌ Error: ${error.response?.statusCode} ${error.requestOptions.path}');
-          _logger.e('📝 Message: ${error.message}');
-          _logger.e('📝 Response Data: ${error.response?.data}');
-          
+          // No imprimir response data: puede contener información sensible.
+          if (kDebugMode) {
+            _logger.e('❌ Error: ${error.response?.statusCode} ${error.requestOptions.path}');
+            _logger.e('📝 Message: ${error.message}');
+          }
+
           // Si el token expiró (401), eliminar token y redirigir al login
           if (error.response?.statusCode == 401) {
-            _logger.w('⚠️ Token expirado o inválido. Cerrando sesión...');
+            if (kDebugMode) {
+              _logger.w('⚠️ Token expirado o inválido. Cerrando sesión...');
+            }
             await _storage.delete(key: AppConfig.tokenKey);
             await _storage.delete(key: AppConfig.userKey);
             

@@ -1,0 +1,16 @@
+# ============================================================================
+# PLANTILLA de credenciales de firma para el release de Android.
+# 1) Copia este archivo como  android/key.properties  (sin .example)
+# 2) Rellena los valores reales con tu keystore.
+# 3) NUNCA subas key.properties ni el .jks a git (ya están en .gitignore).
+#
+# Generar un keystore (una sola vez):
+#   keytool -genkey -v -keystore yahveh-release.jks -keyalg RSA -keysize 2048 \
+#           -validity 10000 -alias yahveh
+# Guarda el .jks en un lugar SEGURO y respaldado: si lo pierdes NO podrás
+# volver a publicar actualizaciones de la app en Play Store.
+# ============================================================================
+storePassword=CAMBIA_ESTA_CLAVE
+keyPassword=CAMBIA_ESTA_CLAVE
+keyAlias=yahveh
+storeFile=../yahveh-release.jks

@@ -1,7 +1,13 @@
 /// Configuración global de la aplicación
 class AppConfig {
   // API Configuration
-  static const String baseUrl = 'http://192.168.68.51:8080/api';
+  // La URL se puede inyectar en tiempo de build SIN tocar el código:
+  //   flutter build apk --dart-define=API_URL=https://api.tudominio.com/api
+  // Si no se inyecta, usa el valor por defecto (entorno local de desarrollo).
+  static const String baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://192.168.68.51:8080/api',
+  );
   static const String apiVersion = 'v1';
   static const int connectionTimeout = 30000; // 30 segundos
   static const int receiveTimeout = 30000;

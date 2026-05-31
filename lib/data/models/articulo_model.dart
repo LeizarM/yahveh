@@ -35,9 +35,7 @@ class ArticuloModel extends ArticuloEntity {
         precioSinFactura: json["precioSinFactura"]?.toDouble(),
         audUsuario: json["audUsuario"],
         audFecha: json["audFecha"] != null ? DateTime.parse(json["audFecha"]) : null,
-        rowNumber: (json["rowNumber"] ?? 0) is int
-            ? (json["rowNumber"] ?? 0) as int
-            : (json["rowNumber"] as num).toInt(),
+        rowNumber: (json["rowNumber"] as num?)?.toInt() ?? 0,
     );
 
     Map<String, dynamic> toJson() => {
@@ -80,12 +78,10 @@ class ArticuloPageModel extends ArticuloPage {
             data: raw
                 .map((e) => ArticuloModel.fromJson(e as Map<String, dynamic>))
                 .toList(),
-            total: (json["total"] ?? 0) is int
-                ? (json["total"] ?? 0) as int
-                : (json["total"] as num).toInt(),
-            page: (json["page"] ?? 1) as int,
-            pageSize: (json["pageSize"] ?? 20) as int,
-            totalPages: (json["totalPages"] ?? 0) as int,
+            total: (json["total"] as num?)?.toInt() ?? 0,
+            page: (json["page"] as num?)?.toInt() ?? 1,
+            pageSize: (json["pageSize"] as num?)?.toInt() ?? 20,
+            totalPages: (json["totalPages"] as num?)?.toInt() ?? 0,
         );
     }
 }

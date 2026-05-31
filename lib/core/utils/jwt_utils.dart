@@ -34,15 +34,16 @@ class JwtUtils {
       }
 
       // Buscar el campo 'exp' (expiration time) en el payload
-      final exp = payload['exp'];
+      final exp = (payload['exp'] as num?)?.toInt();
       if (exp == null) {
-        // Si no hay campo de expiración, asumimos que es válido
-        return false;
+        // Sin campo de expiración (o no parseable) lo tratamos como
+        // EXPIRADO/inválido por seguridad.
+        return true;
       }
 
       // El campo 'exp' es un timestamp en segundos desde epoch
       final expirationDate = DateTime.fromMillisecondsSinceEpoch(
-        (exp as int) * 1000,
+        exp * 1000,
       );
 
       // Agregar un margen de 30 segundos para evitar problemas de sincronización

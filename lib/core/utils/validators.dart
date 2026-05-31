@@ -45,7 +45,8 @@ class Validators {
     }
     
     if (value.length < AppConstants.minPasswordLength) {
-      return 'La contraseña debe tener al menos ${AppConstants.minPasswordLength} caracteres';
+      return 'La contraseña es demasiado corta: debe tener al menos '
+          '${AppConstants.minPasswordLength} caracteres';
     }
     
     if (value.length > AppConstants.maxPasswordLength) {
